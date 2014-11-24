@@ -18,4 +18,10 @@ BDX is licensed under the permissive [Apache 2 License](http://www.apache.org/li
 Download and Install
 --------------------
 
-TODO
+You can find the latest release [here](https://github.com/GoranM/bdx/releases).
+
+Download bdx.zip (should be a green button). Once you have it, you can install it like any other blender addon - In User Preferences, click on the "Install from File" button, then find and install bdx.zip.
+
+After that, you just need to enable it (you can find it in the Import-Export category - Testing support level), and then Save User Settings, so you don't have to re-enable after every blender restart.
+
+At that point, there should be a BDX panel in the Render properties window.
