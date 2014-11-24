@@ -1,0 +1,53 @@
+<project name="bdx" basedir="." default="build-jar">
+	<property name="src.dir" value="src"/>
+	<property name="build.dir" value="build"/>
+
+	<property name="libs.dir" value="blender/bdx/libs"/>
+
+	<property name="modules" value="${user.home}/.gradle/caches/modules-2/files-2.1" />
+
+	<property name="libgdx.libs.dir" value="${modules}/com.badlogicgames.gdx"/>
+	<property name="libgdx.version" value="1.3.1"/>
+	<property name="lwjgl.libs.dir" location="${modules}/org.lwjgl.lwjgl" />
+
+	<path id="master-classpath">
+		<fileset dir="${libs.dir}">
+			<include name="gwt-vecmath.jar"/>
+			<include name="gbullet.jar"/>
+		</fileset>
+		<fileset dir="${libgdx.libs.dir}">
+			<include name="gdx/${libgdx.version}/**/*.jar" />
+			<include name="gdx-backend-lwjgl/${libgdx.version}/**/*.jar" />
+			<include name="gdx-platform/${libgdx.version}/**/*desktop.jar" />
+		</fileset>
+		<fileset dir="${lwjgl.libs.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<target name="build" description="Compile source tree java files">
+		<mkdir dir="${build.dir}"/>
+		<javac destdir="${build.dir}" 
+			includeantruntime="false"
+			debug="true">
+			<compilerarg line="-encoding utf-8"/>
+			<classpath refid="master-classpath"/>
+			<src path="${src.dir}"/>
+		</javac>
+	</target>
+
+	<target name="build-jar" depends="build">
+		<jar destfile="${libs.dir}/bdx.jar">
+			<fileset dir="${build.dir}"/>
+			<fileset dir="${src.dir}"/>
+		</jar>
+	</target>
+ 
+	<target name="clean" description="Clean output directories">
+		<delete>
+			<fileset dir="${build.dir}">
+				<include name="**/*.class"/>
+			</fileset>
+		</delete>
+	</target>
+</project>
