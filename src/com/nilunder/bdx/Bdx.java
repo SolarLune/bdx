@@ -2,7 +2,6 @@ package com.nilunder.bdx;
 
 import com.nilunder.bdx.inputs.Mouse;
 import com.nilunder.bdx.inputs.Keyboard;
-import com.nilunder.bdx.services.Services;
 import com.nilunder.bdx.utils.ArrayListNamed;
 
 public class Bdx{
@@ -11,7 +10,6 @@ public class Bdx{
 	public static Sounds sounds;
 	public static Mouse mouse;
 	public static Keyboard keyboard;
-	public static Services services;
 	
 
 	public static void init(){
@@ -19,9 +17,5 @@ public class Bdx{
 		sounds = new Sounds();
 		mouse = new Mouse();
 		keyboard = new Keyboard();
-		if (services == null){
-			services = new Services(true);
-		}
-		
 	}
 }

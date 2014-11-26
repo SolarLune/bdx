@@ -12,6 +12,9 @@ class CreateBdxProject(bpy.types.Operator):
     def create_libgdx_project(self):
         sc = bpy.context.scene
 
+        if (not sc.bdx_android_sdk.strip()):
+            sc.bdx_android_sdk = j(os.getcwd(), "android-sdk")
+
         fmt = {"program": j(ut.gen_root(), "gdx-setup.jar"),
                "dir": j(sc.bdx_base_path, sc.bdx_dir_name),
                "name": sc.bdx_proj_name,
@@ -72,7 +75,13 @@ class CreateBdxProject(bpy.types.Operator):
             h, t, o = strv.split('.')
             return int(h) * 100 + int(t) * 10 + int(o)
         sc = bpy.context.scene
-        version = sorted(os.listdir(j(sc.bdx_android_sdk, "build-tools")), key=strv_to_intv)[-1]
+
+        build_tools_dir = j(sc.bdx_android_sdk, "build-tools")
+
+        if os.path.exists(build_tools_dir):
+            version = sorted(os.listdir(build_tools_dir), key=strv_to_intv)[-1]
+        else:
+            version = "20.0.0"
 
         # Set corresponding line in android/build.gradle:
         android_build_gradle = j(ut.project_root(), "android", "build.gradle")
