@@ -5,11 +5,6 @@ BDX is a small 3D game engine, designed to work with [Blender](http://www.blende
 
 From a "build and deploy" perspective, BDX projects are simply extended libGDX projects, which means that you can use the same gradle-powered pipeline to deploy BDX games to any platform that's currently supported by libGDX (Windows, Linux, Mac OS X, HTML5, Android and iOS).
 
-Status
-------
-
-The project is currently in alpha, as it has yet to be tested on platforms other than the one it was developed on (Arch Linux).
-
 License
 -------
 
@@ -25,3 +20,8 @@ Download bdx.zip (should be a green button). Once you have it, you can install i
 After that, you just need to enable it (you can find it in the Import-Export category - Testing support level), and then Save User Settings, so you don't have to re-enable after every blender restart.
 
 At that point, there should be a BDX panel in the Render properties window.
+
+Use
+---
+
+You can find relevant information in [the wiki](https://github.com/GoranM/bdx/wiki).
