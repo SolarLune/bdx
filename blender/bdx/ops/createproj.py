@@ -1,5 +1,6 @@
 import os
 import bpy
+import shutil
 from .. import utils as ut
 
 j = os.path.join
@@ -50,7 +51,7 @@ class CreateBdxProject(bpy.types.Operator):
         os.mkdir(j(bdx, "fonts"))
 
         for png in ut.listdir_fullpath(ut.gen_root(), ".png"):
-            os.system('cp "{}" "{}"'.format(png, textures))
+            shutil.copy(png, textures);
 
     def create_blender_assets(self):
         """
@@ -61,13 +62,13 @@ class CreateBdxProject(bpy.types.Operator):
         blender = j(ut.project_root(), "blender")
         os.mkdir(blender)
         
-        os.system('cp "{}" "{}"'.format(j(ut.gen_root(), "game.blend"), blender))
+        shutil.copy(j(ut.gen_root(), "game.blend"), blender)
 
     def replace_build_gradle(self):
         """Replaces the build.gradle file with a version that includes BDX dependencies"""
         bdx_build_gradle = j(ut.gen_root(), "build.gradle")
         gdx_build_gradle = j(ut.project_root(), "build.gradle")
-        os.system('cp "{}" "{}"'.format(bdx_build_gradle, gdx_build_gradle))
+        shutil.copy(bdx_build_gradle, gdx_build_gradle)
 
         sc = bpy.context.scene
         ut.set_file_var(gdx_build_gradle, "appName", "'{}'".format(sc.bdx_proj_name))
@@ -97,7 +98,7 @@ class CreateBdxProject(bpy.types.Operator):
         n = "BdxApp.java"
         bdx_app = j(ut.gen_root(), n)
         gdx_app = j(ut.src_root(), n)
-        os.system('cp "{}" "{}"'.format(bdx_app, gdx_app))
+        shutil.copy(bdx_app, gdx_app)
 
         ut.set_file_line(gdx_app, 1,
                          "package " + bpy.context.scene.bdx_java_pack + ';')
@@ -106,7 +107,7 @@ class CreateBdxProject(bpy.types.Operator):
         n = "DesktopLauncher.java"
         bdx_dl = j(ut.gen_root(), n)
         gdx_dl = j(ut.src_root("desktop", n), n)
-        os.system('cp "{}" "{}"'.format(bdx_dl, gdx_dl))
+        shutil.copy(bdx_dl, gdx_dl);
 
         sc = bpy.context.scene
 
@@ -120,7 +121,7 @@ class CreateBdxProject(bpy.types.Operator):
         n = "AndroidLauncher.java"
         bdx_al = j(ut.gen_root(), n)
         gdx_al = j(ut.src_root("android", n), n)
-        os.system('cp "{}" "{}"'.format(bdx_al, gdx_al))
+        shutil.copy(bdx_al, gdx_al)
 
         sc = bpy.context.scene
 
@@ -133,7 +134,7 @@ class CreateBdxProject(bpy.types.Operator):
     def copy_bdx_libs(self):
         bdx_libs = j(ut.plugin_root(), "libs")
         libs = j(ut.project_root(), "core", "libs")
-        os.system('cp -R "{}" "{}"'.format(bdx_libs, libs))
+        shutil.copytree(bdx_libs, libs)
 
     def open_default_blend(self):
         proot = ut.project_root()
