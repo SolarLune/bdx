@@ -477,6 +477,13 @@ def texts(objects):
 def generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir):
     j = os.path.join
 
+    # list of fonts to export
+    existing = os.listdir(fonts_dir)
+    fonts_to_export = [f for f in fonts if f.name + ".fntx" not in existing]
+
+    if not fonts_to_export:
+        return
+
     # base hiero command
     gcr = ut.gradle_cache_root()
 
@@ -487,6 +494,10 @@ def generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir):
 
     badlogic = j(gcr, "com.badlogicgames.gdx")
     gdx_jars = [ut.find_file(jar, badlogic) for jar in gdx_jars]
+
+    if None in gdx_jars:
+        raise Exception("Font gen: Can't find required gdx jars \
+                (try running the game without any text objects first)")
 
     op_sys = {"lin":"linux", "dar":"osx", "win":"windows"}[sys.platform[:3]]
 
@@ -499,36 +510,31 @@ def generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir):
     jars = gdx_jars + lwjgl_jars + [j(hiero_dir, "gdx-tools.jar")]
 
     sep = ";" if op_sys == "windows" else ":"
-    hiero = "java -cp " + sep.join(jars) + " com.badlogic.gdx.tools.hiero.Hiero "
-
-    # list of fonts to export
-    existing = os.listdir(fonts_dir)
-    fonts_to_export = [f for f in fonts if f.name + ".fntx" not in existing]
+    hiero = 'java -cp "{}" com.badlogic.gdx.tools.hiero.Hiero '.format(sep.join(jars))
 
     # export fonts, via hiero
-    if fonts_to_export:
-        for font in fonts_to_export:
-            ttf = font.filepath
-            if ttf == "<builtin>":
-                ttf = j(hiero_dir, "bfont.ttf")
-            else:
-                ttf = os.path.abspath(bpy.path.abspath(ttf))
-            hiero += ttf + "---" + j(fonts_dir, font.name) + " "
-        os.system(hiero)
+    for font in fonts_to_export:
+        ttf = font.filepath
+        if ttf == "<builtin>":
+            ttf = j(hiero_dir, "bfont.ttf")
+        else:
+            ttf = os.path.abspath(bpy.path.abspath(ttf))
+        hiero += '"{}---{}" '.format(ttf, j(fonts_dir, font.name))
+    os.system(hiero)
 
-        # move pngs to textures dir
-        for f in ut.listdir_fullpath(fonts_dir, ".png"):
-            shutil.move(f, j(textures_dir, "__FNT_" + os.path.basename(f)))
+    # move pngs to textures dir
+    for f in ut.listdir_fullpath(fonts_dir, ".png"):
+        shutil.move(f, j(textures_dir, "__FNT_" + os.path.basename(f)))
 
-        # convert hiero-generated angel code files (.fnt), to proper json files (.fntx)
-        fnts = ut.listdir_fullpath(fonts_dir, ".fnt")
-        for fnt in fnts:
-            with open(fnt+'x', 'w') as f:
-                json.dump(ut.angel_code(fnt), f)
+    # convert hiero-generated angel code files (.fnt), to proper json files (.fntx)
+    fnts = ut.listdir_fullpath(fonts_dir, ".fnt")
+    for fnt in fnts:
+        with open(fnt+'x', 'w') as f:
+            json.dump(ut.angel_code(fnt), f)
 
-        # remove fnt files
-        for f in fnts:
-            os.remove(f)
+    # remove fnt files
+    for f in fnts:
+        os.remove(f)
 
 
 def export(context, filepath, scene_name, exprun):
