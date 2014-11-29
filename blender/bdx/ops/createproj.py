@@ -15,12 +15,14 @@ class CreateBdxProject(bpy.types.Operator):
         if (not sc.bdx_android_sdk.strip()):
             sc.bdx_android_sdk = j(os.getcwd(), "android-sdk")
 
+        absp = bpy.path.abspath
+
         fmt = {"program": j(ut.gen_root(), "gdx-setup.jar"),
-               "dir": j(sc.bdx_base_path, sc.bdx_dir_name),
+               "dir": j(absp(sc.bdx_base_path), sc.bdx_dir_name),
                "name": sc.bdx_proj_name,
                "package": sc.bdx_java_pack,
                "mainClass": "BdxApp",
-               "sdkLocation": sc.bdx_android_sdk}
+               "sdkLocation": absp(sc.bdx_android_sdk)}
 
         cmd = 'java -jar "{program}" \
                 --dir "{dir}" \
