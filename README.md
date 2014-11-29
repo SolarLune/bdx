@@ -10,6 +10,13 @@ License
 
 BDX is licensed under the permissive [Apache 2 License](http://www.apache.org/licenses/LICENSE-2.0.html) (just like libGDX): You can use this software free of charge, no strings attached, in commercial and non-commercial projects.
 
+Dependencies
+------------
+
+For game development with BDX, you only need a relatively recent version of Java (I tested with 1.7, but anything higher should work just as well).
+
+If you plan on developing the engine itself, you'll additionally need a working version of [ant](http://ant.apache.org/).
+
 Download and Install
 --------------------
 
