@@ -1,5 +1,6 @@
 import os
 import bpy
+import subprocess
 from .. import utils as ut
 
 
@@ -72,7 +73,7 @@ class BdxExpRun(bpy.types.Operator):
         print(" ")
         print("------------ BDX START --------------------------------------------------")
         print(" ")
-        error = os.system('""{}" -p "{}" desktop:run"'.format(os.path.join(proot, gradlew), proot))
+        error = subprocess.check_call([os.path.join(proot, gradlew), "-p", proot, "desktop:run"])
         print(" ")
         print("------------ BDX END ----------------------------------------------------")
         print(" ")
