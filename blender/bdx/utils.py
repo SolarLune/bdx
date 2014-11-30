@@ -13,9 +13,9 @@ def gen_root():
 
 proot = None 
 def project_root():
-    global proot
+    root = p.join(bpy.path.abspath('//'), p.pardir)
     if not proot:
-        proot = p.join(bpy.path.abspath('//'), p.pardir)
+        return p.abspath(root)
     return p.abspath(proot)
 
 def project_name():
