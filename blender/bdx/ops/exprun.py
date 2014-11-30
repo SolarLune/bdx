@@ -72,7 +72,7 @@ class BdxExpRun(bpy.types.Operator):
         print(" ")
         print("------------ BDX START --------------------------------------------------")
         print(" ")
-        error = os.system('"{}" -p "{}" desktop:run'.format(os.path.join(proot, gradlew), proot))
+        error = os.system('""{}" -p "{}" desktop:run"'.format(os.path.join(proot, gradlew), proot))
         print(" ")
         print("------------ BDX END ----------------------------------------------------")
         print(" ")
