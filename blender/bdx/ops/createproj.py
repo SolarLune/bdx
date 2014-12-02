@@ -39,7 +39,6 @@ class CreateBdxProject(bpy.types.Operator):
 
         ut.proot = fmt["dir"]
 
-
     def create_android_assets_bdx(self):
         """Creates the bdx directory structure in android/assets"""
         bdx = j(ut.project_root(), "android", "assets", "bdx")
@@ -92,7 +91,6 @@ class CreateBdxProject(bpy.types.Operator):
         new_line = '    buildToolsVersion "'+version+'"'
         ut.replace_line_containing(android_build_gradle, "buildToolsVersion", new_line)
 
-
     def replace_app_class(self):
         """Replaces the LibGDX app class with the BDX app class"""
         n = "BdxApp.java"
@@ -144,6 +142,11 @@ class CreateBdxProject(bpy.types.Operator):
         bpy.ops.file.find_missing_files(directory=textures)
         bpy.ops.wm.save_mainfile()
 
+    def update_bdx_xml(self):
+        proot = ut.project_root()
+        bdx_xml = j(proot, "core/src/BdxApp.gwt.xml")
+        ut.insert_lines_after(bdx_xml, "<module>", ["	<inherits name='com.Bdx' />"])
+
     def execute(self, context):
         context.window.cursor_set("WAIT")
 
@@ -156,6 +159,7 @@ class CreateBdxProject(bpy.types.Operator):
         self.replace_desktop_launcher()
         self.replace_android_launcher()
         self.copy_bdx_libs()
+        self.update_bdx_xml()
         self.open_default_blend()
 
         #context.window.cursor_set("DEFAULT")
