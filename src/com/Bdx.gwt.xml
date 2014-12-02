@@ -1,5 +1,5 @@
 <module>
-	<inherits name='javax.BulletPhysics' />
+	<inherits name='com.BulletPhysics' />
 
 	<source path='nilunder/bdx' />
 </module>
