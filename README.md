@@ -13,7 +13,7 @@ BDX is licensed under the permissive [Apache 2 License](http://www.apache.org/li
 Dependencies
 ------------
 
-For game development with BDX, you only need a relatively recent version of Java (I tested with 1.7, but anything higher should work just as well).
+For game development with BDX, you only need a relatively recent version of the Java Development Kit (I tested with 1.7).
 
 If you plan on developing the engine itself, you'll additionally need a working version of [ant](http://ant.apache.org/).
 
