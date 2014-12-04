@@ -2,7 +2,6 @@ package com.nilunder.bdx;
 
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.attributes.*;
 
 public class Text extends GameObject{
 	public String text;
@@ -75,11 +74,6 @@ public class Text extends GameObject{
 
 		mesh.setVertices(verts, 0, verts.length);
 
-	}
-
-	public void color(float r, float g, float b){
-		ColorAttribute ca = (ColorAttribute)modelInstance.materials.get(0).get(ColorAttribute.Diffuse);
-		ca.color.set(r, g, b, 1);
 	}
 
 }

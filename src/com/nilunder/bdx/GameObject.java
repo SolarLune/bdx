@@ -5,8 +5,11 @@ import java.util.ArrayList;
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
+import javax.vecmath.Vector4f;
 
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonValue;
@@ -342,4 +345,24 @@ public class GameObject implements Named{
 		rotMatrix.mul(ori);
 		orientation(rotMatrix);
 	}
+
+	public Vector4f multiplyColor(){
+
+		ColorAttribute ca = (ColorAttribute) modelInstance.materials.get(0).get(ColorAttribute.Diffuse);
+
+		return new Vector4f(ca.color.r, ca.color.g, ca.color.b, ca.color.a);
+
+	}
+
+	public void multiplyColor(float r, float g, float b, float a){
+
+		for (Material mat : modelInstance.materials){
+
+			ColorAttribute ca = (ColorAttribute) mat.get(ColorAttribute.Diffuse);
+
+			ca.color.set(r, g, b, a);
+
+		}
+	}
+
 }
