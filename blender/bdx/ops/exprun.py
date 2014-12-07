@@ -73,14 +73,14 @@ class BdxExpRun(bpy.types.Operator):
         print(" ")
         print("------------ BDX START --------------------------------------------------")
         print(" ")
-        error = subprocess.check_call([os.path.join(proot, gradlew), "-p", proot, "desktop:run"])
+        try:
+            subprocess.check_call([os.path.join(proot, gradlew), "-p", proot, "desktop:run"])
+        except subprocess.CalledProcessError:
+            self.report({"ERROR"}, "BDX BUILD FAILED")
         print(" ")
         print("------------ BDX END ----------------------------------------------------")
         print(" ")
 
-        if error:
-            self.report({"ERROR"}, "BDX BUILD FAILED")
-        
         context.window.cursor_set("DEFAULT")
         
         return {'FINISHED'}
