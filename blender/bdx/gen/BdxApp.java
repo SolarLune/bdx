@@ -42,7 +42,7 @@ public class BdxApp implements ApplicationListener {
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		for (Scene s : Bdx.scenes){
+		for (Scene s : (ArrayListNamed<Scene>)Bdx.scenes.clone()){
 			s.update();
 			renderScene(s);
 		}
