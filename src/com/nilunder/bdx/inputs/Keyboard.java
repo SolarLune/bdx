@@ -101,31 +101,31 @@ public class Keyboard {
 
 	}
 
-	public ArrayList<String> keycodesDown() {
+	public ArrayList<String> downKeys() {
 
-		ArrayList<String> codes = new ArrayList<String>();
+		ArrayList<String> keyNames = new ArrayList<String>();
 
 		for (String keyName : keyCodes.keySet()){
 
-			if (Gdx.input.isKeyPressed(keyCodes.get(keyName)))	codes.add(keyName);
+			if (Gdx.input.isKeyPressed(keyCodes.get(keyName)))	keyNames.add(keyName);
 
 		}
 
-		return codes;
+		return keyNames;
 
 	}
 
-	public ArrayList<String> keycodesHit() {
+	public ArrayList<String> hitKeys() {
 
-		ArrayList<String> codes = new ArrayList<String>();
+		ArrayList<String> keyNames = new ArrayList<String>();
 
 		for (String keyName : keyCodes.keySet()){
 
-			if (Gdx.input.isKeyJustPressed(keyCodes.get(keyName)))	codes.add(keyName);
+			if (Gdx.input.isKeyJustPressed(keyCodes.get(keyName)))	keyNames.add(keyName);
 
 		}
 
-		return codes;
+		return keyNames;
 
 	}
 
@@ -144,4 +144,5 @@ public class Keyboard {
 	public int kDown(String key){
 		return Gdx.input.isKeyPressed(keyCodes.get(key))?1:0;
 	}
+
 }
