@@ -72,6 +72,61 @@ public class Keyboard {
 		keyCodes.put("lctrl", 129);
 		keyCodes.put("rctrl", 130);
 		keyCodes.put("esc", 131);
+		keyCodes.put("f1", 244);
+		keyCodes.put("f2", 245);
+		keyCodes.put("f3", 246);
+		keyCodes.put("f4", 247);
+		keyCodes.put("f5", 248);
+		keyCodes.put("f6", 249);
+		keyCodes.put("f7", 250);
+		keyCodes.put("f8", 251);
+		keyCodes.put("f9", 252);
+		keyCodes.put("f10", 253);
+		keyCodes.put("f11", 254);
+		keyCodes.put("f12", 255);
+		keyCodes.put("numpad0", 144);
+		keyCodes.put("numpad1", 145);
+		keyCodes.put("numpad2", 146);
+		keyCodes.put("numpad3", 147);
+		keyCodes.put("numpad4", 148);
+		keyCodes.put("numpad5", 149);
+		keyCodes.put("numpad6", 150);
+		keyCodes.put("numpad7", 151);
+		keyCodes.put("numpad8", 152);
+		keyCodes.put("numpad9", 153);
+		keyCodes.put("[", 71);
+		keyCodes.put("]", 72);
+		keyCodes.put(".", 56);
+		keyCodes.put("+", 81);
+
+	}
+
+	public ArrayList<String> downKeys() {
+
+		ArrayList<String> keyNames = new ArrayList<String>();
+
+		for (String keyName : keyCodes.keySet()){
+
+			if (Gdx.input.isKeyPressed(keyCodes.get(keyName)))	keyNames.add(keyName);
+
+		}
+
+		return keyNames;
+
+	}
+
+	public ArrayList<String> hitKeys() {
+
+		ArrayList<String> keyNames = new ArrayList<String>();
+
+		for (String keyName : keyCodes.keySet()){
+
+			if (Gdx.input.isKeyJustPressed(keyCodes.get(keyName)))	keyNames.add(keyName);
+
+		}
+
+		return keyNames;
+
 	}
 
 	public boolean keyHit(String key){
@@ -89,4 +144,5 @@ public class Keyboard {
 	public int kDown(String key){
 		return Gdx.input.isKeyPressed(keyCodes.get(key))?1:0;
 	}
+
 }
