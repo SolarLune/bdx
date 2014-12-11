@@ -348,7 +348,17 @@ def projection_matrix(camd):
 def srl_objects(objects):
     name_object = {}
 
-    zero_mass_types = ("STATIC", "SENSOR")
+    def static(obj):
+        return obj.game.physics_type in ("STATIC", "SENSOR")
+
+    def bounds_type(obj):
+        t = obj.game.collision_bounds_type
+        if static(obj):
+            if not obj.game.use_collision_bounds:
+                t = "TRIANGLE_MESH"
+        elif t == "TRIANGLE_MESH":
+            t = "BOX"
+        return t
 
     for obj in objects:
         matrix = obj.matrix_world
@@ -372,8 +382,8 @@ def srl_objects(objects):
             "instance": instance(obj.dupli_group),
             "physics": {
                 "body": obj.game.physics_type,
-                "bounds": obj.game.collision_bounds_type,
-                "mass": 0 if obj.game.physics_type in zero_mass_types else obj.game.mass,
+                "bounds": bounds_type(obj),
+                "mass": 0 if static(obj) else obj.game.mass,
                 "friction": obj.active_material.physics.friction if obj.active_material else 0.5,
                 "restitution": obj.active_material.physics.elasticity if obj.active_material else 0,
                 "ghost": obj.game.use_ghost
