@@ -31,9 +31,11 @@ public class Bullet {
 	public static IndexedMesh makeMesh(Mesh mesh){
 		ByteBuffer indices = ByteBuffer.allocate(mesh.getIndicesBuffer().capacity() * (Short.SIZE/8));
 		indices.asShortBuffer().put(mesh.getIndicesBuffer());
+		mesh.getIndicesBuffer().rewind();
 		
 		ByteBuffer verts = ByteBuffer.allocate(mesh.getVerticesBuffer().capacity() * (Float.SIZE/8));
 		verts.asFloatBuffer().put(mesh.getVerticesBuffer());
+		mesh.getVerticesBuffer().rewind();
 		
 		IndexedMesh m = new IndexedMesh();
 		
