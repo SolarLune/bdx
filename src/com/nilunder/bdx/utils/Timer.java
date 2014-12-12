@@ -6,8 +6,9 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 public class Timer {
 	
+	public long timeLast;
+
 	private long delta;
-	private long timeLast;
 
 	public Timer(){
 		this(1f);
@@ -15,7 +16,7 @@ public class Timer {
 	
 	public Timer(float secondsDelta){
 		delta(secondsDelta);
-		timeLast = TimeUtils.millis();
+		timeLast = 0;
 	}
 
 	public void delta(float secondsDelta){

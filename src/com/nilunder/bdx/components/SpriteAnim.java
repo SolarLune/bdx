@@ -7,7 +7,7 @@ import javax.vecmath.*;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.math.*;
 
 import com.bulletphysics.linearmath.MatrixUtil;
 
@@ -17,87 +17,40 @@ import com.nilunder.bdx.utils.Timer;
 
 public class SpriteAnim extends Component {
 
-	private static class Frame extends ArrayList<Vector3f>{
-		
-		public Frame(){
-			for (int i = 0; i < 4; ++i){
-				add(new Vector3f(0, 0, 1));
-			}
-		}
-
-		public Frame(JsonValue frame){
-			for (JsonValue arr : frame){
-				float[] a = arr.asFloatArray(); 
-				add(new Vector3f(a[0], a[1], 1));
-			}
-		}
-		
-		public Frame(Frame frame){
-			for (Vector3f v : frame){
-				add(new Vector3f(v));
-			}
-		}
-
-		public Frame moved(float dx, float dy){
-			Frame copy = new Frame(this);
-			for (Vector3f v : copy){
-				v.x += dx;
-				v.y += dy;
-			}
-			return copy;
-		}
-	}
-
-	private static class Animation extends ArrayList<Frame>{
-		public static float defaultFps = 12;
-
-		public float fps;
-		public boolean loop;
+	private static class Animation extends ArrayList<Vector2f>{
 		public String name;
+		public float fps;
+		public boolean looping;
 
-		private Iterator<Frame> iter;
-		private Frame lastFrame;
-		private Frame currentFrame;
+		private int playHead;
 
-		public Animation(String name, ArrayList<Frame> frames){
-			addAll(frames);
-			reset();
-			init(name);
-		}
-		
-		public Animation(String name, JsonValue frames){
-			for (JsonValue frame : frames){
-				add(new Frame(frame));
-			}
-			reset();
-			init(name);
+		public Animation(String name, float fps, boolean looping){
+			this.name = name;
+			this.fps = fps;
+			this.looping = looping;
+			playHead = 0;
 		}
 
-		public Frame nextFrame(){
-			if (!iter.hasNext()){
-				if (loop)
-					iter = iterator();
+		public Vector2f nextFrame(){
+			if (onLastFrame()){
+				if (looping)
+					reset();
 				else
-					return lastFrame;
+					--playHead;
 			}
-			currentFrame = iter.next();
-			return currentFrame;
+
+			return get(playHead++);
+
 		}
 
 		public boolean onLastFrame(){
-			return currentFrame == lastFrame;
+			return playHead == size();
 		}
 
 		public void reset(){
-			iter = iterator();
+			playHead = 0;
 		}
 
-		private void init(String name){
-			this.name = name;
-			fps = defaultFps;
-			loop = true;
-			lastFrame = get(size() - 1);
-		}
 	}
 	
 	public float speed;
@@ -105,61 +58,57 @@ public class SpriteAnim extends Component {
 	private HashMap<String, Animation> animations;
 	private Animation active;
 	private Timer tick;
-	private Matrix3f uvTransform;
-	private Frame baseFrame;
+	private Matrix3 uvScale;
 	private boolean rowBased;
-	private int frameWidth;
-	private int frameHeight;
+	private Vector2f baseFrame;
+	private Vector2f displayedFrame;
+	private Vector2f frameDim;
 	
-	public SpriteAnim(GameObject g){
+	public SpriteAnim(GameObject g, int frameWidth, int frameHeight, boolean rowBased){
 		super(g);
+		this.rowBased = rowBased;
 		animations = new HashMap<String, Animation>();
 		tick = new Timer();
-		uvTransform = new Matrix3f();
-		uvTransform.setIdentity();
+		uvScale = new Matrix3();
+		uvScale.idt();
 		speed = 1;
 		state = play;
-	}
 
-	public SpriteAnim(GameObject g, FileHandle sprycle){
-		this(g);
-		importAnimations(sprycle);
-		play(animations.keySet().iterator().next());
+		baseFrame = frame();
+		displayedFrame = baseFrame;
+
+		// frameDim
+		TextureAttribute ta = (TextureAttribute)g.modelInstance.materials.get(0).get(TextureAttribute.Diffuse);
+		GLTexture t = ta.textureDescription.texture;
+		float u = 1f / t.getWidth();
+		float v = 1f / t.getHeight();
+
+		frameDim = new Vector2f(u * frameWidth, v * frameHeight);
 	}
 
 	public SpriteAnim(GameObject g, int frameWidth, int frameHeight){
 		this(g, frameWidth, frameHeight, true);
 	}
 
-	public SpriteAnim(GameObject g, int frameWidth, int frameHeight, boolean rowBased){
-		this(g);
-		this.frameWidth = frameWidth;
-		this.frameHeight = frameHeight;
-		this.rowBased = rowBased;
-		baseFrame = frame();
-	}
-
 	public void add(String name, int index, int[] frames){
-		add(name, index, frames, Animation.defaultFps, true);
+		add(name, index, frames, 12, true);
 	}
 
-	public void add(String name, int index, int[] frameIndices, float fps, boolean loop){
-		TextureAttribute ta = (TextureAttribute)g.modelInstance.materials.get(0).get(TextureAttribute.Diffuse);
-		GLTexture t = ta.textureDescription.texture;
-		float u = 1f / t.getWidth();
-		float v = 1f / t.getHeight();
+	public void add(String name, int sequence, int[] frames, float fps, boolean looping){
+		Animation anim = new Animation(name, fps, looping);
 
-		ArrayList<Frame> frames = new ArrayList<Frame>();
-		for (int i : frameIndices){
-			if (rowBased)
-				frames.add(baseFrame.moved(u * i * frameWidth, v * index * frameHeight));
-			else
-				frames.add(baseFrame.moved(u * index * frameWidth, v * i * frameHeight));
+		for (int i : frames){
+			Vector2f f = new Vector2f(baseFrame);
+			if (rowBased){
+				f.x += i * frameDim.x;
+				f.y += sequence * frameDim.y;
+			}else{
+				f.x += sequence * frameDim.x;
+				f.y += i * frameDim.y;
+			}
+			anim.add(f);
 		}
 
-		Animation anim = new Animation(name, frames);
-		anim.fps = fps;
-		anim.loop = loop;
 		animations.put(name, anim);
 	}
 
@@ -167,37 +116,46 @@ public class SpriteAnim extends Component {
 		return active.onLastFrame();
 	}
 
-	public void flipX(){
-		MatrixUtil.scale(uvTransform, uvTransform, new Vector3f(-1, 1, 1));
+	public void uvScaleX(float s){
+		uvScale(s, uvScaleY());
+	}
+
+	public void uvScaleY(float s){
+		uvScale(uvScaleX(), s);
+	}
+
+	public float uvScaleX(){
+		return uvScale.val[Matrix3.M00];
 	}
 	
-	public void flipY(){
-		MatrixUtil.scale(uvTransform, uvTransform, new Vector3f(1, -1, 1));
-	}
-	
-	public boolean isFlippedX(){
-		return uvTransform.m00 < 0;
-	}
-	
-	public boolean isFlippedY(){
-		return uvTransform.m11 < 0;
+	public float uvScaleY(){
+		return uvScale.val[Matrix3.M11];
 	}
 	
 	public void play(String name){
-		active = animations.get(name);
-		if (!active.loop && active.onLastFrame())
+		Animation next = animations.get(name);
+
+		if (active != next){
+			active = next;
+			tick.timeLast = 0; // immediate play
+		}
+
+		if (!active.looping && onLastFrame()){
 			active.reset();
+			tick.timeLast = 0;
+		}
+
 	}
 
 	public String current(){
 		return active == null ? "BDX_NONE" : active.name;
 	}
 	
-	public void showNextFrame(){
+	public void showNextVector2f(){
 		if (active == null)
 			return;
 
-		frame(transformed(active.nextFrame()));
+		frame(active.nextFrame());
 	}
 	
 	private State play = new State(){
@@ -209,95 +167,75 @@ public class SpriteAnim extends Component {
 			if (active == null)
 				return;
 
-			active.fps = nz(active.fps);
-			speed = nz(speed);
+			active.fps = Math.abs(active.fps);
+			speed = Math.abs(speed);
 
-			tick.delta(1f/active.fps / speed);
+			tick.delta(1f / nz(active.fps * speed));
 
 			if (tick.time()){
-				showNextFrame();
+				showNextVector2f();
 			}
 		}
 	};
 
-	private void importAnimations(FileHandle sprycle){
-		JsonValue root = new JsonReader().parse(sprycle);
-		for (JsonValue anim : root){
-			animations.put(anim.name, new Animation(anim.name, anim));
-		}
-	}
-	
-	private Frame transformed(Frame frame){
-		Frame f = new Frame(frame);
+	private void frame(Vector2f frame){
+		Matrix3 trans = new Matrix3();
+		Vector2f df = displayedFrame;
+		trans.setToTranslation(frame.x - df.x, frame.y - df.y);
 		
-		Vector3f sum = new Vector3f();
-		for (Vector3f v : f){
-			sum.add(v);
-		}
-	
-		sum.scale(0.25f);
-		sum.z = 1;
-		
-		Matrix3f fromOrigin = new Matrix3f();
-		fromOrigin.setIdentity();
-		fromOrigin.setColumn(2, sum);
-		
-		Matrix3f toOrigin = new Matrix3f(fromOrigin);
-		toOrigin.invert();
-		
-		Matrix3f t = new Matrix3f(fromOrigin);
-		t.mul(uvTransform);
-		t.mul(toOrigin);
-		
-		for (Vector3f v : f){
-			t.transform(v);
-		}
-
-		return f;
-	}
-
-	private void frame(Frame frame){
-		_frame(frame, true);
-	}
-
-	private Frame frame(){
-		Frame f = new Frame();
-		_frame(f, false);
-		return f;
-	}
-
-	private void _frame(Frame frame, boolean set){
 		Mesh mesh = g.modelInstance.model.meshes.first();
-		
-		int start = 0;
-		int count = mesh.getNumVertices();
-		
-		VertexAttribute posAttr = mesh.getVertexAttribute(VertexAttributes.Usage.TextureCoordinates);
-		int offset = posAttr.offset / 4;
-		int vertexSize = mesh.getVertexSize() / 4;
-		int numVertices = mesh.getNumVertices();
+		mesh.transformUV(trans);
 
-		float[] vertices = new float[numVertices * vertexSize];
-		int[] tcIndices = new int[]{0, 1, 2, 2, 3, 0};
-
-		mesh.getVertices(0, vertices.length, vertices);
-
-		int idx = offset + (start * vertexSize);
-		for (int i = 0; i < count; i++) {
-			Vector3f uv = frame.get(tcIndices[i]);
-			if (set){
-				vertices[idx] = uv.x;
-				vertices[idx + 1] = uv.y;
-			}else{
-				uv.x = vertices[idx];
-				uv.y = vertices[idx + 1];
-			}
-			idx += vertexSize;
-		}
-
-		if (set)
-			mesh.setVertices(vertices, 0, vertices.length);
-		
+		displayedFrame = frame;
 	}
 
+	private Vector2f frame(){
+		Mesh mesh = g.modelInstance.model.meshes.first();
+		int n = mesh.getNumVertices();
+		float[] verts = new float[n*5];
+		mesh.getVertices(0, verts.length, verts);
+
+		Vector2f frame = new Vector2f(0, 0);
+
+		int uvStart = 3;
+		for (int v = 0; v < n; ++v){
+			int i = v * 5;
+			frame.x += verts[i + uvStart];
+			frame.y += verts[i + uvStart + 1];
+		}
+
+		frame.x /= n;
+		frame.y /= n;
+		
+		return frame;
+	}
+
+	private void scaleUV(Matrix3 scale){
+		Matrix3 trans = new Matrix3(); trans.idt();
+		Vector2f df = displayedFrame;
+		trans.setToTranslation(df.x, df.y);
+
+		Matrix3 toOrigin = new Matrix3(trans);
+		toOrigin.inv();
+
+		trans.mul(scale);
+		trans.mul(toOrigin);
+
+		Mesh mesh = g.modelInstance.model.meshes.first();
+		mesh.transformUV(trans);
+	}
+
+	private void uvScale(float x, float y){
+		if (uvScaleX() == x && uvScaleY() == y)
+			return;
+		
+		// back to unit scale
+		uvScale.inv();
+		scaleUV(uvScale);
+
+		// set new scale
+		uvScale.idt();
+		uvScale.scale(x, y);
+		scaleUV(uvScale);
+	}
 }
