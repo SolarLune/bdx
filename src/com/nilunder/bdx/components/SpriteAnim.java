@@ -151,7 +151,7 @@ public class SpriteAnim extends Component {
 		return active == null ? "BDX_NONE" : active.name;
 	}
 	
-	public void showNextVector2f(){
+	public void showNextFrame(){
 		if (active == null)
 			return;
 
@@ -173,7 +173,7 @@ public class SpriteAnim extends Component {
 			tick.delta(1f / nz(active.fps * speed));
 
 			if (tick.time()){
-				showNextVector2f();
+				showNextFrame();
 			}
 		}
 	};
