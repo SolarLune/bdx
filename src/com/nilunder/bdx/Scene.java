@@ -41,6 +41,7 @@ import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSo
 import com.bulletphysics.linearmath.Transform;
 
 import com.nilunder.bdx.utils.*;
+import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
 
 public class Scene implements Named{
@@ -471,6 +472,10 @@ public class Scene implements Named{
 	
 	private void runObjectLogic(){
 		Bdx.mouse.scene = this;
+
+		for (Finger f : Bdx.fingers){
+			f.scene = this;
+		}
 
 		for (GameObject g : objects){
 			g.main();

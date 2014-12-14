@@ -13,6 +13,7 @@ import com.nilunder.bdx.GameObject;
 import com.nilunder.bdx.Scene;
 import com.nilunder.bdx.Instantiator;
 import com.nilunder.bdx.utils.*;
+import com.nilunder.bdx.inputs.*;
 
 public class BdxApp implements ApplicationListener {
 
@@ -41,6 +42,8 @@ public class BdxApp implements ApplicationListener {
 	public void render() {
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+		Bdx.updateInput();
 
 		for (Scene s : (ArrayListNamed<Scene>)Bdx.scenes.clone()){
 			s.update();
