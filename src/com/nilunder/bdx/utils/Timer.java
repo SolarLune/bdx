@@ -10,8 +10,6 @@ public class Timer {
 
 	private long delta;
 
-	private static Long timeStart;
-
 	public Timer(){
 		this(1f);
 	}
@@ -27,11 +25,7 @@ public class Timer {
 
 	public static double runningTime(){
 
-		if (timeStart == null){
-			timeStart = TimeUtils.millis();
-		}
-
-		return (double)(TimeUtils.millis() - timeStart) / 1000;
+		return TimeUtils.millis() / 1000d;
 
 	}
 
