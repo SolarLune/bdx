@@ -478,6 +478,10 @@ public class Scene implements Named{
 		}
 
 		for (GameObject g : objects){
+			for (Component c : g.components){
+				if (c.state != null)
+					c.state.main();
+			}
 			g.main();
 		}
 		if (toBeAdded.size() > 0){

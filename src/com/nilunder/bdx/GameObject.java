@@ -61,10 +61,6 @@ public class GameObject implements Named{
 	}
 	
 	public void main(){
-		for (Component c : components){
-			if (c.state != null)
-				c.state.main();
-		}
 	}
 	
 	public GameObject parent(){
