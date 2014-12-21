@@ -29,10 +29,6 @@ class BdxProject(bpy.types.Panel):
 
             r().operator("object.bdxexprun", text="Export and Run")
 
-            # Override P to export and run BDX game, instead of running BGE game:
-            kmi = bpy.data.window_managers['WinMan'].keyconfigs['Blender'].keymaps['Object Mode'].keymap_items
-            if 'view3d.game_start' in kmi:
-                kmi['view3d.game_start'].idname = 'object.bdxexprun'
         else:
             sc = context.scene
             r().prop(sc, "bdx_proj_name")
@@ -46,6 +42,21 @@ class BdxProject(bpy.types.Panel):
 
 def register():
     bpy.utils.register_class(BdxProject)
+
+    @bpy.app.handlers.persistent
+    def P_mapto_bdxexprun(dummy):
+        """Override P to export and run BDX game, instead of running BGE game"""
+
+        kmi = bpy.data.window_managers['WinMan'].keyconfigs['Blender'].keymaps['Object Mode'].keymap_items
+
+        if ut.in_bdx_project():
+            if 'view3d.game_start' in kmi:
+                kmi['view3d.game_start'].idname = 'object.bdxexprun'
+        else:
+            if 'objects.bdxexprun' in kmi:
+                kmi['objects.bdxexprun'].idname = 'view3d.game_start'
+
+    bpy.app.handlers.load_post.append(P_mapto_bdxexprun)
 
 
 def unregister():
