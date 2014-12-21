@@ -23,7 +23,7 @@ public class Bdx{
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
 
-	private static ArrayList<Finger> fingers_last;
+	private static ArrayList<Finger> fingersLast;
 	private static ArrayList<Finger> _fingers;
 	
 	public static void init(){
@@ -32,7 +32,7 @@ public class Bdx{
 		mouse = new Mouse();
 		keyboard = new Keyboard();
 		fingers = new ArrayList<Finger>(); 
-		fingers_last = new ArrayList<Finger>(); 
+		fingersLast = new ArrayList<Finger>(); 
 
 		_fingers = new ArrayList<Finger>();
 		for (int i = 0; i < 10; ++i){
@@ -41,15 +41,15 @@ public class Bdx{
 	}
 
 	public static void updateInput(){
-		ArrayList<Finger> fl = fingers_last;
-		fingers_last = fingers;
+		ArrayList<Finger> fl = fingersLast;
+		fingersLast = fingers;
 		fingers = fl;
 		fingers.clear();
 
 		for (Finger f : _fingers){
 			if (f.down()){
 				fingers.add(f);
-				if (fingers_last.contains(f)){
+				if (fingersLast.contains(f)){
 					f.hit = false;
 				}else{
 					f.hit = true;
