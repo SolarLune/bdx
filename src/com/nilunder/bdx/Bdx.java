@@ -6,8 +6,18 @@ import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.utils.ArrayListNamed;
 
 public class Bdx{
+
+	public static class ArrayListScenes extends ArrayListNamed<Scene>{
+		public boolean add(Scene scene){
+			boolean ret = super.add(scene);
+			if (scene.objects == null)
+				scene.init();
+			return ret;
+		}
+	}
+
 	public static final float tick_time = 1f/60f;
-	public static ArrayListNamed<Scene> scenes;
+	public static ArrayListScenes scenes;
 	public static Sounds sounds;
 	public static Mouse mouse;
 	public static Keyboard keyboard;
@@ -17,7 +27,7 @@ public class Bdx{
 	private static ArrayList<Finger> _fingers;
 	
 	public static void init(){
-		scenes = new ArrayListNamed<Scene>();
+		scenes = new ArrayListScenes();
 		sounds = new Sounds();
 		mouse = new Mouse();
 		keyboard = new Keyboard();

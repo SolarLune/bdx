@@ -84,7 +84,6 @@ public class Scene implements Named{
 		}else{
 			this.instantiator = new Instantiator();
 		}
-		init();
 	}
 
 	public String name(){
