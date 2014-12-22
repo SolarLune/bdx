@@ -47,6 +47,8 @@ class CreateBdxProject(bpy.types.Operator):
         textures = j(bdx, "textures")
         os.mkdir(textures)
         os.mkdir(j(bdx, "audio"))
+        os.mkdir(j(bdx, "audio", "sounds"))
+        os.mkdir(j(bdx, "audio", "music"))
         os.mkdir(j(bdx, "fonts"))
 
         for png in ut.listdir_fullpath(ut.gen_root(), ".png"):

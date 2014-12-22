@@ -3,6 +3,7 @@ package com.nilunder.bdx;
 import java.util.*;
 
 import com.nilunder.bdx.inputs.*;
+import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.ArrayListNamed;
 
 public class Bdx{
@@ -19,6 +20,7 @@ public class Bdx{
 	public static final float tick_time = 1f/60f;
 	public static ArrayListScenes scenes;
 	public static Sounds sounds;
+	public static Music music;
 	public static Mouse mouse;
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
@@ -29,6 +31,7 @@ public class Bdx{
 	public static void init(){
 		scenes = new ArrayListScenes();
 		sounds = new Sounds();
+		music = new Music();
 		mouse = new Mouse();
 		keyboard = new Keyboard();
 		fingers = new ArrayList<Finger>(); 

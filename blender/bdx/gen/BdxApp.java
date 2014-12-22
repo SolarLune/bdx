@@ -25,7 +25,6 @@ public class BdxApp implements ApplicationListener {
 		modelBatch = new ModelBatch();
 		
 		Bdx.init();
-		Bdx.sounds.pathRoot("bdx/audio");
 
 		Scene.instantiators = new HashMap<String, Instantiator>();
 		Scene.instantiators.put("name", null);
