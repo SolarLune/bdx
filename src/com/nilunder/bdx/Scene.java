@@ -541,7 +541,7 @@ public class Scene implements Named{
 			
 			updateCamera();
 			
-			world.stepSimulation(Bdx.tick_time, 0);
+			world.stepSimulation(Bdx.TICK_TIME, 0);
 			
 			updateChildBodies();
 			

@@ -17,7 +17,7 @@ public class Bdx{
 		}
 	}
 
-	public static final float tick_time = 1f/60f;
+	public static final float TICK_TIME = 1f/60f;
 	public static ArrayListScenes scenes;
 	public static Sounds sounds;
 	public static Music music;
