@@ -15,6 +15,11 @@ public class Bdx{
 				scene.init();
 			return ret;
 		}
+		public void add(int index, Scene scene){
+			super.add(index, scene);
+			if (scene.objects == null)
+				scene.init();
+		}
 	}
 
 	public static final float TICK_TIME = 1f/60f;
