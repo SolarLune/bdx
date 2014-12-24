@@ -28,8 +28,8 @@ public class GameObject implements Named{
 	
 	public String name;
 	public boolean visible;
-	public ArrayListNamed<GameObject> hitObjects;
-	public ArrayListNamed<GameObject> hitObjectsLast;
+	public ArrayListNamed<GameObject> touchingObjects;
+	public ArrayListNamed<GameObject> touchingObjectsLast;
 	public ArrayList<PersistentManifold> contactManifolds;
 	public ModelInstance modelInstance;
 	public RigidBody body;
@@ -46,8 +46,8 @@ public class GameObject implements Named{
 	
 	
 	public GameObject() {
-		hitObjects = new ArrayListNamed<GameObject>();
-		hitObjectsLast = new ArrayListNamed<GameObject>();
+		touchingObjects = new ArrayListNamed<GameObject>();
+		touchingObjectsLast = new ArrayListNamed<GameObject>();
 		contactManifolds = new ArrayList<PersistentManifold>();
 		components = new ArrayList<Component>();
 		children = new ArrayListNamed<GameObject>();
@@ -230,12 +230,12 @@ public class GameObject implements Named{
 	}
 	
 	public boolean touching(String name){
-		return hitObjects.get(name) != null;
+		return touchingObjects.get(name) != null;
 	}
 	
 	public boolean hit(String name){
-		return hitObjects.get(name) != null && 
-			hitObjectsLast.get(name) == null;
+		return touchingObjects.get(name) != null && 
+			touchingObjectsLast.get(name) == null;
 	}
 	
 	public float reactionForce(){

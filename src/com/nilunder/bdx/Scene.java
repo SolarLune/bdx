@@ -399,10 +399,10 @@ public class Scene implements Named{
 	
 	private void detectCollisions(){
 		for (GameObject g : objects){
-			ArrayListNamed<GameObject> hitLast = g.hitObjectsLast;
-			g.hitObjectsLast = g.hitObjects;
-			g.hitObjects = hitLast;
-			g.hitObjects.clear();
+			ArrayListNamed<GameObject> hitLast = g.touchingObjectsLast;
+			g.touchingObjectsLast = g.touchingObjects;
+			g.touchingObjects = hitLast;
+			g.touchingObjects.clear();
 			g.contactManifolds.clear();
 		}
 		
@@ -415,8 +415,8 @@ public class Scene implements Named{
 				RigidBody b = (RigidBody)mani.getBody1();
 				GameObject A = (GameObject)a.getUserPointer();
 				GameObject B = (GameObject)b.getUserPointer();
-				A.hitObjects.add(B);
-				B.hitObjects.add(A);
+				A.touchingObjects.add(B);
+				B.touchingObjects.add(A);
 				A.contactManifolds.add(mani);
 				B.contactManifolds.add(mani);
 			}
