@@ -164,6 +164,8 @@ class CreateBdxProject(bpy.types.Operator):
         self.update_bdx_xml()
         self.open_default_blend()
 
+        ut.proot = None
+
         #context.window.cursor_set("DEFAULT")
 
         return {'FINISHED'}
