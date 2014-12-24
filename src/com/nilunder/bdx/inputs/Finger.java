@@ -6,17 +6,29 @@ import com.nilunder.bdx.*;
 
 public class Finger extends Pointer {
 
-	public boolean hit;
+	public int hit;
+	public int up;
 	
+	public Finger(){
+		this(0);
+	}
+
 	public Finger(int id){
 		super(id);
+		hit = 0;
+		up = 0;
 	}
 
 	public boolean hit(){
-		return hit;
+		return hit == Keyboard.t;
 	}
 
 	public boolean down(){
-		return Gdx.input.isTouched(id);
+		return hit > up;
 	}
+
+	public boolean up(){
+		return up == Keyboard.t;
+	}
+
 }

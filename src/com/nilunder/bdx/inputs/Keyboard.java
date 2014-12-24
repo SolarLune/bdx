@@ -3,101 +3,122 @@ package com.nilunder.bdx.inputs;
 import java.util.*;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
 
 import com.nilunder.bdx.*;
 
 public class Keyboard {
 
-	private HashMap<String,Integer> keyCodes;
+	public static class Log{
+
+		public int hit;
+		public int up;
+
+		public Log(){
+			hit = 0;
+			up = 0;
+		}
+		
+	}
+
+	public static int t;
+
+	public HashMap<Integer, Log> codeToLog;
+
+	private HashMap<String,Integer> keyToCode;
 
 	public Keyboard(){
-		keyCodes = new HashMap<>();
-		keyCodes.put("*", -1); // any key
-		keyCodes.put("0", 7);
-		keyCodes.put("1", 8);
-		keyCodes.put("2", 9);
-		keyCodes.put("3", 10);
-		keyCodes.put("4", 11);
-		keyCodes.put("5", 12);
-		keyCodes.put("6", 13);
-		keyCodes.put("7", 14);
-		keyCodes.put("8", 15);
-		keyCodes.put("9", 16);
-		keyCodes.put("a", 29);
-		keyCodes.put("lalt", 57);
-		keyCodes.put("ralt", 58);
-		keyCodes.put("b", 30);
-		keyCodes.put("\\", 73);
-		keyCodes.put("c", 31);
-		keyCodes.put(",", 55);
-		keyCodes.put("d", 32);
-		keyCodes.put("backspace", 67);
-		keyCodes.put("down", 20);
-		keyCodes.put("left", 21);
-		keyCodes.put("right", 22);
-		keyCodes.put("up", 19);
-		keyCodes.put("e", 33);
-		keyCodes.put("enter", 66);
-		keyCodes.put("=", 70);
-		keyCodes.put("f", 34);
-		keyCodes.put("g", 35);
-		keyCodes.put("`", 68);
-		keyCodes.put("h", 36);
-		keyCodes.put("i", 37);
-		keyCodes.put("j", 38);
-		keyCodes.put("k", 39);
-		keyCodes.put("l", 40);
-		keyCodes.put("m", 41);
-		keyCodes.put("-", 69);
-		keyCodes.put("n", 42);
-		keyCodes.put("o", 43);
-		keyCodes.put("p", 44);
-		keyCodes.put("q", 45);
-		keyCodes.put("r", 46);
-		keyCodes.put("s", 47);
-		keyCodes.put(";", 74);
-		keyCodes.put("lshift", 59);
-		keyCodes.put("rshift", 60);
-		keyCodes.put("/", 76);
-		keyCodes.put("space", 62);
-		keyCodes.put("t", 48);
-		keyCodes.put("tab", 61);
-		keyCodes.put("u", 49);
-		keyCodes.put("v", 50);
-		keyCodes.put("w", 51);
-		keyCodes.put("x", 52);
-		keyCodes.put("y", 53);
-		keyCodes.put("z", 54);
-		keyCodes.put("lctrl", 129);
-		keyCodes.put("rctrl", 130);
-		keyCodes.put("esc", 131);
-		keyCodes.put("f1", 244);
-		keyCodes.put("f2", 245);
-		keyCodes.put("f3", 246);
-		keyCodes.put("f4", 247);
-		keyCodes.put("f5", 248);
-		keyCodes.put("f6", 249);
-		keyCodes.put("f7", 250);
-		keyCodes.put("f8", 251);
-		keyCodes.put("f9", 252);
-		keyCodes.put("f10", 253);
-		keyCodes.put("f11", 254);
-		keyCodes.put("f12", 255);
-		keyCodes.put("numpad0", 144);
-		keyCodes.put("numpad1", 145);
-		keyCodes.put("numpad2", 146);
-		keyCodes.put("numpad3", 147);
-		keyCodes.put("numpad4", 148);
-		keyCodes.put("numpad5", 149);
-		keyCodes.put("numpad6", 150);
-		keyCodes.put("numpad7", 151);
-		keyCodes.put("numpad8", 152);
-		keyCodes.put("numpad9", 153);
-		keyCodes.put("[", 71);
-		keyCodes.put("]", 72);
-		keyCodes.put(".", 56);
-		keyCodes.put("+", 81);
+		t = 0;
+
+		keyToCode = new HashMap<>();
+		keyToCode.put("*", -1); // any key
+		keyToCode.put("0", 7);
+		keyToCode.put("1", 8);
+		keyToCode.put("2", 9);
+		keyToCode.put("3", 10);
+		keyToCode.put("4", 11);
+		keyToCode.put("5", 12);
+		keyToCode.put("6", 13);
+		keyToCode.put("7", 14);
+		keyToCode.put("8", 15);
+		keyToCode.put("9", 16);
+		keyToCode.put("a", 29);
+		keyToCode.put("lalt", 57);
+		keyToCode.put("ralt", 58);
+		keyToCode.put("b", 30);
+		keyToCode.put("\\", 73);
+		keyToCode.put("c", 31);
+		keyToCode.put(",", 55);
+		keyToCode.put("d", 32);
+		keyToCode.put("backspace", 67);
+		keyToCode.put("down", 20);
+		keyToCode.put("left", 21);
+		keyToCode.put("right", 22);
+		keyToCode.put("up", 19);
+		keyToCode.put("e", 33);
+		keyToCode.put("enter", 66);
+		keyToCode.put("=", 70);
+		keyToCode.put("f", 34);
+		keyToCode.put("g", 35);
+		keyToCode.put("`", 68);
+		keyToCode.put("h", 36);
+		keyToCode.put("i", 37);
+		keyToCode.put("j", 38);
+		keyToCode.put("k", 39);
+		keyToCode.put("l", 40);
+		keyToCode.put("m", 41);
+		keyToCode.put("-", 69);
+		keyToCode.put("n", 42);
+		keyToCode.put("o", 43);
+		keyToCode.put("p", 44);
+		keyToCode.put("q", 45);
+		keyToCode.put("r", 46);
+		keyToCode.put("s", 47);
+		keyToCode.put(";", 74);
+		keyToCode.put("lshift", 59);
+		keyToCode.put("rshift", 60);
+		keyToCode.put("/", 76);
+		keyToCode.put("space", 62);
+		keyToCode.put("t", 48);
+		keyToCode.put("tab", 61);
+		keyToCode.put("u", 49);
+		keyToCode.put("v", 50);
+		keyToCode.put("w", 51);
+		keyToCode.put("x", 52);
+		keyToCode.put("y", 53);
+		keyToCode.put("z", 54);
+		keyToCode.put("lctrl", 129);
+		keyToCode.put("rctrl", 130);
+		keyToCode.put("esc", 131);
+		keyToCode.put("f1", 244);
+		keyToCode.put("f2", 245);
+		keyToCode.put("f3", 246);
+		keyToCode.put("f4", 247);
+		keyToCode.put("f5", 248);
+		keyToCode.put("f6", 249);
+		keyToCode.put("f7", 250);
+		keyToCode.put("f8", 251);
+		keyToCode.put("f9", 252);
+		keyToCode.put("f10", 253);
+		keyToCode.put("f11", 254);
+		keyToCode.put("f12", 255);
+		keyToCode.put("numpad0", 144);
+		keyToCode.put("numpad1", 145);
+		keyToCode.put("numpad2", 146);
+		keyToCode.put("numpad3", 147);
+		keyToCode.put("numpad4", 148);
+		keyToCode.put("numpad5", 149);
+		keyToCode.put("numpad6", 150);
+		keyToCode.put("numpad7", 151);
+		keyToCode.put("numpad8", 152);
+		keyToCode.put("numpad9", 153);
+		keyToCode.put("[", 71);
+		keyToCode.put("]", 72);
+		keyToCode.put(".", 56);
+		keyToCode.put("+", 81);
+
+		codeToLog = new HashMap<>();
+		for (Integer code : keyToCode.values())
+			codeToLog.put(code, new Log());
 
 	}
 
@@ -105,9 +126,9 @@ public class Keyboard {
 
 		ArrayList<String> keyNames = new ArrayList<String>();
 
-		for (String keyName : keyCodes.keySet()){
+		for (String keyName : keyToCode.keySet()){
 
-			if (Gdx.input.isKeyPressed(keyCodes.get(keyName)))	keyNames.add(keyName);
+			if (Gdx.input.isKeyPressed(keyToCode.get(keyName)))	keyNames.add(keyName);
 
 		}
 
@@ -119,9 +140,9 @@ public class Keyboard {
 
 		ArrayList<String> keyNames = new ArrayList<String>();
 
-		for (String keyName : keyCodes.keySet()){
+		for (String keyName : keyToCode.keySet()){
 
-			if (Gdx.input.isKeyJustPressed(keyCodes.get(keyName)))	keyNames.add(keyName);
+			if (Gdx.input.isKeyJustPressed(keyToCode.get(keyName)))	keyNames.add(keyName);
 
 		}
 
@@ -130,19 +151,26 @@ public class Keyboard {
 	}
 
 	public boolean keyHit(String key){
-		return Gdx.input.isKeyJustPressed(keyCodes.get(key));
+		Log k = codeToLog.get(keyToCode.get(key));
+		return k.hit == t;
 	}
 
 	public boolean keyDown(String key){
-		return Gdx.input.isKeyPressed(keyCodes.get(key));
+		Log k = codeToLog.get(keyToCode.get(key));
+		return k.hit > k.up;
+	}
+
+	public boolean keyUp(String key){
+		Log k = codeToLog.get(keyToCode.get(key));
+		return k.up == t;
 	}
 
 	public int kHit(String key){
-		return Gdx.input.isKeyJustPressed(keyCodes.get(key))?1:0;
+		return keyHit(key)?1:0;
 	}
 
 	public int kDown(String key){
-		return Gdx.input.isKeyPressed(keyCodes.get(key))?1:0;
+		return keyDown(key)?1:0;
 	}
 
 }

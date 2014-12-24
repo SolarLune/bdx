@@ -29,10 +29,8 @@ public class Bdx{
 	public static Mouse mouse;
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
+	public static ArrayList<Finger> allocatedFingers;
 
-	private static ArrayList<Finger> fingersLast;
-	private static ArrayList<Finger> _fingers;
-	
 	public static void init(){
 		scenes = new ArrayListScenes();
 		sounds = new Sounds();
@@ -40,29 +38,19 @@ public class Bdx{
 		mouse = new Mouse();
 		keyboard = new Keyboard();
 		fingers = new ArrayList<Finger>(); 
-		fingersLast = new ArrayList<Finger>(); 
 
-		_fingers = new ArrayList<Finger>();
+		allocatedFingers = new ArrayList<Finger>();
 		for (int i = 0; i < 10; ++i){
-			_fingers.add(new Finger(i));
+			allocatedFingers.add(new Finger(i));
 		}
 	}
 
 	public static void updateInput(){
-		ArrayList<Finger> fl = fingersLast;
-		fingersLast = fingers;
-		fingers = fl;
+		++Keyboard.t;
 		fingers.clear();
-
-		for (Finger f : _fingers){
-			if (f.down()){
+		for (Finger f : allocatedFingers){
+			if (f.down() || f.up())
 				fingers.add(f);
-				if (fingersLast.contains(f)){
-					f.hit = false;
-				}else{
-					f.hit = true;
-				}
-			}
 		}
 	}
 }

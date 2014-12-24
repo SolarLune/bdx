@@ -11,10 +11,6 @@ abstract class Pointer {
 	public Scene scene;
 	public int id;
 
-	public Pointer(){
-		this(0);
-	}
-
 	public Pointer(int id){
 		this.id = id;
 	}

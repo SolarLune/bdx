@@ -25,6 +25,7 @@ public class BdxApp implements ApplicationListener {
 		modelBatch = new ModelBatch();
 		
 		Bdx.init();
+		Gdx.input.setInputProcessor(new GdxProcessor(Bdx.keyboard, Bdx.mouse, Bdx.allocatedFingers));
 
 		Scene.instantiators = new HashMap<String, Instantiator>();
 		Scene.instantiators.put("name", null);
