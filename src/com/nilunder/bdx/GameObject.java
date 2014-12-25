@@ -229,6 +229,10 @@ public class GameObject implements Named{
 		angularVelocity(v);
 	}
 	
+	public boolean touching(){
+		return !touchingObjects.isEmpty();
+	}
+	
 	public boolean touching(String name){
 		return touchingObjects.get(name) != null;
 	}
