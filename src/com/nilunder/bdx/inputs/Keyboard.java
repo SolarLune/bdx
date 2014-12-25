@@ -173,4 +173,8 @@ public class Keyboard {
 		return keyDown(key)?1:0;
 	}
 
+	public int kUp(String key){
+		return keyUp(key)?1:0;
+	}
+
 }
