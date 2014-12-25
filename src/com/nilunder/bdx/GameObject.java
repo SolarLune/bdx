@@ -133,6 +133,15 @@ public class GameObject implements Named{
 	public void rotate(Vector3f rot){
 		rotate(rot.x, rot.y, rot.z);
 	}
+
+	public void move(Vector3f delta){
+		position(position().plus(delta));
+	}
+
+	public void move(float x, float y, float z){
+		Vector3f delta = new Vector3f(x, y, z);
+		move(delta);
+	}
 	
 	public void rotateLocal(float x, float y, float z){
 		Matrix3f ori = orientation();
