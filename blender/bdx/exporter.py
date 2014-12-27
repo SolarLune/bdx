@@ -64,7 +64,7 @@ def vertices(mesh):
 
 def in_active_layer(obj):
     layer = [i for i, v in enumerate(obj.layers) if v][0]
-    active_layers = [i for i, v in enumerate(bpy.context.scene.layers) if v]
+    active_layers = [i for i, v in enumerate(scene.layers) if v]
 
     if layer in active_layers:
         return True
@@ -313,7 +313,7 @@ def view_plane(camd, winx, winy, xasp, yasp):
 
 
 def projection_matrix(camd):
-    r = bpy.context.scene.render
+    r = scene.render
     left, right, bottom, top = view_plane(camd, r.resolution_x, r.resolution_y, 1, 1)
 
     farClip, nearClip = camd.clip_end, camd.clip_start
@@ -547,7 +547,10 @@ def generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir):
         os.remove(f)
 
 
+scene = None;
+
 def export(context, filepath, scene_name, exprun):
+    global scene;
     scene = bpy.data.scenes[scene_name] if scene_name else context.scene
 
     objects = scene.objects
