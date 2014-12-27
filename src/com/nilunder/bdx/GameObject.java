@@ -338,6 +338,13 @@ public class GameObject implements Named{
 		cs.getLocalScaling(s);
 		return s;
 	}
+
+	public Vector3f dimensions(){
+		Vector3f min = new Vector3f(0, 0, 0);
+		Vector3f max = new Vector3f(0, 0, 0);
+		body.getAabb(min, max);
+		return max.minus(min);
+	}
 	
 	public Vector3f axis(int axis){
 		Vector3f v = new Vector3f();
