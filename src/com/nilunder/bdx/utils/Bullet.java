@@ -48,27 +48,29 @@ public class Bullet {
 		
 		return m;
 	}
-	
-	public static RigidBody makeBody(Mesh mesh, float[] glTransform, JsonValue physics){
-		CollisionShape shape;
-		
-		String bounds = physics.get("bounds").asString();
-		
+
+	public static CollisionShape makeShape(Mesh mesh, String bounds){
 		if (bounds.equals("TRIANGLE_MESH")){
 			TriangleIndexVertexArray mi = new TriangleIndexVertexArray();
 			mi.addIndexedMesh(Bullet.makeMesh(mesh), ScalarType.SHORT);
-			shape = new BvhTriangleMeshShape(mi, false);
+			return new BvhTriangleMeshShape(mi, false);
 			
 		}else if (bounds.equals("SPHERE")){
 			float radius = mesh.calculateRadius(0f, 0f, 0f);
-			shape = new SphereShape(radius);
+			return new SphereShape(radius);
 			
 		}else{ // BOX
 			BoundingBox bbox = mesh.calculateBoundingBox();
 			Vector3 d = bbox.getDimensions().scl(0.5f);
 			Vector3f dim = new Vector3f(d.x, d.y, d.z);
-			shape = new BoxShape(dim);
+			return new BoxShape(dim);
 		}
+	}
+	
+	public static RigidBody makeBody(Mesh mesh, float[] glTransform, JsonValue physics){
+		String bounds = physics.get("bounds").asString();
+		
+		CollisionShape shape = makeShape(mesh, bounds);
 		
 		float mass = physics.get("mass").asFloat();
 		String body_type = physics.get("body").asString();
@@ -103,13 +105,22 @@ public class Bullet {
 
 	public static RigidBody cloneBody(RigidBody body){
 		GameObject gobj = (GameObject)body.getUserPointer();
-		float mass = gobj._json.get("physics").get("mass").asFloat();
+		JsonValue physics = gobj._json.get("physics");
+		float mass = physics.get("mass").asFloat();
 		
 		Vector3f inertia = new Vector3f();
 		body.getCollisionShape().calculateLocalInertia(mass, inertia);
 		
+		CollisionShape shape;
+
+		if (gobj.modelInstance != null){
+			shape = makeShape(gobj.modelInstance.model.meshes.first(), physics.get("bounds").asString());
+		}else{
+			shape = new BoxShape(new Vector3f(0.25, 0.25f, 0.25f));
+		}
+		
 		RigidBody b = new RigidBody(mass, new DefaultMotionState(new Transform(gobj.transform())),
-								body.getCollisionShape(),
+								shape,
 								inertia);
 		
 		b.setCollisionFlags(gobj.body.getCollisionFlags());
