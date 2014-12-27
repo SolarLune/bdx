@@ -116,7 +116,7 @@ public class Bullet {
 		if (gobj.modelInstance != null){
 			shape = makeShape(gobj.modelInstance.model.meshes.first(), physics.get("bounds").asString());
 		}else{
-			shape = new BoxShape(new Vector3f(0.25, 0.25f, 0.25f));
+			shape = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
 		}
 		
 		RigidBody b = new RigidBody(mass, new DefaultMotionState(new Transform(gobj.transform())),
