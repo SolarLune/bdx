@@ -246,6 +246,13 @@ public class GameObject implements Named{
 		return touchingObjects.get(name) != null;
 	}
 	
+	public boolean hit(){
+		if (touchingObjectsLast.isEmpty()){
+			return !touchingObjects.isEmpty();
+		}
+		return touchingObjects != touchingObjectsLast;
+	}
+	
 	public boolean hit(String name){
 		return touchingObjects.get(name) != null && 
 			touchingObjectsLast.get(name) == null;
