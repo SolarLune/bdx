@@ -247,10 +247,12 @@ public class GameObject implements Named{
 	}
 	
 	public boolean hit(){
-		if (touchingObjectsLast.isEmpty()){
-			return !touchingObjects.isEmpty();
+		for (GameObject g: touchingObjects){
+			if (!touchingObjectsLast.contains(g)){
+				return true;
+			}
 		}
-		return touchingObjects != touchingObjectsLast;
+		return false;
 	}
 	
 	public boolean hit(String name){
