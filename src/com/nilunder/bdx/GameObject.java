@@ -246,6 +246,15 @@ public class GameObject implements Named{
 		return touchingObjects.get(name) != null;
 	}
 	
+	public boolean hit(){
+		for (GameObject g: touchingObjects){
+			if (!touchingObjectsLast.contains(g)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public boolean hit(String name){
 		return touchingObjects.get(name) != null && 
 			touchingObjectsLast.get(name) == null;
