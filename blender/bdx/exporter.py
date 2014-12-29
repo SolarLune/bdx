@@ -77,17 +77,10 @@ def instance(dupli_group):
         return [o.name for o in dupli_group.objects if not o.parent][0]
 
 
-def has_materials(mesh):
-    for mat in mesh.materials:
-        if mat and hasattr(mat.active_texture, "image"):
-            return True
-
-    return False
-
-
 def mat_tris(mesh):
     """Returns dict: mat_name -> list_of_triangle_indices"""
-    if not has_materials(mesh):
+
+    if not mesh.materials:
         return {}
 
     m_ps = {}
@@ -218,7 +211,8 @@ def srl_models_text(texts, fntx_dir):
 def srl_materials_text(fonts):
     return {"__FNT_"+f.name:
                 {"texture": "__FNT_"+f.name+".png",
-                 "alpha_blend": "ALPHA"} 
+                 "alpha_blend": "ALPHA",
+                 "color": [1, 1, 1]} 
          for f in fonts}
 
 def view_plane(camd, winx, winy, xasp, yasp):
@@ -404,17 +398,19 @@ def srl_objects(objects):
 
 
 def used_materials(objects):
-    mesh_mats = lambda mesh: [m for m in mesh.materials if 
-                              m and m.active_texture and
-                              hasattr(m.active_texture, "image")]
-
-    return sum([mesh_mats(o.data) for o in objects 
+    return sum([list(o.data.materials) for o in objects 
                 if o.type == "MESH"], [])
 
 def srl_materials(materials):
+    def texture_name(m):
+        if m and m.active_texture and hasattr(m.active_texture, "image"):
+            return m.active_texture.image.name
+        return None
+
     return {m.name: 
-                {"texture": m.active_texture.image.name,
-                 "alpha_blend": m.game_settings.alpha_blend}
+                {"texture": texture_name(m),
+                 "alpha_blend": m.game_settings.alpha_blend,
+                 "color": list(m.diffuse_color)}
             for m in materials}
 
 

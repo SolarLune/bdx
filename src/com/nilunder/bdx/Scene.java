@@ -122,13 +122,21 @@ public class Scene implements Named{
 		
 		for (JsonValue mat : json.get("materials")){
 			String texName = mat.get("texture").asString();
-			Texture texture = new Texture(Gdx.files.internal("bdx/textures/" + texName));
-			texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
-			textures.add(texture);
-			Material material = new Material(TextureAttribute.createDiffuse(texture), ColorAttribute.createDiffuse(1, 1, 1, 1));
+
+			float[] c = mat.get("color").asFloatArray();
+			Material material = new Material(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
+							
+			if (texName != null){
+				Texture texture = new Texture(Gdx.files.internal("bdx/textures/" + texName));
+				texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+				textures.add(texture);
+				material.set(TextureAttribute.createDiffuse(texture));
+			}
+
 			if (mat.get("alpha_blend").asString().equals("ALPHA")){
 				material.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
 			}
+
 			materials.put(mat.name, material);
 		}
 		
