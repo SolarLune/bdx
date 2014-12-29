@@ -371,7 +371,7 @@ public class GameObject implements Named{
 		orientation(rotMatrix);
 	}
 
-	public Vector4f multiplyColor(){
+	public Vector4f color(){
 
 		ColorAttribute ca = (ColorAttribute) modelInstance.materials.get(0).get(ColorAttribute.Diffuse);
 
@@ -379,7 +379,7 @@ public class GameObject implements Named{
 
 	}
 
-	public void multiplyColor(float r, float g, float b, float a){
+	public void color(float r, float g, float b, float a){
 
 		for (Material mat : modelInstance.materials){
 
