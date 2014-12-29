@@ -212,7 +212,8 @@ def srl_materials_text(fonts):
     return {"__FNT_"+f.name:
                 {"texture": "__FNT_"+f.name+".png",
                  "alpha_blend": "ALPHA",
-                 "color": [1, 1, 1]} 
+                 "color": [1, 1, 1],
+                 "opacity": 1} 
          for f in fonts}
 
 def view_plane(camd, winx, winy, xasp, yasp):
@@ -410,7 +411,8 @@ def srl_materials(materials):
     return {m.name: 
                 {"texture": texture_name(m),
                  "alpha_blend": m.game_settings.alpha_blend,
-                 "color": list(m.diffuse_color)}
+                 "color": list(m.diffuse_color),
+                 "opacity": m.alpha if m.use_transparency else 1}
             for m in materials}
 
 

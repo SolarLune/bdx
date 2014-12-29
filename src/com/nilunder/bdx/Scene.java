@@ -133,8 +133,12 @@ public class Scene implements Named{
 				material.set(TextureAttribute.createDiffuse(texture));
 			}
 
-			if (mat.get("alpha_blend").asString().equals("ALPHA")){
-				material.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
+			float opacity = mat.get("opacity").asFloat();
+
+			if (mat.get("alpha_blend").asString().equals("ALPHA") || opacity < 1) {
+				BlendingAttribute ba = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+				ba.opacity = opacity;
+				material.set(ba);
 			}
 
 			materials.put(mat.name, material);
