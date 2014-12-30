@@ -6,6 +6,7 @@ import javax.vecmath.*;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.math.*;
 
@@ -61,8 +62,8 @@ public class SpriteAnim extends Component {
 	private Matrix3 uvScale;
 	private boolean rowBased;
 	private Vector2f baseFrame;
-	private Vector2f displayedFrame;
 	private Vector2f frameDim;
+
 	
 	public SpriteAnim(GameObject g, int frameWidth, int frameHeight, boolean rowBased){
 		super(g);
@@ -74,8 +75,14 @@ public class SpriteAnim extends Component {
 		speed = 1;
 		state = play;
 
-		baseFrame = frame();
-		displayedFrame = baseFrame;
+		// initially displayed frame
+		HashMap<Model,Vector2f> modelToFrame = g.scene.modelToFrame;
+
+		baseFrame = modelToFrame.get(g.modelInstance.model);
+		if (baseFrame == null){
+			baseFrame = frame();
+			modelToFrame.put(g.modelInstance.model, baseFrame);
+		}
 
 		// frameDim
 		TextureAttribute ta = (TextureAttribute)g.modelInstance.materials.get(0).get(TextureAttribute.Diffuse);
@@ -180,13 +187,12 @@ public class SpriteAnim extends Component {
 
 	private void frame(Vector2f frame){
 		Matrix3 trans = new Matrix3();
-		Vector2f df = displayedFrame;
+		Vector2f df = frame();
 		trans.setToTranslation(frame.x - df.x, frame.y - df.y);
 		
 		Mesh mesh = g.modelInstance.model.meshes.first();
 		mesh.transformUV(trans);
 
-		displayedFrame = frame;
 	}
 
 	private Vector2f frame(){
@@ -212,7 +218,7 @@ public class SpriteAnim extends Component {
 
 	private void scaleUV(Matrix3 scale){
 		Matrix3 trans = new Matrix3(); trans.idt();
-		Vector2f df = displayedFrame;
+		Vector2f df = frame();
 		trans.setToTranslation(df.x, df.y);
 
 		Matrix3 toOrigin = new Matrix3(trans);

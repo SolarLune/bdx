@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import javax.vecmath.Matrix3f;
-import javax.vecmath.Matrix4f;
-import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
+import javax.vecmath.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
@@ -52,6 +49,7 @@ public class Scene implements Named{
 	public Camera camera;
 	public ArrayList<Camera> cameras;
 	public PerspectiveCamera cam;
+	public HashMap<Model, Vector2f> modelToFrame;
 
 	private FileHandle scene;
 
@@ -101,6 +99,7 @@ public class Scene implements Named{
 		models = new HashMap<String,Model>();
 		textures = new ArrayList<Texture>();
 		materials = new HashMap<String,Material>();
+		modelToFrame = new HashMap<>();
 
 		materials.put("__BDX_DEFAULT", defaultMaterial);
 		
