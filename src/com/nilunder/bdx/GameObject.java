@@ -312,8 +312,24 @@ public class GameObject implements Named{
 			scene.world.updateSingleAabb(body);
 
 		// Child propagation
+		Vector3f ps = scale();
+		Matrix4f pt = transform();
+		Matrix4f ms = new Matrix4f();
+		Matrix3f rs = new Matrix3f();
+		Vector4f es = new Vector4f();
+
 		for (GameObject c : children){
-			c.scale(scale().mul(c.localScale), false);
+			ms.setIdentity();
+			ms.m00 = ps.x; ms.m11 = ps.y; ms.m22 = ps.z;
+			pt.mul(ms);
+			ms.mul(pt, c.localTransform);
+			ms.getColumn(0, es); ps.x = es.length();
+			ms.getColumn(1, es); ps.y = es.length();
+			ms.getColumn(2, es); ps.z = es.length();
+			c.scale(ps.mul(c.localScale), false);
+			c.transform().getRotationScale(rs);
+			ms.setRotationScale(rs);
+			c.transform(ms, false);
 		}
 
 		if (parent != null && updateLocal){
