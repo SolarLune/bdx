@@ -445,16 +445,18 @@ def instantiator(objects):
     with open(j(ut.gen_root(), "Instantiator.java"), 'r') as f:
         lines = f.readlines()
 
-    lines[0] = "package " + ut.package_name() + ".inst;\n"
-    lines[4] = "import " + ut.package_name() + ".*;\n"
+    package_name = ut.package_name()
+    lines[0] = "package " + package_name + ".inst;\n"
+    lines[4] = "import " + package_name + ".*;\n"
 
     top = lines[:10]
-    template = lines[10:12]
+    equals, new = lines[10:12]
     bottom = lines[12:]
 
     body = []
     for name in shared_names:
-        body += [l.replace("NAME", name) for l in template]
+        body += [equals.replace("NAME", name),
+                 new.replace("NAME", package_name + "." + name)]
 
     new_lines = top + body + bottom
 
