@@ -410,9 +410,9 @@ def srl_materials(materials):
 
     return {m.name: 
                 {"texture": texture_name(m),
-                 "alpha_blend": m.game_settings.alpha_blend,
+                 "alpha_blend": "ALPHA" if m.use_transparency else "OPAQUE",
                  "color": list(m.diffuse_color),
-                 "opacity": m.alpha if m.use_transparency else 1}
+                 "opacity": m.alpha}
             for m in materials}
 
 
