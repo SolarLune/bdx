@@ -14,14 +14,18 @@ class BdxExpRun(bpy.types.Operator):
 
         proot = ut.project_root()
         sroot = ut.src_root()
-        asset_dir = os.path.join(proot, "android", "assets", "bdx", "scenes")
+        asset_dir = j(proot, "android", "assets", "bdx")
 
+        # Save-out internal java texts
+        java_texts = [t for t in bpy.data.texts.values() if t.name.endswith(".java")]
+        for t in java_texts:
+            with open(j(sroot, t.name), 'w') as f:
+                f.write(t.as_string())
 
         # Export scenes:
-
         for scene in bpy.data.scenes:
             file_name =  scene.name + ".bdx"
-            file_path = j(asset_dir, file_name)
+            file_path = j(asset_dir, "scenes", file_name)
 
             bpy.ops.export_scene.bdx(filepath=file_path, scene_name=scene.name, exprun=True)
 
