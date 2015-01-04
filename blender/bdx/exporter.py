@@ -134,7 +134,11 @@ def char_uvs(char, angel_code):
     cm = angel_code["common"]
     W, H = cm["scaleW"], cm["scaleH"]
 
-    c = angel_code["char"][str(ord(char))]
+    try:
+        c = angel_code["char"][str(ord(char))]
+    except:
+        c = angel_code["char"][str(ord(' '))]
+
     x, y = c['x'], c['y']
     w, h = c['width'], c['height']
 
@@ -170,7 +174,12 @@ def vertices_text(text, angel_code):
 
     for char in text.body:
         # Make quad
-        c = ac["char"][str(ord(char))]
+
+        try:
+            c = ac["char"][str(ord(char))]
+        except:
+            c = ac["char"][str(ord(' '))]
+
         x, y = pos + c["xoffset"], 0 - c["yoffset"]
         w, h = c["width"], c["height"]
         pos += c["xadvance"]
