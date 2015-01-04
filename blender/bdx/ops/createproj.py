@@ -18,6 +18,13 @@ class CreateBdxProject(bpy.types.Operator):
 
         absp = bpy.path.abspath
 
+        if ut.in_packed_bdx_blend():
+            sc.bdx_base_path = absp("//")
+            sc.bdx_java_pack = ut.internal_java_package()
+            blend_name = os.path.basename(bpy.data.filepath).split('.')[0]
+            sc.bdx_proj_name = blend_name
+            sc.bdx_dir_name = sc.bdx_proj_name
+
         fmt = {"program": j(ut.gen_root(), "gdx-setup.jar"),
                "dir": j(absp(sc.bdx_base_path), sc.bdx_dir_name),
                "name": sc.bdx_proj_name,
@@ -38,6 +45,7 @@ class CreateBdxProject(bpy.types.Operator):
             raise Exception("Failed to create LibGDX project")
 
         ut.proot = fmt["dir"]
+
 
     def create_android_assets_bdx(self):
         """Creates the bdx directory structure in android/assets"""
@@ -137,17 +145,29 @@ class CreateBdxProject(bpy.types.Operator):
         shutil.copytree(bdx_libs, libs)
 
     def open_default_blend(self):
-        proot = ut.project_root()
-        fp = j(proot, "blender/game.blend")
+        fp = j(ut.project_root(), "blender", "game.blend")
         bpy.ops.wm.open_mainfile(filepath=fp)
-        textures = j(proot, "android", "assets", "bdx", "textures")
+
+    def fix_texture_links(self):
+        textures = j(ut.project_root(), "android", "assets", "bdx", "textures")
         bpy.ops.file.find_missing_files(directory=textures)
-        bpy.ops.wm.save_mainfile()
 
     def update_bdx_xml(self):
         proot = ut.project_root()
         bdx_xml = j(proot, "core/src/BdxApp.gwt.xml")
         ut.insert_lines_after(bdx_xml, "<module>", ["	<inherits name='com.Bdx' />"])
+
+    def make_current_blend_default(self):
+        shutil.move(bpy.data.filepath, j(ut.project_root(), "blender", "game.blend"))
+
+    def unpack_textures(self):
+        proot = ut.project_root()
+        bdx = j(proot, "android", "assets", "bdx")
+        shutil.rmtree(j(bdx, "textures"))
+        bpy.ops.file.unpack_all()
+        unpacked_textures = j(proot, "blender", "textures") 
+        shutil.move(unpacked_textures, bdx)
+
 
     def execute(self, context):
         context.window.cursor_set("WAIT")
@@ -162,7 +182,16 @@ class CreateBdxProject(bpy.types.Operator):
         self.replace_android_launcher()
         self.copy_bdx_libs()
         self.update_bdx_xml()
-        self.open_default_blend()
+
+        if ut.in_packed_bdx_blend():
+            self.make_current_blend_default()
+            self.open_default_blend()
+            self.unpack_textures()
+        else:
+            self.open_default_blend()
+
+        self.fix_texture_links()
+        bpy.ops.wm.save_mainfile()
 
         ut.proot = None
 

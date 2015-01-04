@@ -31,11 +31,15 @@ class BdxProject(bpy.types.Panel):
 
         else:
             sc = context.scene
-            r().prop(sc, "bdx_proj_name")
-            r().prop(sc, "bdx_java_pack")
-            r().prop(sc, "bdx_base_path")
-            r().prop(sc, "bdx_dir_name")
-            r().prop(sc, "bdx_android_sdk")
+
+            if ut.in_packed_bdx_blend():
+                r().label(text="In packed BDX blend.")
+            else:
+                r().prop(sc, "bdx_proj_name")
+                r().prop(sc, "bdx_java_pack")
+                r().prop(sc, "bdx_base_path")
+                r().prop(sc, "bdx_dir_name")
+                r().prop(sc, "bdx_android_sdk")
 
             r().operator("scene.create_bdx_project", text="Create BDX project")
 

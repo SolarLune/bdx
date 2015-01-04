@@ -163,3 +163,16 @@ def libgdx_version():
     _, version, *_ = get_file_line(fp, 20).split("'")
     return version
 
+def internal_java_package():
+    java_texts = [t for t in bpy.data.texts.values() if t.name.endswith(".java")]
+
+    if not java_texts:
+        return None
+
+    for text_line in java_texts[0].lines:
+        line = text_line.body
+        if line.startswith("package "):
+            return line.split(" ")[1][:-1]
+
+def in_packed_bdx_blend():
+    return bpy.data.is_saved and internal_java_package()
