@@ -80,22 +80,20 @@ def instance(dupli_group):
 def mat_tris(mesh):
     """Returns dict: mat_name -> list_of_triangle_indices"""
 
-    if not mesh.materials:
-        return {}
-
     m_ps = {}
 
     idx_tri = 0
     for p in mesh.polygons:
-        mat = mesh.materials[p.material_index]
-        if not mat.name in m_ps:
-            m_ps[mat.name] = []
+        mat = mesh.materials[p.material_index] if mesh.materials else None
+        mat_name = mat.name if mat else "__BDX_DEFAULT"
+        if not mat_name in m_ps:
+            m_ps[mat_name] = []
 
-        m_ps[mat.name].append(idx_tri)
+        m_ps[mat_name].append(idx_tri)
         idx_tri += 1
 
         if len(p.loop_indices) > 3:
-            m_ps[mat.name].append(idx_tri)
+            m_ps[mat_name].append(idx_tri)
             idx_tri += 1
 
     return m_ps
@@ -115,12 +113,9 @@ def srl_models(meshes):
         m_tris = mat_tris(mesh)
         verts = vertices(mesh)
         m_verts = {}
-        if len(m_tris):
-            for m, tris in m_tris.items():
-                m_verts[m] = sum([verts[i * tfs : i * tfs + tfs] for i in tris], [])
-            name_model[mesh.name] = m_verts
-        else:
-            name_model[mesh.name] = {"__BDX_DEFAULT": verts}
+        for m, tris in m_tris.items():
+            m_verts[m] = sum([verts[i * tfs : i * tfs + tfs] for i in tris], [])
+        name_model[mesh.name] = m_verts
 
     return name_model
 
@@ -408,7 +403,7 @@ def srl_objects(objects):
 
 
 def used_materials(objects):
-    return sum([list(o.data.materials) for o in objects 
+    return sum([[m for m in o.data.materials if m] for o in objects 
                 if o.type == "MESH"], [])
 
 def srl_materials(materials):
