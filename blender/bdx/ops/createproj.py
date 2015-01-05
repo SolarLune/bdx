@@ -160,13 +160,37 @@ class CreateBdxProject(bpy.types.Operator):
     def make_current_blend_default(self):
         shutil.move(bpy.data.filepath, j(ut.project_root(), "blender", "game.blend"))
 
-    def unpack_textures(self):
+    def unpack_resources(self):
+        # sort out music from sound
+        def _music(s):
+            head, tail = os.path.split(s.filepath)
+            _, dir_name = os.path.split(head)
+            if dir_name == "music":
+                return True
+            return False
+
+        music = [s.name for s in bpy.data.sounds if _music(s)]
+
+        # dump it all
+        bpy.ops.file.unpack_all()
+
+        # move textures
         proot = ut.project_root()
         bdx = j(proot, "android", "assets", "bdx")
         shutil.rmtree(j(bdx, "textures"))
-        bpy.ops.file.unpack_all()
         unpacked_textures = j(proot, "blender", "textures") 
         shutil.move(unpacked_textures, bdx)
+
+        # move audio
+        audio = ut.listdir_fullpath(j(proot, "blender", "sounds"))
+        for fp in audio:
+            if os.path.basename(fp) in music:
+                adir = "music"
+            else:
+                adir = "sounds"
+            shutil.move(fp, j(bdx, "audio", adir))
+
+        shutil.rmtree(j(proot, "blender", "sounds"))
 
 
     def execute(self, context):
@@ -186,7 +210,7 @@ class CreateBdxProject(bpy.types.Operator):
         if ut.in_packed_bdx_blend():
             self.make_current_blend_default()
             self.open_default_blend()
-            self.unpack_textures()
+            self.unpack_resources()
         else:
             self.open_default_blend()
 

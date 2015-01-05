@@ -1,6 +1,7 @@
 from . import (
         exprun,
-        createproj
+        createproj,
+        packproj
 )
 
-modules = [exprun, createproj]
+modules = [exprun, createproj, packproj]
