@@ -182,15 +182,18 @@ class CreateBdxProject(bpy.types.Operator):
         shutil.move(unpacked_textures, bdx)
 
         # move audio
-        audio = ut.listdir_fullpath(j(proot, "blender", "sounds"))
-        for fp in audio:
-            if os.path.basename(fp) in music:
-                adir = "music"
-            else:
-                adir = "sounds"
-            shutil.move(fp, j(bdx, "audio", adir))
+        unpacked_sounds = j(proot, "blender", "sounds")
+        if os.path.isdir(unpacked_sounds):
+            audio = ut.listdir_fullpath(unpacked_sounds)
+            for fp in audio:
+                if os.path.basename(fp) in music:
+                    adir = "music"
+                else:
+                    adir = "sounds"
+                shutil.move(fp, j(bdx, "audio", adir))
 
-        shutil.rmtree(j(proot, "blender", "sounds"))
+            shutil.rmtree(unpacked_sounds)
+
 
 
     def execute(self, context):
