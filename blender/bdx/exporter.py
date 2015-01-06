@@ -208,17 +208,39 @@ def srl_models_text(texts, fntx_dir):
             data = json.load(f)
         return data
 
+    def mat_name(t):
+        for m in t.materials:
+            if m:
+                return m.name
+        return ""
+
     return {"__FNT_"+t.name: 
-                {"__FNT_"+t.font.name: vertices_text(t, fntx(t))} 
+                {"__FNT_"+mat_name(t)+t.font.name: vertices_text(t, fntx(t))} 
             for t in texts}
 
-def srl_materials_text(fonts):
-    return {"__FNT_"+f.name:
-                {"texture": "__FNT_"+f.name+".png",
-                 "alpha_blend": "ALPHA",
-                 "color": [1, 1, 1],
-                 "opacity": 1} 
-         for f in fonts}
+def srl_materials_text(texts):
+
+    def mat(t):
+        for m in t.materials:
+            if m:
+                return m
+
+    mat_name = lambda m: m.name if m else ""
+
+    name_gmat = {}
+
+    for t in texts:
+        m = mat(t)
+
+        gmat = {"texture": "__FNT_"+t.font.name+".png",
+                "alpha_blend": "ALPHA",
+                "color": list(m.diffuse_color) if m else [1, 1, 1],
+                "opacity": m.alpha if m else 1} 
+
+        name_gmat["__FNT_"+mat_name(m)+t.font.name] = gmat
+
+    return name_gmat
+
 
 def view_plane(camd, winx, winy, xasp, yasp):
     """
@@ -583,7 +605,7 @@ def export(context, filepath, scene_name, exprun):
         generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir);
 
         bdx["models"].update(srl_models_text(ts, fonts_dir))
-        bdx["materials"].update(srl_materials_text(fonts))
+        bdx["materials"].update(srl_materials_text(ts))
 
         # Generate instantiators
         lines = instantiator(objects)

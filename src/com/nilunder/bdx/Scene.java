@@ -54,7 +54,7 @@ public class Scene implements Named{
 	private FileHandle scene;
 
 	private HashMap<String,Model> models;
-	private ArrayList<Texture> textures;
+	private HashMap<String,Texture> textures;
 	private HashMap<String,Material> materials;
 	public Material defaultMaterial;
 	private Model defaultModel;
@@ -97,7 +97,7 @@ public class Scene implements Named{
 		defaultModel = new ModelBuilder().createBox(0.1f, 0.1f, 0.1f, defaultMaterial, Usage.Position | Usage.TextureCoordinates);
 
 		models = new HashMap<String,Model>();
-		textures = new ArrayList<Texture>();
+		textures = new HashMap<String,Texture>();
 		materials = new HashMap<String,Material>();
 		modelToFrame = new HashMap<>();
 
@@ -126,10 +126,13 @@ public class Scene implements Named{
 			Material material = new Material(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
 							
 			if (texName != null){
-				Texture texture = new Texture(Gdx.files.internal("bdx/textures/" + texName));
-				texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
-				textures.add(texture);
+				Texture texture = textures.get(texName);
+				if (texture == null){
+					texture = new Texture(Gdx.files.internal("bdx/textures/" + texName));
+					textures.put(texName, texture);
+				}
 				material.set(TextureAttribute.createDiffuse(texture));
+				texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
 			}
 
 			if (mat.get("alpha_blend").asString().equals("ALPHA")) {
@@ -506,7 +509,7 @@ public class Scene implements Named{
 			for (Model m : models.values()){
 				m.dispose();
 			}
-			for (Texture t : textures){
+			for (Texture t : textures.values()){
 				t.dispose();
 			}
 			init();
