@@ -11,6 +11,7 @@ class PackBdxProject(bpy.types.Operator):
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
 
     def invoke(self, context, event):
+        self.filepath = "packedgame.blend"
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
