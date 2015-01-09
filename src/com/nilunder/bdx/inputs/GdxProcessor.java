@@ -18,13 +18,15 @@ public class GdxProcessor extends InputAdapter{
 
 	public boolean keyDown(int code){
 		Keyboard.Log k = keyboard.codeToLog.get(code);
-		k.hit = Keyboard.t + 1;
+		if (k != null)
+			k.hit = Keyboard.t + 1;
 		return true;
 	}
 
 	public boolean keyUp(int code){
 		Keyboard.Log k = keyboard.codeToLog.get(code);
-		k.up = Keyboard.t + 1;
+		if (k != null)
+			k.up = Keyboard.t + 1;
 		return true;
 	}
 
