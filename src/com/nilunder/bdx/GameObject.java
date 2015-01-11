@@ -9,6 +9,7 @@ import javax.vecmath.Vector4f;
 
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
@@ -404,6 +405,29 @@ public class GameObject implements Named{
 			ca.color.set(r, g, b, a);
 
 		}
+	}
+
+	public int[] blendMode(){
+
+		BlendingAttribute ba = (BlendingAttribute) modelInstance.materials.first().get(BlendingAttribute.Type);
+
+		int[] a = {ba.sourceFunction, ba.destFunction};
+
+		return a;
+
+	}
+
+	public void blendMode(int src, int dest){
+
+		for (Material mat : modelInstance.materials){
+
+			BlendingAttribute ba = (BlendingAttribute) mat.get(BlendingAttribute.Type);
+
+			ba.sourceFunction = src;
+			ba.destFunction = dest;
+
+		}
+
 	}
 
 }
