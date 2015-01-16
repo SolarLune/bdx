@@ -23,6 +23,7 @@ public class Bdx{
 	}
 
 	public static final float TICK_TIME = 1f/60f;
+	public static float time;
 	public static ArrayListScenes scenes;
 	public static Sounds sounds;
 	public static Music music;
@@ -32,6 +33,7 @@ public class Bdx{
 	public static ArrayList<Finger> allocatedFingers;
 
 	public static void init(){
+		time = 0;
 		scenes = new ArrayListScenes();
 		sounds = new Sounds();
 		music = new Music();
@@ -46,6 +48,7 @@ public class Bdx{
 	}
 
 	public static void updateInput(){
+		time += TICK_TIME;
 		++Keyboard.t;
 		fingers.clear();
 		for (Finger f : allocatedFingers){

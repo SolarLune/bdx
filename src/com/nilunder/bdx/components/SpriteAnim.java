@@ -58,7 +58,7 @@ public class SpriteAnim extends Component {
 
 	private HashMap<String, Animation> animations;
 	private Animation active;
-	private Timer tick;
+	private Timer ticker;
 	private Matrix3 uvScale;
 	private boolean rowBased;
 	private Vector2f baseFrame;
@@ -69,7 +69,7 @@ public class SpriteAnim extends Component {
 		super(g);
 		this.rowBased = rowBased;
 		animations = new HashMap<String, Animation>();
-		tick = new Timer();
+		ticker = new Timer();
 		uvScale = new Matrix3();
 		uvScale.idt();
 		speed = 1;
@@ -144,12 +144,12 @@ public class SpriteAnim extends Component {
 
 		if (active != next){
 			active = next;
-			tick.timeLast = 0; // immediate play
+			ticker.done(true); // immediate play
 		}
 
 		if (!active.looping && onLastFrame()){
 			active.reset();
-			tick.timeLast = 0;
+			ticker.done(true);
 		}
 
 	}
@@ -177,9 +177,9 @@ public class SpriteAnim extends Component {
 			active.fps = Math.abs(active.fps);
 			speed = Math.abs(speed);
 
-			tick.delta(1f / nz(active.fps * speed));
+			ticker.interval = 1f / nz(active.fps * speed);
 
-			if (tick.time()){
+			if (ticker.tick()){
 				showNextFrame();
 			}
 		}

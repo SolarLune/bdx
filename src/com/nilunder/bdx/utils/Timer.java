@@ -1,40 +1,73 @@
 package com.nilunder.bdx.utils;
 
-import com.badlogic.gdx.utils.TimeUtils;
-
-
+import com.nilunder.bdx.Bdx;
 
 public class Timer {
 	
-	public long timeLast;
+	public float interval;
 
-	private long delta;
+	private boolean paused;
+	private float delta;
+
+	private float timeLast;
 
 	public Timer(){
 		this(1f);
 	}
 	
-	public Timer(float secondsDelta){
-		delta(secondsDelta);
-		timeLast = 0;
+	public Timer(float interval){
+		set(interval);
 	}
 
-	public void delta(float secondsDelta){
-		delta = (long)(secondsDelta * 1000);
+	public void set(float interval){
+		this.interval = interval;
+		restart();
 	}
 
-	public static double runningTime(){
-
-		return TimeUtils.millis() / 1000d;
-
+	public float time(){
+		if (paused) return delta;
+		return Bdx.time - timeLast;
 	}
 
-	public boolean time(){
-		long timeNow = TimeUtils.millis();
-		if (timeNow - timeLast > delta){
-			timeLast = timeNow;
-			return true;
+	public float timeLeft(){
+		return interval - time();
+	}
+
+	public void restart(){
+		timeLast = Bdx.time;
+	}
+
+	public void pause(){
+		delta = time();
+		paused = true;
+	}
+
+	public boolean paused(){
+		return paused;
+	}
+
+
+	public void resume(){
+		if (paused){
+			timeLast = Bdx.time - delta;
+			paused = false;
 		}
-		return false;
+	}
+
+	public boolean done(){
+		return time() > interval;
+	}
+
+	public void done(boolean done){
+		if (done)
+			timeLast -= interval + 1;
+		else
+			restart();
+	}
+
+	public boolean tick(){
+		boolean d = done();
+		if (d) restart();
+		return d;
 	}
 }
