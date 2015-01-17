@@ -35,6 +35,8 @@ public class GameObject implements Named{
 	public ModelInstance modelInstance;
 	public RigidBody body;
 	
+	public JsonValue props;
+	
 	public ArrayListNamed<GameObject> children;
 	
 	public ArrayList<Component> components;
