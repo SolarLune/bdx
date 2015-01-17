@@ -395,6 +395,7 @@ def srl_objects(objects):
 
         name_object[obj.name] = {
             "type": obj.type,
+            "properties": {n: p.value for n, p in obj.game.properties.items()},
             "transform": transform,
             "parent": obj.parent.name if obj.parent else None,
             "model": mesh_name,
