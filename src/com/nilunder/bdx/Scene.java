@@ -188,6 +188,8 @@ public class Scene implements Named{
 			g.body = Bullet.makeBody(m, trans, gobj.get("physics"));
 			g.body.setUserPointer(g);
 			
+			g.props = gobj.get("properties");
+			
 			g._json = gobj;
 			
 			g.scene = this;
@@ -270,6 +272,8 @@ public class Scene implements Named{
 		g.body.setUserPointer(g);
 		g.scale(gobj.scale());
 		
+		g.props = gobj.props;
+		
 		g.scene = this;
 
 		return g;
@@ -293,6 +297,8 @@ public class Scene implements Named{
 		Matrix3f ori = inst.orientation();
 		ori.mul(g.orientation());
 		g.orientation(ori);
+		
+		g.props = inst.props;
 
 		return g;
 	}
