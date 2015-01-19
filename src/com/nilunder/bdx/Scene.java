@@ -139,6 +139,7 @@ public class Scene implements Named{
 				BlendingAttribute ba = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 				ba.opacity = mat.get("opacity").asFloat();
 				material.set(ba);
+				material.set(FloatAttribute.createAlphaTest(0));
 			}
 
 			materials.put(mat.name, material);
