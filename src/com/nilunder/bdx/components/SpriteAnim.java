@@ -4,13 +4,10 @@ import java.util.*;
 
 import javax.vecmath.*;
 
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.math.*;
-
-import com.bulletphysics.linearmath.MatrixUtil;
 
 import com.nilunder.bdx.*;
 import com.nilunder.bdx.utils.Timer;
@@ -51,6 +48,10 @@ public class SpriteAnim extends Component {
 		public void reset(){
 			playHead = 0;
 		}
+
+		public void playHead(int subimage){playHead = subimage;}
+
+		public int playHead(){return playHead;}
 
 	}
 	
@@ -164,7 +165,24 @@ public class SpriteAnim extends Component {
 
 		frame(active.nextFrame());
 	}
-	
+
+	public void subimage(int frame){
+
+		if (active == null)
+			return;
+
+		active.playHead(frame); // Set the subimage, and
+		ticker.done(true); // Update the sprite immediately
+	}
+
+	public int subimage(){
+
+		if (active == null)
+			return 0;
+
+		return active.playHead();
+	}
+
 	private State play = new State(){
 		private float nz(float n){
 			return n <= 0 ? Float.MIN_VALUE : n;
