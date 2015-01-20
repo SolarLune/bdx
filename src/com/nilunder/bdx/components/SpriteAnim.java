@@ -81,7 +81,7 @@ public class SpriteAnim extends Component {
 
 		baseFrame = modelToFrame.get(g.modelInstance.model);
 		if (baseFrame == null){
-			baseFrame = frame();
+			baseFrame = uvFrame();
 			modelToFrame.put(g.modelInstance.model, baseFrame);
 		}
 
@@ -163,19 +163,19 @@ public class SpriteAnim extends Component {
 		if (active == null)
 			return;
 
-		frame(active.nextFrame());
+		uvFrame(active.nextFrame());
 	}
 
-	public void subimage(int frame){
+	public void frame(int frame){
 
 		if (active == null)
 			return;
 
-		active.playHead(frame); // Set the subimage, and
+		active.playHead(frame); // Set the frame, and
 		ticker.done(true); // Update the sprite immediately
 	}
 
-	public int subimage(){
+	public int frame(){
 
 		if (active == null)
 			return 0;
@@ -203,9 +203,9 @@ public class SpriteAnim extends Component {
 		}
 	};
 
-	private void frame(Vector2f frame){
+	private void uvFrame(Vector2f frame){
 		Matrix3 trans = new Matrix3();
-		Vector2f df = frame();
+		Vector2f df = uvFrame();
 		trans.setToTranslation(frame.x - df.x, frame.y - df.y);
 		
 		Mesh mesh = g.modelInstance.model.meshes.first();
@@ -213,7 +213,7 @@ public class SpriteAnim extends Component {
 
 	}
 
-	private Vector2f frame(){
+	private Vector2f uvFrame(){
 		Mesh mesh = g.modelInstance.model.meshes.first();
 		int n = mesh.getNumVertices();
 		float[] verts = new float[n*5];
@@ -236,7 +236,7 @@ public class SpriteAnim extends Component {
 
 	private void scaleUV(Matrix3 scale){
 		Matrix3 trans = new Matrix3(); trans.idt();
-		Vector2f df = frame();
+		Vector2f df = uvFrame();
 		trans.setToTranslation(df.x, df.y);
 
 		Matrix3 toOrigin = new Matrix3(trans);
