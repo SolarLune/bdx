@@ -49,7 +49,7 @@ public class SpriteAnim extends Component {
 			playHead = 0;
 		}
 
-		public void playHead(int subimage){playHead = subimage;}
+		public void playHead(int frame){playHead = frame;}
 
 		public int playHead(){return playHead;}
 
