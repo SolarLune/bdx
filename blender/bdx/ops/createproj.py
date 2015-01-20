@@ -82,24 +82,38 @@ class CreateBdxProject(bpy.types.Operator):
         sc = bpy.context.scene
         ut.set_file_var(gdx_build_gradle, "appName", "'{}'".format(sc.bdx_proj_name))
 
-    def set_android_sdk_build_tools_version(self):
-        # Get latest available version:
-        def strv_to_intv(strv):
+    def set_android_sdk_version(self):
+        """
+        Gets latest available buildToolsVersion and compileSdkVersion,
+        and sets corresponding lines in android/build.gradle
+        
+        """
+        def get_version_dir_name(path, sort_key, default):
+            if os.path.exists(path):
+                return sorted(os.listdir(path), key=sort_key)[-1]
+            return default
+            
+        def set_version(pattern, version):
+            android_build_gradle_dir = j(ut.project_root(), "android", "build.gradle")
+            new_line = '    ' + pattern + ' ' + version
+            ut.replace_line_containing(android_build_gradle_dir, pattern, new_line)
+            
+        def build_tools_sort_key(strv):
             h, t, o = strv.split('.')
             return int(h) * 100 + int(t) * 10 + int(o)
-        sc = bpy.context.scene
-
-        build_tools_dir = j(sc.bdx_android_sdk, "build-tools")
-
-        if os.path.exists(build_tools_dir):
-            version = sorted(os.listdir(build_tools_dir), key=strv_to_intv)[-1]
-        else:
-            version = "20.0.0"
-
-        # Set corresponding line in android/build.gradle:
-        android_build_gradle = j(ut.project_root(), "android", "build.gradle")
-        new_line = '    buildToolsVersion "'+version+'"'
-        ut.replace_line_containing(android_build_gradle, "buildToolsVersion", new_line)
+            
+        def compile_sdk_sort_key(strv):
+            return int(strv.split('-')[-1])
+            
+        android_sdk_dir = bpy.context.scene.bdx_android_sdk
+        
+        build_tools_dir = j(android_sdk_dir, "build-tools")
+        build_tools_version = get_version_dir_name(build_tools_dir, build_tools_sort_key, "20.0.0")
+        set_version("buildToolsVersion", '"' + build_tools_version + '"')
+        
+        platforms_dir = j(android_sdk_dir, "platforms")
+        compile_sdk_version = get_version_dir_name(platforms_dir, compile_sdk_sort_key, "20")
+        set_version("compileSdkVersion", compile_sdk_version.split('-')[-1])
 
     def replace_app_class(self):
         """Replaces the LibGDX app class with the BDX app class"""
@@ -207,7 +221,7 @@ class CreateBdxProject(bpy.types.Operator):
         self.create_android_assets_bdx()
         self.create_blender_assets()
         self.replace_build_gradle()
-        self.set_android_sdk_build_tools_version()
+        self.set_android_sdk_version()
         self.replace_app_class()
         self.replace_desktop_launcher()
         self.replace_android_launcher()
