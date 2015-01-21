@@ -138,12 +138,26 @@ def angel_code(path_to_fnt):
     
     return ac
 
-def listdir_fullpath(d, ends_with_filter=None):
-    paths = [p.join(d, f) for f in os.listdir(d)]
-    if ends_with_filter:
-        flt = ends_with_filter
-        paths = [f for f in paths if f[-len(flt):] == flt]
-    return paths
+def listdir(path_to_dir, recursive=False, full_path=True, pattern="*", files_only=False, dirs_only=False):
+    ret = []
+
+    fds = [1, 2]
+    if files_only:
+        fds.remove(1)
+    elif dirs_only:
+        fds.remove(2)
+
+    for root_dirs_files in os.walk(path_to_dir):
+        root = root_dirs_files[0]
+        for i in fds:
+            for fd in root_dirs_files[i]:
+                if fnmatch.fnmatch(fd, pattern):
+                    ret.append(p.join(root, fd) if full_path else fd)
+
+        if not recursive:
+            break
+
+    return ret
 
 def gradle_cache_root():
     return p.join(p.expanduser('~'),

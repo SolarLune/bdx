@@ -560,11 +560,11 @@ def generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir):
     os.system(hiero)
 
     # move pngs to textures dir
-    for f in ut.listdir_fullpath(fonts_dir, ".png"):
+    for f in ut.listdir(fonts_dir, pattern="*.png"):
         shutil.move(f, j(textures_dir, "__FNT_" + os.path.basename(f)))
 
     # convert hiero-generated angel code files (.fnt), to proper json files (.fntx)
-    fnts = ut.listdir_fullpath(fonts_dir, ".fnt")
+    fnts = ut.listdir(fonts_dir, pattern="*.fnt")
     for fnt in fnts:
         with open(fnt+'x', 'w') as f:
             json.dump(ut.angel_code(fnt), f)

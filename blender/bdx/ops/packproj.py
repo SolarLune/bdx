@@ -23,8 +23,8 @@ class PackBdxProject(bpy.types.Operator):
         j = os.path.join
 
         audio_dir = j(ut.project_root(), "android", "assets", "bdx", "audio")
-        sounds = ut.listdir_fullpath(j(audio_dir, "sounds"))
-        music = ut.listdir_fullpath(j(audio_dir, "music"))
+        sounds = ut.listdir(j(audio_dir, "sounds"))
+        music = ut.listdir(j(audio_dir, "music"))
 
         file_ext = lambda fp: fp.split('.')[-1]
 

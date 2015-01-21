@@ -59,7 +59,7 @@ class CreateBdxProject(bpy.types.Operator):
         os.mkdir(j(bdx, "audio", "music"))
         os.mkdir(j(bdx, "fonts"))
 
-        for png in ut.listdir_fullpath(ut.gen_root(), ".png"):
+        for png in ut.listdir(ut.gen_root(), pattern="*.png"):
             shutil.copy(png, textures);
 
     def create_blender_assets(self):
@@ -198,7 +198,7 @@ class CreateBdxProject(bpy.types.Operator):
         # move audio
         unpacked_sounds = j(proot, "blender", "sounds")
         if os.path.isdir(unpacked_sounds):
-            audio = ut.listdir_fullpath(unpacked_sounds)
+            audio = ut.listdir(unpacked_sounds)
             for fp in audio:
                 if os.path.basename(fp) in music:
                     adir = "music"
