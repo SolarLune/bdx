@@ -425,6 +425,11 @@ public class GameObject implements Named{
 
 			BlendingAttribute ba = (BlendingAttribute) mat.get(BlendingAttribute.Type);
 
+			if (ba == null){
+				ba = new BlendingAttribute();
+				mat.set(ba);
+			}
+
 			ba.sourceFunction = src;
 			ba.destFunction = dest;
 
