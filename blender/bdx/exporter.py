@@ -634,9 +634,6 @@ def export(context, filepath, scene_name, exprun):
 
             inst = j(ut.src_root(), "inst")
 
-            if not os.path.isdir(inst):
-                os.mkdir(inst)
-
             with open(j(inst, scene.name + ".java"), 'w') as f:
                 f.writelines(lines)
 
