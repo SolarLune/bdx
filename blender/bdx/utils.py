@@ -190,3 +190,10 @@ def internal_java_package():
 
 def in_packed_bdx_blend():
     return bpy.data.is_saved and internal_java_package()
+
+def split_path(path):
+    head, tail = p.split(path)
+    if head:
+        return split_path(head) + [tail]
+    else:
+        return [tail]

@@ -452,22 +452,40 @@ def camera_names(scene):
 def instantiator(objects):
     """
     Returns list of java source lines, which encode an instantiator that
-    binds classes in the root package to exported objects with the same name.
+    binds classes in the root package (and subpackages) to exported objects with the same name.
 
     """
 
-    class_names = {f.split('.')[0] 
-                   for f in os.listdir(ut.src_root()) 
-                   if '.' in f}
+    j = os.path.join
 
-    object_names = {o.name for o in objects}
+    src_root = ut.src_root()
 
-    shared_names = class_names & object_names
+    relevant_dirs = ut.listdir(src_root, dirs_only=True, recursive=True);
+
+    try:
+        relevant_dirs.remove(j(src_root, "inst"))
+    except ValueError:
+        pass
+
+    relevant_dirs.append(src_root)
+
+    relevant_files = sum([ut.listdir(d, pattern="*.java") for d in relevant_dirs], [])
+
+    def path_to_name(path):
+        return os.path.split(path)[1].split('.')[0]
+
+    def path_to_class(path):
+        path = path[:-5] # strip ".java"
+        path = os.path.relpath(path, j(ut.project_root(), "core", "src"))
+        return '.'.join(ut.split_path(path))
+
+    name_class = {path_to_name(fp): path_to_class(fp) for fp in relevant_files}
+
+    shared_names = [o.name for o in objects if o.name in name_class]
 
     if not shared_names:
         return None
 
-    j = os.path.join
 
     with open(j(ut.gen_root(), "Instantiator.java"), 'r') as f:
         lines = f.readlines()
@@ -483,7 +501,7 @@ def instantiator(objects):
     body = []
     for name in shared_names:
         body += [equals.replace("NAME", name),
-                 new.replace("NAME", package_name + "." + name)]
+                 new.replace("NAME", name_class[name])]
 
     new_lines = top + body + bottom
 
