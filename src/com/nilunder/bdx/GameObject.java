@@ -409,6 +409,14 @@ public class GameObject implements Named{
 		}
 	}
 
+	public void color(float r, float g, float b){
+		color(r, g, b, 1);
+	}
+
+	public void color(Vector4f color){
+		color(color.x, color.y, color.z, color.w);
+	}
+
 	public int[] blendMode(){
 
 		BlendingAttribute ba = (BlendingAttribute) modelInstance.materials.first().get(BlendingAttribute.Type);
