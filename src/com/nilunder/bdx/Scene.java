@@ -94,7 +94,7 @@ public class Scene implements Named{
 
 		
 		defaultMaterial = new Material();
-		defaultModel = new ModelBuilder().createBox(0.1f, 0.1f, 0.1f, defaultMaterial, Usage.Position | Usage.TextureCoordinates);
+		defaultModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.TextureCoordinates);
 
 		models = new HashMap<String,Model>();
 		textures = new HashMap<String,Texture>();
@@ -161,17 +161,6 @@ public class Scene implements Named{
 		FAnim.loadActions(json.get("actions"));
 
 		for (JsonValue gobj: json.get("objects")){
-			JsonValue mesh = gobj.get("model");
-			String meshName = mesh.asString();
-			
-			ModelInstance modelInstance = null;
-			
-
-			if (meshName != null){
-				modelInstance = new ModelInstance(models.get(meshName));
-			}
-			
-
 			GameObject g = instantiator.newObject(gobj);
 
 			String type = gobj.get("type").asString();
@@ -181,10 +170,18 @@ public class Scene implements Named{
 			}
 
 			g.name = gobj.name;
-			g.visible = gobj.get("visible").asBoolean();
 
-			g.modelInstance = modelInstance;
-			Mesh m = modelInstance != null ? modelInstance.model.meshes.first() : defaultModel.meshes.first();
+			JsonValue mesh = gobj.get("model");
+			String meshName = mesh.asString();
+			if (meshName != null){
+				g.visible = gobj.get("visible").asBoolean();
+				g.modelInstance = new ModelInstance(models.get(meshName));
+			}else{
+				g.visible = false;
+				g.modelInstance = new ModelInstance(defaultModel);
+			}
+			Mesh m = g.modelInstance.model.meshes.first();
+
 			float[] trans = gobj.get("transform").asFloatArray();
 			g.body = Bullet.makeBody(m, trans, gobj.get("physics"));
 			g.body.setUserPointer(g);
@@ -267,7 +264,7 @@ public class Scene implements Named{
 		
 		g.name = gobj.name;
 		g.visible = gobj.visible;
-		g.modelInstance = gobj.modelInstance == null ? null : new ModelInstance(gobj.modelInstance);
+		g.modelInstance = new ModelInstance(gobj.modelInstance);
 		
 		g.body = Bullet.cloneBody(gobj.body);
 		g.body.setUserPointer(g);
@@ -479,7 +476,7 @@ public class Scene implements Named{
 		float[] mt = new float[16];
 		
 		for (GameObject g : objects){
-			if (g.visible && g.modelInstance != null){
+			if (g.visible){
 				g.body.getMotionState().getWorldTransform(trans);
 				trans.getOpenGLMatrix(mt);
 				g.body.getCollisionShape().getLocalScaling(scale);
