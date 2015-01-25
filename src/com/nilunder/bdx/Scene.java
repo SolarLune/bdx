@@ -1,6 +1,7 @@
 package com.nilunder.bdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -239,7 +240,19 @@ public class Scene implements Named{
 	}
 
 	private void addInstances(){
-		for (GameObject gobj : templates.values()){
+
+		ArrayList<GameObject> temps = new ArrayList<GameObject>(templates.values());
+
+		for (GameObject t : temps){
+
+			if (t.name.contains("init_")){
+
+				Collections.swap(temps, 0, temps.indexOf(t));
+
+			}
+		}
+
+		for (GameObject gobj : temps){
 			boolean onActiveLayer = gobj._json.get("active").asBoolean();
 			if (onActiveLayer && gobj.parent() == null){
 				GameObject g = clone(gobj);
