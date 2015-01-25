@@ -294,8 +294,6 @@ public class GameObject implements Named{
 	}
 	
 	public void scale(float x, float y, float z, boolean updateLocal){
-		if (modelInstance == null) return;
-
 		// Set unit scale
 		Matrix4 t = modelInstance.transform;
 		Matrix4 mat_scale = new Matrix4();
