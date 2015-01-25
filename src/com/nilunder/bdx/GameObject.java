@@ -46,7 +46,7 @@ public class GameObject implements Named{
 	private GameObject parent;
 	private Matrix4f localTransform;
 	private Vector3f localScale;
-	private boolean valid;
+	public boolean valid;
 	
 	
 	public GameObject() {
@@ -286,20 +286,11 @@ public class GameObject implements Named{
 		for (GameObject g : children){
 			g.end();
 		}
-
-		if (parent() != null)
-			parent.children.remove(this); // Gotta remember to remove references to invalid children
-
 		scene.remove(this);
-		valid = false;
 	}
 	
 	public void endNoChildren(){
-		if (parent() != null)
-			parent.children.remove(this);
-
 		scene.remove(this);
-		valid = false;
 	}
 	
 	public void scale(float x, float y, float z, boolean updateLocal){
@@ -452,10 +443,6 @@ public class GameObject implements Named{
 
 		}
 
-	}
-
-	public boolean valid(){
-		return valid;
 	}
 
 }
