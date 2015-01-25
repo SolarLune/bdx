@@ -46,6 +46,7 @@ public class GameObject implements Named{
 	private GameObject parent;
 	private Matrix4f localTransform;
 	private Vector3f localScale;
+	public boolean valid;
 	
 	
 	public GameObject() {
@@ -54,6 +55,7 @@ public class GameObject implements Named{
 		contactManifolds = new ArrayList<PersistentManifold>();
 		components = new ArrayList<Component>();
 		children = new ArrayListNamed<GameObject>();
+		valid = true;
 	}
 
 	public String name(){
@@ -197,8 +199,6 @@ public class GameObject implements Named{
 		}
 	}
 
-
-	
 	private void updateLocalTransform(){
 		localTransform = parent.transform();
 		localTransform.invert();

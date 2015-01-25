@@ -359,8 +359,10 @@ public class Scene implements Named{
 	
 	public void remove(GameObject g){
 		toBeAdded.remove(g);
+		g.parent(null);
 		world.removeRigidBody(g.body);
 		toBeRemoved.add(g);
+		g.valid = false;
 	}
 	
 	public RayHit ray(Vector3f src, Vector3f vec){
