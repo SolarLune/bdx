@@ -160,7 +160,10 @@ class CreateBdxProject(bpy.types.Operator):
 
     def open_default_blend(self):
         fp = j(ut.project_root(), "blender", "game.blend")
-        bpy.ops.wm.open_mainfile(filepath=fp)
+        try:
+            bpy.ops.wm.open_mainfile(filepath=fp)
+        except RuntimeError as e:
+            print(e)
 
     def fix_texture_links(self):
         textures = j(ut.project_root(), "android", "assets", "bdx", "textures")
