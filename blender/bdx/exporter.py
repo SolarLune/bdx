@@ -598,7 +598,17 @@ def export(context, filepath, scene_name, exprun):
     global scene;
     scene = bpy.data.scenes[scene_name] if scene_name else context.scene
 
-    objects = scene.objects
+    objects = list(scene.objects)
+
+    def instance_referenced(objects):
+        instances = [o for o in objects if o.dupli_group]
+        expanded = sum([list(o.dupli_group.objects) for o in instances], [])
+
+        if expanded:
+            return expanded + instance_referenced(expanded)
+        return []
+
+    objects = set(objects + instance_referenced(objects))
 
     ts = texts(objects)
     fonts = used_fonts(ts)
