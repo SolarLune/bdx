@@ -283,7 +283,7 @@ public class GameObject implements Named{
 	}
 	
 	public void end(){
-		for (GameObject g : children){
+		for (GameObject g : new ArrayList<GameObject>(children)){
 			g.end();
 		}
 		scene.remove(this);
