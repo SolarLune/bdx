@@ -288,38 +288,36 @@ public class Scene implements Named{
 		return g;
 	}
 
-	private GameObject cloneReal(GameObject gobj){
+	private GameObject clone(GameObject gobj){
+		String instance = gobj._json.get("instance").asString();
+
+		GameObject inst = gobj;
+		if (instance != null)
+			gobj = templates.get(instance);
+
 		GameObject g = cloneNoChildren(gobj);
-		
+
 		for (GameObject c : gobj.children){
 			GameObject nc = clone(c);
 			nc.parent(g);
 		}
-		
-		return g;
-	}
 
-	private GameObject cloneInstance(GameObject inst, GameObject real){
-		GameObject g = cloneReal(real);
+		if (instance != null){
+			g.position(inst.position());
+			Matrix3f ori = inst.orientation();
+			ori.mul(g.orientation());
+			g.orientation(ori);
 
-		g.position(inst.position());
-		Matrix3f ori = inst.orientation();
-		ori.mul(g.orientation());
-		g.orientation(ori);
-		
-		g.props = inst.props;
+			g.props = inst.props;
 
-		return g;
-	}
-	
-	private GameObject clone(GameObject gobj){
-		String inst = gobj._json.get("instance").asString();
-
-		if (inst != null){
-			return cloneInstance(gobj, templates.get(inst));
+			for (GameObject c : inst.children){
+				GameObject nc = clone(c);
+				nc.parent(g);
+			}
 		}
 
-		return cloneReal(gobj);
+		return g;
+
 	}
 	
 	private void initGameObject(GameObject gobj){
