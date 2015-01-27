@@ -1,6 +1,7 @@
 package com.nilunder.bdx;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
@@ -35,7 +36,7 @@ public class GameObject implements Named{
 	public ModelInstance modelInstance;
 	public RigidBody body;
 	
-	public JsonValue props;
+	public HashMap<String, JsonValue> props;
 	
 	public ArrayListNamed<GameObject> children;
 	

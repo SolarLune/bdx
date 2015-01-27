@@ -187,7 +187,10 @@ public class Scene implements Named{
 			g.body = Bullet.makeBody(m, trans, gobj.get("physics"));
 			g.body.setUserPointer(g);
 			
-			g.props = gobj.get("properties");
+			g.props = new HashMap<String, JsonValue>();
+			for (JsonValue prop : gobj.get("properties")){
+				g.props.put(prop.name, prop);
+			}
 			
 			g._json = gobj;
 			
@@ -308,7 +311,8 @@ public class Scene implements Named{
 			ori.mul(g.orientation());
 			g.orientation(ori);
 
-			g.props = inst.props;
+			g.props = new HashMap<String, JsonValue>(g.props);
+			g.props.putAll(inst.props);
 
 			for (GameObject c : inst.children){
 				GameObject nc = clone(c);
