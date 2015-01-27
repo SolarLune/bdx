@@ -281,7 +281,20 @@ public class GameObject implements Named{
 
 		return totalContacts != 0 ? force / totalContacts : 0;
 	}
-	
+
+	public void visible(boolean visible){
+
+		for (GameObject g : children){
+			g.visible(visible);
+		}
+		this.visible = visible;
+	}
+
+	public void visibleNoChildren(boolean visible){
+		this.visible = visible;
+	}
+
+
 	public void end(){
 		for (GameObject g : children){
 			g.end();
