@@ -615,6 +615,7 @@ def export(context, filepath, scene_name, exprun):
 
     bdx = {
         "name": scene.name,
+        "gravity": scene.game_settings.physics_gravity,
         "models": srl_models(used_meshes(objects)),
         "objects": srl_objects(objects),
         "materials": srl_materials(used_materials(objects)),

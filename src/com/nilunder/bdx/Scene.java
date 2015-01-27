@@ -108,9 +108,6 @@ public class Scene implements Named{
 		DefaultCollisionConfiguration collisionConfiguration = new DefaultCollisionConfiguration();
 		SequentialImpulseConstraintSolver solver = new SequentialImpulseConstraintSolver();
 		CollisionDispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
-		
-		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-		world.setGravity(new Vector3f(0f, 0f, -10f));
 
 		toBeAdded = new ArrayList<GameObject>();
 		toBeRemoved = new ArrayList<GameObject>();
@@ -120,6 +117,9 @@ public class Scene implements Named{
 		JsonValue json = new JsonReader().parse(scene);
 		name = json.get("name").asString();
 		
+		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+		world.setGravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
+
 		for (JsonValue mat : json.get("materials")){
 			String texName = mat.get("texture").asString();
 
