@@ -28,7 +28,6 @@ public class GameObject implements Named{
 	public JsonValue _json;
 	
 	public String name;
-	public boolean visible;
 	public ArrayListNamed<GameObject> touchingObjects;
 	public ArrayListNamed<GameObject> touchingObjectsLast;
 	public ArrayList<PersistentManifold> contactManifolds;
@@ -46,6 +45,7 @@ public class GameObject implements Named{
 	private GameObject parent;
 	private Matrix4f localTransform;
 	private Vector3f localScale;
+	private boolean visible;
 	public boolean valid;
 	
 	
@@ -280,6 +280,10 @@ public class GameObject implements Named{
 		}
 
 		return totalContacts != 0 ? force / totalContacts : 0;
+	}
+
+	public boolean visible(){
+		return visible;
 	}
 
 	public void visible(boolean visible){
