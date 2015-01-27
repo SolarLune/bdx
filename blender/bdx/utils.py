@@ -197,3 +197,20 @@ def split_path(path):
         return split_path(head) + [tail]
     else:
         return [tail]
+
+def save_internal_java_files(to_dir, overwrite=False):
+    saved = []
+    java_texts = [t for t in bpy.data.texts.values() if t.name.endswith(".java")]
+
+    for t in java_texts:
+        fp = p.join(to_dir, t.name)
+
+        if not overwrite and p.exists(fp):
+            continue
+
+        saved.append(fp)
+
+        with open(fp, 'w') as f:
+            f.write(t.as_string())
+
+    return saved

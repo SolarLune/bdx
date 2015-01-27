@@ -27,8 +27,9 @@ class BdxProject(bpy.types.Panel):
         if ut.in_bdx_project():
             r().label(text="In BDX project: " + ut.project_name())
 
-            r().operator("object.bdxexprun", text="Export and Run")
+            r().operator("object.bdxexprun")
             r().operator("object.packproj")
+            r().operator("object.externjava")
 
         else:
             sc = context.scene

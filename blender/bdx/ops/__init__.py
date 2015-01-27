@@ -1,7 +1,8 @@
 from . import (
         exprun,
         createproj,
-        packproj
+        packproj,
+        externjava
 )
 
-modules = [exprun, createproj, packproj]
+modules = [exprun, createproj, packproj, externjava]
