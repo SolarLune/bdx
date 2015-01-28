@@ -45,6 +45,8 @@ import com.nilunder.bdx.components.*;
 public class Scene implements Named{
 	public static HashMap<String, Instantiator> instantiators;
 
+	public JsonValue json;
+
 	public String name;
 	public LinkedListNamed<GameObject> objects;
 	public Camera camera;
@@ -114,7 +116,7 @@ public class Scene implements Named{
 		objects = new LinkedListNamed<GameObject>();
 		templates = new HashMap<String, GameObject>();
 		
-		JsonValue json = new JsonReader().parse(scene);
+		json = new JsonReader().parse(scene);
 		name = json.get("name").asString();
 		
 		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
@@ -148,7 +150,7 @@ public class Scene implements Named{
 		
 		
 		for (JsonValue model: json.get("models")){
-			models.put(model.name, createModel(model.name, model));
+			models.put(model.name, createModel(model));
 		}
 		
 		
@@ -372,10 +374,8 @@ public class Scene implements Named{
 	
 	public void remove(GameObject g){
 		toBeAdded.remove(g);
-		g.parent(null);
 		world.removeRigidBody(g.body);
 		toBeRemoved.add(g);
-		g.valid = false;
 	}
 	
 	public RayHit ray(Vector3f src, Vector3f vec){
@@ -398,13 +398,14 @@ public class Scene implements Named{
 	}
 	
 	
-	private Model createModel(String name, JsonValue model) {
+	public Model createModel(JsonValue model) {
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
 		int part_idx = 0;
 		short idx = 0;
 		for (JsonValue mat : model){
-			MeshPartBuilder mpb = builder.part(name + part_idx, GL20.GL_TRIANGLES, Usage.Position | Usage.TextureCoordinates, materials.get(mat.name));
+			MeshPartBuilder mpb = builder.part(model.name, GL20.GL_TRIANGLES,
+					Usage.Position | Usage.TextureCoordinates, materials.get(mat.name));
 			float verts[] = mat.asFloatArray();
 			mpb.vertex(verts);
 			int len = verts.length / 5;

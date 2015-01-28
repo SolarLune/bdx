@@ -8,10 +8,8 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonValue;
@@ -47,7 +45,8 @@ public class GameObject implements Named{
 	private Matrix4f localTransform;
 	private Vector3f localScale;
 	private boolean visible;
-	public boolean valid;
+	private boolean valid;
+	private Model uniqueModel;
 	
 	
 	public GameObject() {
@@ -58,6 +57,7 @@ public class GameObject implements Named{
 		children = new ArrayListNamed<GameObject>();
 		valid = true;
 	}
+
 
 	public String name(){
 		return name;
@@ -292,7 +292,7 @@ public class GameObject implements Named{
 		for (GameObject g : children){
 			g.visible(visible);
 		}
-		this.visible = visible;
+		visibleNoChildren(visible);
 	}
 
 	public void visibleNoChildren(boolean visible){
@@ -304,11 +304,19 @@ public class GameObject implements Named{
 		for (GameObject g : new ArrayList<GameObject>(children)){
 			g.end();
 		}
-		scene.remove(this);
+		endNoChildren();
 	}
 	
 	public void endNoChildren(){
+		parent(null);
+		valid = false;
+		if (uniqueModel != null)
+			uniqueModel.dispose();
 		scene.remove(this);
+	}
+
+	public boolean valid(){
+		return valid;
 	}
 	
 	public void scale(float x, float y, float z, boolean updateLocal){
@@ -459,6 +467,15 @@ public class GameObject implements Named{
 
 		}
 
+	}
+
+	public void useUniqueMesh(){
+		String modelName = modelInstance.model.meshParts.get(0).id;
+		JsonValue modelData = scene.json.get("models").get(modelName);
+		uniqueModel = scene.createModel(modelData);
+		ModelInstance mi = new ModelInstance(uniqueModel);
+		mi.transform.set(modelInstance.transform);
+		modelInstance = mi;
 	}
 
 }
