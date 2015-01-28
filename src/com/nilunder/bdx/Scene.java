@@ -175,10 +175,10 @@ public class Scene implements Named{
 			JsonValue mesh = gobj.get("model");
 			String meshName = mesh.asString();
 			if (meshName != null){
-				g.visible = gobj.get("visible").asBoolean();
+				g.visibleNoChildren(gobj.get("visible").asBoolean());
 				g.modelInstance = new ModelInstance(models.get(meshName));
 			}else{
-				g.visible = false;
+				g.visibleNoChildren(false);
 				g.modelInstance = new ModelInstance(defaultModel);
 			}
 			Mesh m = g.modelInstance.model.meshes.first();
@@ -274,7 +274,7 @@ public class Scene implements Named{
 		g._json = gobj._json;
 		
 		g.name = gobj.name;
-		g.visible = gobj.visible;
+		g.visibleNoChildren(gobj.visible());
 		g.modelInstance = new ModelInstance(gobj.modelInstance);
 		
 		g.body = Bullet.cloneBody(gobj.body);
@@ -487,7 +487,7 @@ public class Scene implements Named{
 		float[] mt = new float[16];
 		
 		for (GameObject g : objects){
-			if (g.visible){
+			if (g.visible()){
 				g.body.getMotionState().getWorldTransform(trans);
 				trans.getOpenGLMatrix(mt);
 				g.body.getCollisionShape().getLocalScaling(scale);

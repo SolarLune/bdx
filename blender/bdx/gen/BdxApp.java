@@ -56,7 +56,7 @@ public class BdxApp implements ApplicationListener {
 		Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 		modelBatch.begin(scene.cam);
 		for (GameObject g : scene.objects){
-			if (g.visible && g.modelInstance != null){
+			if (g.visible() && g.modelInstance != null){
 				modelBatch.render(g.modelInstance);
 			}
 		}
