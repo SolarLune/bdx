@@ -478,4 +478,10 @@ public class GameObject implements Named{
 		modelInstance = mi;
 	}
 
+	public String toString(){
+
+		return name + " <" + getClass().getName() + "> @" + Integer.toHexString(hashCode());
+
+	}
+
 }
