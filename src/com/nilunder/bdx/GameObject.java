@@ -24,7 +24,7 @@ import com.bulletphysics.linearmath.Transform;
 import com.nilunder.bdx.utils.*;
 
 public class GameObject implements Named{
-	public JsonValue _json;
+	public JsonValue json;
 	
 	public String name;
 	public ArrayListNamed<GameObject> touchingObjects;

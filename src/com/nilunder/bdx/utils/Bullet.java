@@ -105,7 +105,7 @@ public class Bullet {
 
 	public static RigidBody cloneBody(RigidBody body){
 		GameObject gobj = (GameObject)body.getUserPointer();
-		JsonValue physics = gobj._json.get("physics");
+		JsonValue physics = gobj.json.get("physics");
 		float mass = physics.get("mass").asFloat();
 		
 		Vector3f inertia = new Vector3f();

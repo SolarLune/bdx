@@ -194,7 +194,7 @@ public class Scene implements Named{
 				g.props.put(prop.name, prop);
 			}
 			
-			g._json = gobj;
+			g.json = gobj;
 			
 			g.scene = this;
 
@@ -215,7 +215,7 @@ public class Scene implements Named{
 		camera = cameras.get(0);
 
 		cam = new PerspectiveCamera();
-		cam.projection.set(camera._json.get("camera").get("projection").asFloatArray());
+		cam.projection.set(camera.json.get("camera").get("projection").asFloatArray());
 
 		ArrayList<GameObject> rootParents = new ArrayList<GameObject>();
 
@@ -233,7 +233,7 @@ public class Scene implements Named{
 
 	private void hookParentChild(){
 		for (GameObject g : templates.values()){
-			String parentName = g._json.get("parent").asString();
+			String parentName = g.json.get("parent").asString();
 			if (parentName != null){
 				g.parent(templates.get(parentName));
 			}
@@ -253,7 +253,7 @@ public class Scene implements Named{
 		}
 
 		for (GameObject gobj : temps){
-			boolean onActiveLayer = gobj._json.get("active").asBoolean();
+			boolean onActiveLayer = gobj.json.get("active").asBoolean();
 			if (onActiveLayer && gobj.parent() == null){
 				GameObject g = clone(gobj);
 				addToWorld(g);
@@ -265,7 +265,7 @@ public class Scene implements Named{
 	
 
 	private GameObject cloneNoChildren(GameObject gobj){
-		GameObject g = instantiator.newObject(gobj._json);
+		GameObject g = instantiator.newObject(gobj.json);
 
 		if (g instanceof Camera){
 			Camera c = (Camera)g;
@@ -276,7 +276,7 @@ public class Scene implements Named{
 			t.font = tt.font;
 		}
 
-		g._json = gobj._json;
+		g.json = gobj.json;
 		
 		g.name = gobj.name;
 		g.visibleNoChildren(gobj.visible());
@@ -294,7 +294,7 @@ public class Scene implements Named{
 	}
 
 	private GameObject clone(GameObject gobj){
-		String instance = gobj._json.get("instance").asString();
+		String instance = gobj.json.get("instance").asString();
 
 		GameObject inst = gobj;
 		if (instance != null)
@@ -338,7 +338,7 @@ public class Scene implements Named{
 
 
 	private void addToWorld(GameObject gobj){
-		boolean collisionEnabled = !gobj._json.get("physics").get("body").asString().equals("NO_COLLISION");
+		boolean collisionEnabled = !gobj.json.get("physics").get("body").asString().equals("NO_COLLISION");
 		if (collisionEnabled)
 			world.addRigidBody(gobj.body);
 		toBeAdded.add(gobj);

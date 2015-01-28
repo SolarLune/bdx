@@ -42,7 +42,7 @@ abstract class Pointer {
 	}
 
 	public Vector3f rayDirection(){
-		String type = scene.camera._json.get("camera").get("type").asString();
+		String type = scene.camera.json.get("camera").get("type").asString();
 		if (type.equals("ORTHO")){
 			return scene.camera.axis(2).negated();
 		}
