@@ -23,11 +23,17 @@ public class Random{
 	}
 
 	public static Vector3f direction(){
+		Vector3f vec = vector();
+		vec.normalize();
+		return vec;
+	}
+
+	public static Vector3f vector(){
 		ArrayList<Integer> ints = new ArrayList<Integer>();
 		ints.add(1);
 		ints.add(-1);
 		return new Vector3f(
-				Random.random() * Random.choice(ints), 
+				Random.random() * Random.choice(ints),
 				Random.random() * Random.choice(ints),
 				Random.random() * Random.choice(ints));
 	}
