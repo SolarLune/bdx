@@ -68,6 +68,7 @@ public class SpriteAnim extends Component {
 	
 	public SpriteAnim(GameObject g, int frameWidth, int frameHeight, boolean rowBased){
 		super(g);
+		g.useUniqueMesh();
 		this.rowBased = rowBased;
 		animations = new HashMap<String, Animation>();
 		ticker = new Timer();
