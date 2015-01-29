@@ -66,9 +66,10 @@ public class SpriteAnim extends Component {
 	private Vector2f frameDim;
 
 	
-	public SpriteAnim(GameObject g, int frameWidth, int frameHeight, boolean rowBased){
+	public SpriteAnim(GameObject g, int frameWidth, int frameHeight, boolean rowBased, boolean uniqueMesh){
 		super(g);
-		g.useUniqueMesh();
+		if (uniqueMesh)
+			g.useUniqueMesh();
 		this.rowBased = rowBased;
 		animations = new HashMap<String, Animation>();
 		ticker = new Timer();
@@ -96,7 +97,7 @@ public class SpriteAnim extends Component {
 	}
 
 	public SpriteAnim(GameObject g, int frameWidth, int frameHeight){
-		this(g, frameWidth, frameHeight, true);
+		this(g, frameWidth, frameHeight, true, true);
 	}
 
 	public void add(String name, int index, int[] frames){
