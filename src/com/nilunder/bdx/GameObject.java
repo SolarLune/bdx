@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.JsonValue;
 
 import com.bulletphysics.collision.narrowphase.PersistentManifold;
 import com.bulletphysics.collision.narrowphase.ManifoldPoint;
+import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.shapes.CollisionShape;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.MatrixUtil;
@@ -298,7 +299,30 @@ public class GameObject implements Named{
 	public void visibleNoChildren(boolean visible){
 		this.visible = visible;
 	}
+	
+	public boolean ghost(){
+		int noContact = body.getCollisionFlags() & CollisionFlags.NO_CONTACT_RESPONSE;
+		return noContact != 0 ? true : false;
+	}
 
+	public void ghost(boolean ghost){
+		for (GameObject g : children){
+			g.ghost(ghost);
+		}
+		ghostNoChildren(ghost);
+	}
+
+	public void ghostNoChildren(boolean ghost){
+		int flags = body.getCollisionFlags();
+		int noContact = CollisionFlags.NO_CONTACT_RESPONSE;
+		
+		if (ghost)
+			flags |= noContact;
+		else
+			flags &= ~noContact;
+			
+		body.setCollisionFlags(flags);
+	}
 
 	public void end(){
 		for (GameObject g : new ArrayList<GameObject>(children)){
