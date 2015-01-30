@@ -510,6 +510,8 @@ public class Scene implements Named{
 		}
 
 		for (GameObject g : objects){
+			if(!g.valid())
+				continue;
 			for (Component c : g.components){
 				if (c.state != null)
 					c.state.main();
