@@ -2,6 +2,8 @@ package com.nilunder.bdx;
 
 import java.util.*;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.ArrayListNamed;
@@ -20,6 +22,15 @@ public class Bdx{
 			if (scene.objects == null)
 				scene.init();
 		}
+		public ArrayList<String> available(){
+			ArrayList<String> scenes = new ArrayList<String>();
+			FileHandle[] files = Gdx.files.internal("bdx/scenes/").list("bdx");
+			for (FileHandle file : files){
+				scenes.add(file.name().replace(".bdx", ""));
+			}
+			return scenes;
+		}
+
 	}
 
 	public static final float TICK_TIME = 1f/60f;
