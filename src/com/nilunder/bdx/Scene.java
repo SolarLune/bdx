@@ -174,8 +174,7 @@ public class Scene implements Named{
 
 			g.name = gobj.name;
 
-			JsonValue mesh = gobj.get("model");
-			String meshName = mesh.asString();
+			String meshName = gobj.get("mesh_name").asString();
 			if (meshName != null){
 				g.visibleNoChildren(gobj.get("visible").asBoolean());
 				g.modelInstance = new ModelInstance(models.get(meshName));
@@ -183,10 +182,10 @@ public class Scene implements Named{
 				g.visibleNoChildren(false);
 				g.modelInstance = new ModelInstance(defaultModel);
 			}
-			Mesh m = g.modelInstance.model.meshes.first();
+			Mesh mesh = g.modelInstance.model.meshes.first();
 
 			float[] trans = gobj.get("transform").asFloatArray();
-			g.body = Bullet.makeBody(m, trans, gobj.get("physics"));
+			g.body = Bullet.makeBody(mesh, trans, gobj.get("physics"));
 			g.body.setUserPointer(g);
 			
 			g.props = new HashMap<String, JsonValue>();
@@ -338,7 +337,7 @@ public class Scene implements Named{
 
 
 	private void addToWorld(GameObject gobj){
-		boolean collisionEnabled = !gobj.json.get("physics").get("body").asString().equals("NO_COLLISION");
+		boolean collisionEnabled = !gobj.json.get("physics").get("body_type").asString().equals("NO_COLLISION");
 		if (collisionEnabled)
 			world.addRigidBody(gobj.body);
 		toBeAdded.add(gobj);

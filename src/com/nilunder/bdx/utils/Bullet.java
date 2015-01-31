@@ -68,12 +68,12 @@ public class Bullet {
 	}
 	
 	public static RigidBody makeBody(Mesh mesh, float[] glTransform, JsonValue physics){
-		String bounds = physics.get("bounds").asString();
+		String bounds = physics.get("bounds_type").asString();
 		
 		CollisionShape shape = makeShape(mesh, bounds);
 		
 		float mass = physics.get("mass").asFloat();
-		String body_type = physics.get("body").asString();
+		String bodyType = physics.get("body_type").asString();
 		
 		Vector3f inertia = new Vector3f();
 		shape.calculateLocalInertia(mass, inertia);
@@ -86,14 +86,14 @@ public class Bullet {
 		
 		RigidBody body = new RigidBody(ci);
 		
-		if (body_type.equals("STATIC")){
+		if (bodyType.equals("STATIC")){
 			body.setCollisionFlags(CollisionFlags.KINEMATIC_OBJECT);
 			//body.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
-		}else if (body_type.equals("DYNAMIC")){
+		}else if (bodyType.equals("DYNAMIC")){
 			body.setAngularFactor(0f);
 		}
 		
-		if (body_type.equals("SENSOR") || physics.get("ghost").asBoolean()){
+		if (bodyType.equals("SENSOR") || physics.get("ghost").asBoolean()){
 			body.setCollisionFlags(CollisionFlags.NO_CONTACT_RESPONSE);
 		}
 		
@@ -114,7 +114,7 @@ public class Bullet {
 		CollisionShape shape;
 
 		if (gobj.modelInstance != null){
-			shape = makeShape(gobj.modelInstance.model.meshes.first(), physics.get("bounds").asString());
+			shape = makeShape(gobj.modelInstance.model.meshes.first(), physics.get("bounds_type").asString());
 		}else{
 			shape = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
 		}
