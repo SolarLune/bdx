@@ -68,9 +68,9 @@ public class Bullet {
 	}
 	
 	public static RigidBody makeBody(Mesh mesh, float[] glTransform, JsonValue physics){
-		String bounds = physics.get("bounds_type").asString();
+		String boundsType = physics.get("bounds_type").asString();
 		
-		CollisionShape shape = makeShape(mesh, bounds);
+		CollisionShape shape = makeShape(mesh, boundsType);
 		
 		float mass = physics.get("mass").asFloat();
 		String bodyType = physics.get("body_type").asString();
