@@ -3,7 +3,6 @@ package com.nilunder.bdx;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 
 import javax.vecmath.*;
 
@@ -19,11 +18,9 @@ import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
-import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
@@ -397,7 +394,47 @@ public class Scene implements Named{
 		return rh;
 	}
 	
-	
+	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec, boolean includeAll){
+
+		Vector3f startPos = new Vector3f(src);
+		Vector3f dist = new Vector3f(vec);
+
+		ArrayList<RayHit> hits = new ArrayList<RayHit>();
+		ArrayList<GameObject> hitObjects = new ArrayList<GameObject>();
+
+		boolean finished = false;
+
+		while (!finished){
+
+			RayHit ray = ray(startPos, dist);
+
+			if (ray != null){
+
+				if (!hitObjects.contains(ray.object) || includeAll) {
+
+					hits.add(ray);
+					hitObjects.add(ray.object);
+
+				}
+
+				Vector3f delta = ray.position.minus(startPos);
+				startPos.add(delta);
+				dist.sub(delta);
+
+			}
+			else
+				finished = true;
+
+		}
+
+		return hits;
+
+	}
+
+	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec) {
+		return xray(src, vec, false);
+	}
+
 	public Model createModel(JsonValue model) {
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
