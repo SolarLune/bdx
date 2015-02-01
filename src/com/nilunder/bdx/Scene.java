@@ -59,7 +59,7 @@ public class Scene implements Named{
 	public Material defaultMaterial;
 	private Model defaultModel;
 	public DiscreteDynamicsWorld world;
-	
+
 	private ArrayList<GameObject> toBeAdded;
 	private ArrayList<GameObject> toBeRemoved;
 
@@ -82,6 +82,14 @@ public class Scene implements Named{
 		}else{
 			this.instantiator = new Instantiator();
 		}
+	}
+
+	public Vector3f gravity(){
+		return world.getGravity(new Vector3f());
+	}
+
+	public void gravity(Vector3f gravity){
+		world.setGravity(gravity);
 	}
 
 	public String name(){
@@ -117,7 +125,7 @@ public class Scene implements Named{
 		name = json.get("name").asString();
 		
 		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-		world.setGravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
+		gravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
 
 		for (JsonValue mat : json.get("materials")){
 			String texName = mat.get("texture").asString();
