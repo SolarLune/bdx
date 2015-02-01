@@ -192,7 +192,15 @@ public class GameObject implements Named{
 		t.set(mat);
 		
 		body.setWorldTransform(t);
-		body.getMotionState().setWorldTransform(t); // required for static objects
+
+		// required for static objects:
+		body.getMotionState().setWorldTransform(t); 
+		if (body.isInWorld() && body.isStaticOrKinematicObject()){
+			scene.world.updateSingleAabb(body);
+			for (GameObject g : touchingObjects)
+				g.body.activate();
+		}
+		//
 		
 		updateChildTransforms();
 
