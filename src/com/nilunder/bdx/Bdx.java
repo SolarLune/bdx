@@ -22,6 +22,10 @@ public class Bdx{
 			if (scene.objects == null)
 				scene.init();
 		}
+		public Scene set(int index, Scene scene){
+			add(index, scene);
+			return remove(index + 1);
+		}
 		public ArrayList<String> available(){
 			ArrayList<String> scenes = new ArrayList<String>();
 			FileHandle[] files = Gdx.files.internal("bdx/scenes/").list("bdx");
