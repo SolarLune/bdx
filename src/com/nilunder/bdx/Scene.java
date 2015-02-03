@@ -271,15 +271,6 @@ public class Scene implements Named{
 	private GameObject cloneNoChildren(GameObject gobj){
 		GameObject g = instantiator.newObject(gobj.json);
 
-		if (g instanceof Camera){
-			Camera c = (Camera)g;
-			Camera cc = (Camera)gobj;
-		}else if (g instanceof Text){
-			Text t = (Text)g;
-			Text tt = (Text)gobj;
-			t.font = tt.font;
-		}
-
 		g.json = gobj.json;
 		
 		g.name = gobj.name;
@@ -293,6 +284,16 @@ public class Scene implements Named{
 		g.props = gobj.props;
 		
 		g.scene = this;
+
+		if (g instanceof Camera){
+			Camera c = (Camera)g;
+			Camera cc = (Camera)gobj;
+		}else if (g instanceof Text){
+			Text t = (Text)g;
+			Text tt = (Text)gobj;
+			t.font = tt.font;
+			t.useUniqueMesh();
+		}
 
 		return g;
 	}
