@@ -23,10 +23,8 @@ public class Bdx{
 				scene.init();
 		}
 		public Scene set(int index, Scene scene){
-			super.add(index, scene);
-			Scene old = remove(index + 1);
-			if (scene.objects == null)
-				scene.init();
+			Scene old = remove(index);
+			add(index, scene);
 			return old;
 		}
 		public ArrayList<String> available(){
