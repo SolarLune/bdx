@@ -48,7 +48,7 @@ public class GameObject implements Named{
 	private boolean visible;
 	private boolean valid;
 	private Model uniqueModel;
-	
+
 	
 	public GameObject() {
 		touchingObjects = new ArrayListNamed<GameObject>();
