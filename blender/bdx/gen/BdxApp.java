@@ -40,15 +40,21 @@ public class BdxApp implements ApplicationListener {
 
 	@Override
 	public void render() {
+		Bdx.profiler.start();
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		Bdx.profiler.stop("graphics");
 
 		Bdx.updateInput();
+		Bdx.profiler.stop("input");
 
 		for (Scene s : (ArrayListNamed<Scene>)Bdx.scenes.clone()){
 			s.update();
+			Bdx.profiler.start();
 			renderScene(s);
+			Bdx.profiler.stop("render");
 		}
+		Bdx.profiler.update();
 	}
 	
 	

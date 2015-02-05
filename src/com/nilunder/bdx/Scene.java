@@ -623,19 +623,24 @@ public class Scene implements Named{
 		
 		if (!paused){
 
+			Bdx.profiler.start();
 			runObjectLogic();			
+			Bdx.profiler.stop("logic");
 			
 			updateVisuals();
+			Bdx.profiler.stop("visuals");
 			
 			updateCamera();
+			Bdx.profiler.stop("camera");
 			
 			world.stepSimulation(Bdx.TICK_TIME, 0);
+			Bdx.profiler.stop("worldStep");
 			
 			updateChildBodies();
+			Bdx.profiler.stop("children");
 			
 			detectCollisions();
-	
-
+			Bdx.profiler.stop("collisions");
 			
 		}
 

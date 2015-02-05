@@ -7,6 +7,7 @@ import com.badlogic.gdx.files.FileHandle;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.ArrayListNamed;
+import com.nilunder.bdx.utils.Profiler;
 
 public class Bdx{
 
@@ -40,6 +41,7 @@ public class Bdx{
 
 	public static final float TICK_TIME = 1f/60f;
 	public static float time;
+	public static Profiler profiler;
 	public static ArrayListScenes scenes;
 	public static Sounds sounds;
 	public static Music music;
@@ -50,6 +52,7 @@ public class Bdx{
 
 	public static void init(){
 		time = 0;
+		profiler = new Profiler();
 		scenes = new ArrayListScenes();
 		sounds = new Sounds();
 		music = new Music();
