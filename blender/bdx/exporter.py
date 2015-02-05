@@ -408,7 +408,9 @@ def srl_objects(objects):
                 "mass": 0 if static(obj) else obj.game.mass,
                 "friction": obj.active_material.physics.friction if obj.active_material else 0.5,
                 "restitution": obj.active_material.physics.elasticity if obj.active_material else 0,
-                "ghost": obj.game.use_ghost
+                "ghost": obj.game.use_ghost,
+                "group": sum([2**i for i, v in enumerate(obj.game.collision_group) if v]),
+                "mask": sum([2**i for i, v in enumerate(obj.game.collision_mask) if v])
             }
         }
 

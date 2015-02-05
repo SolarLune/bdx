@@ -177,6 +177,7 @@ public class Scene implements Named{
 				t.font = fonts.get(gobj.get("font").asString());
 			}
 
+
 			g.name = gobj.name;
 
 			String meshName = gobj.get("mesh_name").asString();
@@ -345,7 +346,8 @@ public class Scene implements Named{
 	private void addToWorld(GameObject gobj){
 		boolean collisionEnabled = !gobj.json.get("physics").get("body_type").asString().equals("NO_COLLISION");
 		if (collisionEnabled)
-			world.addRigidBody(gobj.body);
+			world.addRigidBody(gobj.body, gobj.json.get("physics").get("group").asShort(), gobj.json.get("physics").get("mask").asShort());
+		
 		toBeAdded.add(gobj);
 
 		for (GameObject g : gobj.children){
