@@ -426,6 +426,12 @@ public class Scene implements Named{
 				}
 
 				Vector3f delta = ray.position.minus(startPos);
+
+				if (delta.length() == 0) {
+					delta = new Vector3f(dist);
+					delta.length(0.001f);
+				}
+
 				startPos.add(delta);
 				dist.sub(delta);
 
