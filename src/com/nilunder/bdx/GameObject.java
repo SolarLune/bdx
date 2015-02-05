@@ -272,7 +272,7 @@ public class GameObject implements Named{
 		return touchingObjects.get(name) != null && 
 			touchingObjectsLast.get(name) == null;
 	}
-	
+
 	public float reactionForce(){
 		float force = 0;
 		int totalContacts = 0;
@@ -290,6 +290,32 @@ public class GameObject implements Named{
 		}
 
 		return totalContacts != 0 ? force / totalContacts : 0;
+	}
+
+	public void collisionGroup(short group)
+	{
+		short mask = body.getBroadphaseProxy().collisionFilterMask;
+
+		scene.world.removeRigidBody(body);
+		scene.world.addRigidBody(body, group, mask);
+	}
+
+	public short collisionGroup()
+	{
+		return body.getBroadphaseProxy().collisionFilterGroup;
+	}
+
+	public void collisionMask(short mask)
+	{
+		short group = body.getBroadphaseProxy().collisionFilterGroup;
+
+		scene.world.removeRigidBody(body);
+		scene.world.addRigidBody(body, group, mask);
+	}
+
+	public short collisionMask()
+	{
+		return body.getBroadphaseProxy().collisionFilterMask;
 	}
 
 	public boolean visible(){
