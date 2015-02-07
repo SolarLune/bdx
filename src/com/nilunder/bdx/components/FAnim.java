@@ -60,14 +60,17 @@ public class FAnim extends Component{
 	private float increment;
 	private float[] offsetLocRotScale;
 
-
 	public FAnim(GameObject g){
 		super(g);
+		fps(24);
+	}
+
+	public void fps(float fps){
+		increment = fps / 60.f;
 	}
 
 	public void action(String name){
 		bounce = false;
-		increment = 5.f / 60.f;
 
 		action = actions.get(name);
 		firstFrame = firstFrame();
@@ -75,7 +78,6 @@ public class FAnim extends Component{
 		frame = firstFrame;
 		loop = 0;
 	}
-
 
 	private State play = new State(){
 		public int wall;
@@ -122,7 +124,6 @@ public class FAnim extends Component{
 		return wall;
 	}
 
-
 	public FAnim play(){
 		state = play;
 		offsetLocRotScale = offsetLocRotScale();
@@ -143,7 +144,6 @@ public class FAnim extends Component{
 		return this;
 	}
 
-
 	public void stop(){
 		frame = firstFrame;
 		increment = Math.abs(increment);
@@ -154,10 +154,17 @@ public class FAnim extends Component{
 		state = null;
 	}
 
-
 	public void frame(float frame){
 		this.frame = frame;
 		showFrame(frame);
+	}
+
+	public float frame(){
+		return frame;
+	}
+
+	public boolean isPlaying() {
+		return state != null;
 	}
 
 	private float firstFrame(){
