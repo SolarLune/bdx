@@ -51,11 +51,14 @@ abstract class Pointer {
 		return dir;
 	}
 	
-	public RayHit ray(){
-
+	public RayHit ray(short group, short mask){
 		Vector3f v = rayDirection();
 		v.length(100);
 
-		return scene.ray(raySource(), v);
+		return scene.ray(raySource(), v, group, mask);
+	}
+
+	public RayHit ray(){
+		return ray((short)~0, (short)~0);
 	}
 }

@@ -384,12 +384,19 @@ public class Scene implements Named{
 		world.removeRigidBody(g.body);
 		toBeRemoved.add(g);
 	}
-	
+
+
 	public RayHit ray(Vector3f src, Vector3f vec){
+		return ray(src, vec, (short)~0, (short)~0);
+	}
+	
+	public RayHit ray(Vector3f src, Vector3f vec, short group, short mask){
 		Vector3f to = new Vector3f(src);
 		to.add(vec);
 		
 		CollisionWorld.ClosestRayResultCallback rrc = new CollisionWorld.ClosestRayResultCallback(src, to);
+		rrc.collisionFilterGroup = group;
+		rrc.collisionFilterMask = mask;
 		
 		world.rayTest(src, to, rrc);
 		
@@ -403,8 +410,13 @@ public class Scene implements Named{
 		
 		return rh;
 	}
-	
+
+
 	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec, boolean includeAll){
+		return xray(src, vec, includeAll, (short)~0, (short)~0);
+	}
+	
+	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec, boolean includeAll, short group, short mask){
 
 		Vector3f startPos = new Vector3f(src);
 		Vector3f dist = new Vector3f(vec);
@@ -416,7 +428,7 @@ public class Scene implements Named{
 
 		while (!finished){
 
-			RayHit ray = ray(startPos, dist);
+			RayHit ray = ray(startPos, dist, group, mask);
 
 			if (ray != null){
 
