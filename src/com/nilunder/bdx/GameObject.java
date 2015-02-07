@@ -69,6 +69,9 @@ public class GameObject implements Named{
 	
 	public void main(){
 	}
+
+	public void onEnd(){
+	}
 	
 	public GameObject parent(){
 		return parent;
@@ -366,6 +369,7 @@ public class GameObject implements Named{
 	}
 	
 	public void endNoChildren(){
+		onEnd();
 		parent(null);
 		valid = false;
 		if (uniqueModel != null)
