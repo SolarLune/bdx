@@ -643,11 +643,12 @@ def export(context, filepath, scene_name, exprun):
         lines = instantiator(objects)
 
         if lines:
-            lines[5] = lines[5].replace("NAME", scene.name)
+            class_name = ut.str_to_valid_java_class_name(scene.name)
+            lines[5] = lines[5].replace("NAME", class_name)
 
             inst = j(ut.src_root(), "inst")
 
-            with open(j(inst, scene.name + ".java"), 'w') as f:
+            with open(j(inst, class_name + ".java"), 'w') as f:
                 f.writelines(lines)
 
     with open(filepath, "w") as f:

@@ -42,8 +42,9 @@ class BdxExpRun(bpy.types.Operator):
         # - BdxApp.java
         new_lines = []
         for scene in bpy.data.scenes:
-            if os.path.isfile(j(sroot, "inst", scene.name + ".java")):
-                inst = "new " + ut.package_name() + ".inst." + scene.name + "()"
+            class_name = ut.str_to_valid_java_class_name(scene.name)
+            if os.path.isfile(j(sroot, "inst", class_name + ".java")):
+                inst = "new " + ut.package_name() + ".inst." + class_name + "()"
             else:
                 inst = "null"
 

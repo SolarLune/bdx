@@ -1,6 +1,7 @@
 import os
 import re
 import fnmatch
+import string
 import bpy
 
 p = os.path
@@ -214,3 +215,16 @@ def save_internal_java_files(to_dir, overwrite=False):
             f.write(t.as_string())
 
     return saved
+
+def str_to_valid_java_class_name(input_string):
+    class_name = ['i'] # first character must be a letter
+
+    valid_chars = string.ascii_letters + string.digits + '_'
+
+    for char in input_string:
+        if char in valid_chars:
+            class_name.append(char)
+        else:
+            class_name.append('_'+str(ord(char))+'_')
+
+    return "".join(class_name)
