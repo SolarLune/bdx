@@ -2,7 +2,10 @@ package com.nilunder.bdx.inputs;
 
 import java.util.*;
 
+import javax.vecmath.Vector2f;
+
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Pixmap;
 
 import com.nilunder.bdx.*;
 
@@ -54,6 +57,27 @@ public class Mouse extends Finger{
 		}
 
 		return false;
-	} 
-	
+	}
+
+	public Vector2f position(){
+		return new Vector2f(Gdx.input.getX(), Gdx.input.getY());
+	}
+
+	public void position(int x, int y) {
+		Gdx.input.setCursorPosition(x, y);	
+	}
+
+	public void cursorLock(boolean confine) {
+		Gdx.input.setCursorCatched(confine);	
+	}
+
+	public boolean cursorLock() {
+		return Gdx.input.isCursorCatched();
+	}
+
+	public void setCursorImage(String textureName, int offsetX, int offsetY) {
+		Pixmap pm = new Pixmap(Gdx.files.internal("bdx/textures/"+ textureName));
+		Gdx.input.setCursorImage(pm, offsetX, offsetY);
+		pm.dispose();
+	}	
 }
