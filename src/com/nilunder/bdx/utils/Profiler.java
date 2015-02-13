@@ -1,48 +1,63 @@
 package com.nilunder.bdx.utils;
 
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map.Entry;
 
 import com.badlogic.gdx.utils.TimeUtils;
 
 public class Profiler extends LinkedHashMap<String, Long>{
-	private LinkedHashMap<String, Float> percents = new LinkedHashMap<String, Float>();
+	private LinkedHashMap<String, Long> startTimes = new LinkedHashMap<String, Long>();
 	private long totalStartTime = TimeUtils.millis();
-	private long startTime = totalStartTime;
+	private long lastStopTime;
+	public LinkedHashMap<String, Long> millis = new LinkedHashMap<String, Long>();
+	public LinkedHashMap<String, Float> percents = new LinkedHashMap<String, Float>();
 	
-	public LinkedHashMap<String, Float> percents(){
-		return percents;
-	}
-	
-	public void start(){
-		startTime = TimeUtils.millis();
+	public void start(String name){
+		startTimes.put(name, TimeUtils.millis());
 	}
 
 	public Long stop(String name){
-		long deltaTime = TimeUtils.millis() - startTime;
+		long stopTime = TimeUtils.millis();
+		long startTime = lastStopTime;
+		if (startTimes.containsKey(name))
+			startTime = startTimes.get(name);
+		long deltaTime = stopTime - startTime;
 		long storedDeltaTime = deltaTime;
 		if (containsKey(name))
-			storedDeltaTime = get(name) + deltaTime;
+			storedDeltaTime += get(name);
 		put(name, storedDeltaTime);
-		start();
+		lastStopTime = stopTime;
 		return deltaTime;
 	}
 
 	public void update(){
 		long totalEndTime = TimeUtils.millis();
-		float totalDeltaTime = totalEndTime - totalStartTime;
+		long totalDeltaTime = totalEndTime - totalStartTime;
 		totalStartTime = totalEndTime;
-		if (totalDeltaTime == 0)
-			return;
-		float deltaTimes = 0;
+		long deltaTimes = 0;
+		LinkedHashMap<String, Long> userMillis = new LinkedHashMap<String, Long>();
+		LinkedHashMap<String, Float> userPercents = new LinkedHashMap<String, Float>();
 		for (Entry<String, Long> e : entrySet()){
 			long deltaTime = e.getValue();
-			deltaTimes += deltaTime;
-			float deltaTimePercent = 100 * deltaTime / totalDeltaTime;
-			percents.put(e.getKey(), deltaTimePercent);
+			String name = e.getKey();
+			float deltaTimePercent = 100f * deltaTime / totalDeltaTime;
+			if (name.startsWith("__")){
+				deltaTimes += deltaTime;
+				percents.put(name, deltaTimePercent);
+				millis.put(name, deltaTime);
+			}else{
+				userPercents.put(name, deltaTimePercent);
+				userMillis.put(name, deltaTime);
+			}
 		}
-		float outsideTimePercent = 100 * (1 - deltaTimes / totalDeltaTime);
-		percents.put("outside", outsideTimePercent);
+		long outsideDeltaTime = totalDeltaTime - deltaTimes;
+		float outsideTimePercent = 100f * outsideDeltaTime / totalDeltaTime;
+		millis.put("__outside", outsideDeltaTime);
+		percents.put("__outside", outsideTimePercent);
+		millis.putAll(userMillis);
+		percents.putAll(userPercents);
+		startTimes.clear();
 		clear();
 	}
 	
