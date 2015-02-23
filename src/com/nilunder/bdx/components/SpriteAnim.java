@@ -122,6 +122,10 @@ public class SpriteAnim extends Component {
 		animations.put(name, anim);
 	}
 
+	public ArrayList<String> animationNames(){
+		return new ArrayList<String>(animations.keySet());
+	}
+
 	public boolean onLastFrame(){
 		return active.onLastFrame();
 	}
