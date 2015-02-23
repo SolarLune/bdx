@@ -59,10 +59,12 @@ public class FAnim extends Component{
 	private float lastFrame;
 	private float increment;
 	private float[] offsetLocRotScale;
+	private boolean additive;
 
 	public FAnim(GameObject g){
 		super(g);
 		fps(24);
+		additive(true);
 	}
 
 	public void fps(float fps){
@@ -167,6 +169,14 @@ public class FAnim extends Component{
 		return state != null;
 	}
 
+	public void additive(boolean add){
+		additive = add;
+	}
+
+	public boolean additive() {
+		return additive;
+	}
+
 	private float firstFrame(){
 		Channel ch = action.entrySet().iterator().next().getValue();
 		return ch.get(0).position.x;
@@ -182,7 +192,10 @@ public class FAnim extends Component{
 
 		for (Map.Entry<Integer,Channel> e : action.entrySet()){
 			int i = e.getKey();
-			lrs[i] = channelValue(e.getValue()) + offsetLocRotScale[i];
+			if (additive)
+				lrs[i] = channelValue(e.getValue()) + offsetLocRotScale[i];
+			else
+				lrs[i] = channelValue(e.getValue());
 		}
 
 		// Location
