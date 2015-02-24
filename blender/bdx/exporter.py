@@ -434,7 +434,7 @@ def used_materials(objects):
 def srl_materials(materials):
     def texture_name(m):
         if m.active_texture and hasattr(m.active_texture, "image"):
-            return m.active_texture.image.name
+            return os.path.basename(m.active_texture.image.filepath)
         return None
 
     return {m.name: 
