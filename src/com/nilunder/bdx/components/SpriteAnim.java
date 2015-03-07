@@ -15,18 +15,20 @@ import com.nilunder.bdx.utils.Timer;
 
 public class SpriteAnim extends Component {
 
-	private static class Animation extends ArrayList<Vector2f>{
+	public static class Animation extends ArrayList<Vector2f>{
 		public String name;
 		public float fps;
 		public boolean looping;
 
-		private int playHead;
+		public int playHead;
+		public int playDir;
 
 		public Animation(String name, float fps, boolean looping){
 			this.name = name;
 			this.fps = fps;
 			this.looping = looping;
 			playHead = 0;
+			playDir = 1;
 		}
 
 		public Vector2f nextFrame(){
@@ -34,31 +36,33 @@ public class SpriteAnim extends Component {
 				if (looping)
 					reset();
 				else
-					--playHead;
+					playHead -= playDir;
 			}
 
-			return get(playHead++);
+			Vector2f frame = get(playHead); 
 
+			playHead += playDir;
+
+			return frame;
 		}
 
 		public boolean onLastFrame(){
-			return playHead == size();
+			return playHead == size() || playHead == -1;
 		}
 
 		public void reset(){
-			playHead = 0;
+			if (playDir > 0)
+				playHead = 0;
+			else
+				playHead = size() - 1;
 		}
-
-		public void playHead(int frame){playHead = frame;}
-
-		public int playHead(){return playHead;}
 
 	}
 	
 	public float speed;
+	public HashMap<String, Animation> animations;
+	public Animation active;
 
-	private HashMap<String, Animation> animations;
-	private Animation active;
 	private Timer ticker;
 	private Matrix3 uvScale;
 	private boolean rowBased;
@@ -126,10 +130,6 @@ public class SpriteAnim extends Component {
 		return new ArrayList<String>(animations.keySet());
 	}
 
-	public boolean onLastFrame(){
-		return active.onLastFrame();
-	}
-
 	public void uvScaleX(float s){
 		uvScale(s, uvScaleY());
 	}
@@ -154,39 +154,25 @@ public class SpriteAnim extends Component {
 			ticker.done(true); // immediate play
 		}
 
-		if (!active.looping && onLastFrame()){
+		if (!active.looping && active.onLastFrame()){
 			active.reset();
 			ticker.done(true);
 		}
 
 	}
 
-	public String current(){
-		return active == null ? "BDX_NONE" : active.name;
-	}
-	
 	public void showNextFrame(){
-		if (active == null)
-			return;
-
+		active.playDir = speed * active.fps < 0 ? -1 : 1;
 		uvFrame(active.nextFrame());
 	}
 
 	public void frame(int frame){
-
-		if (active == null)
-			return;
-
-		active.playHead(frame); // Set the frame, and
+		active.playHead = frame; // Set the frame, and
 		ticker.done(true); // Update the sprite immediately
 	}
 
 	public int frame(){
-
-		if (active == null)
-			return 0;
-
-		return active.playHead();
+		return active.playHead;
 	}
 
 	private State play = new State(){
@@ -198,10 +184,7 @@ public class SpriteAnim extends Component {
 			if (active == null)
 				return;
 
-			active.fps = Math.abs(active.fps);
-			speed = Math.abs(speed);
-
-			ticker.interval = 1f / nz(active.fps * speed);
+			ticker.interval = 1f / nz(Math.abs(active.fps) * Math.abs(speed));
 
 			if (ticker.tick()){
 				showNextFrame();
