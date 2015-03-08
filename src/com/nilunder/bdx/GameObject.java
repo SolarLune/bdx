@@ -168,7 +168,7 @@ public class GameObject implements Named{
 		Transform t = new Transform();
 		body.getWorldTransform(t);
 
-		Bullet.normalizeBasis(t.basis);
+		t.basis.normalize();
 		
 		Matrix4f m = new Matrix4f();
 		t.getMatrix(m);
@@ -470,7 +470,7 @@ public class GameObject implements Named{
 		Vector3f alignAxis = axis(axis);
 		Vector3f rotAxis = new Vector3f();
 		rotAxis.cross(alignAxis, vec);
-		Matrix3f rotMatrix = Bullet.rotMatrix(rotAxis, Bullet.vecAngle(alignAxis, vec));
+		Matrix3f rotMatrix = Matrix3f.rotation(rotAxis, alignAxis.angle(vec));
 		Matrix3f ori = orientation();
 		rotMatrix.mul(ori);
 		orientation(rotMatrix);

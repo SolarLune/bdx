@@ -130,24 +130,4 @@ public class Bullet {
 		
 		return b;
 	}
-	
-	public static void normalizeBasis(Matrix3f m){
-		Vector3f v = new Vector3f();
-		for (int i = 0; i < 3; ++i){
-			m.getColumn(i, v);
-			v.normalize();
-			m.setColumn(i, v);
-		}
-	}
-	
-	public static float vecAngle(Vector3f a, Vector3f b){
-		return (float)Math.acos(a.dot(b) / (a.length() * b.length()));
-	}
-	
-	public static Matrix3f rotMatrix(Vector3f axis, float angle){
-		AxisAngle4f aa = new AxisAngle4f(axis, angle);
-		Matrix3f m = new Matrix3f();
-		m.set(aa);
-		return m;
-	}
 }
