@@ -2,14 +2,28 @@ package com.nilunder.bdx;
 
 import java.util.*;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.*;
+import com.badlogic.gdx.files.*;
+
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.ArrayListNamed;
 import com.nilunder.bdx.utils.Profiler;
 
 public class Bdx{
+
+	public static class Display{
+		public void fullscreen(boolean full){
+			Graphics.DisplayMode dm = Gdx.graphics.getDesktopDisplayMode();
+			Gdx.graphics.setDisplayMode(dm.width, dm.height, full);
+		}
+		public boolean fullscreen(){
+			return Gdx.graphics.isFullscreen();
+		}
+		public void clearColor(float r, float g, float b, float a){
+			Gdx.gl.glClearColor(r, g, b, a);
+		}
+	}
 
 	public static class ArrayListScenes extends ArrayListNamed<Scene>{
 		public boolean add(Scene scene){
@@ -43,6 +57,7 @@ public class Bdx{
 	public static float time;
 	public static Profiler profiler;
 	public static ArrayListScenes scenes;
+	public static Display display;
 	public static Sounds sounds;
 	public static Music music;
 	public static Mouse mouse;
@@ -53,6 +68,7 @@ public class Bdx{
 	public static void init(){
 		time = 0;
 		profiler = new Profiler();
+		display = new Display();
 		scenes = new ArrayListScenes();
 		sounds = new Sounds();
 		music = new Music();
