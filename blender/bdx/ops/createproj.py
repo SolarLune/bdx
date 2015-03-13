@@ -1,6 +1,7 @@
 import os
 import bpy
 import shutil
+import subprocess
 from .. import utils as ut
 
 j = os.path.join
@@ -32,16 +33,16 @@ class CreateBdxProject(bpy.types.Operator):
                "mainClass": "BdxApp",
                "sdkLocation": absp(sc.bdx_android_sdk)}
 
-        cmd = 'java -jar "{program}" \
-                --dir "{dir}" \
-                --name "{name}" \
-                --package {package} \
-                --mainClass {mainClass} \
-                --sdkLocation "{sdkLocation}"'
+        cmd = ["java", "-jar", fmt["program"],
+               "--dir", fmt["dir"],
+               "--name", fmt["name"],
+               "--package", fmt["package"],
+               "--mainClass", fmt["mainClass"],
+               "--sdkLocation", fmt["sdkLocation"]]
 
-        error = os.system(cmd.format(**fmt))
-
-        if error:
+        try:
+            subprocess.check_call(cmd)
+        except subprocess.CalledProcessError:
             raise Exception("Failed to create LibGDX project")
 
         ut.proot = fmt["dir"]
