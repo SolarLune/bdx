@@ -460,20 +460,31 @@ public class GameObject implements Named{
 		return max.minus(min);
 	}
 	
-	public Vector3f axis(int axis){
+	public Vector3f axis(String axisName){
+		int axis = "XYZ".indexOf(axisName.charAt(axisName.length() - 1)); 
 		Vector3f v = new Vector3f();
 		orientation().getColumn(axis, v);
+		if (axisName.charAt(0) == '-')
+			v.negate();
 		return v;
 	}
+
+	public Vector3f axis(int axis){
+		return axis("XYZ".charAt(axis));
+	}
 	
-	public void alignAxisToVec(int axis, Vector3f vec){
-		Vector3f alignAxis = axis(axis);
+	public void alignAxisToVec(String axisName, Vector3f vec){
+		Vector3f alignAxis = axis(axisName);
 		Vector3f rotAxis = new Vector3f();
 		rotAxis.cross(alignAxis, vec);
 		Matrix3f rotMatrix = Matrix3f.rotation(rotAxis, alignAxis.angle(vec));
 		Matrix3f ori = orientation();
 		rotMatrix.mul(ori);
 		orientation(rotMatrix);
+	}
+
+	public void alignAxisToVec(int axis, Vector3f vec){
+		alignAxisToVec("XYZ".charAt(axis), vec);
 	}
 
 	public Vector4f color(){
