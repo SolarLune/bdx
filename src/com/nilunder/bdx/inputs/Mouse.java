@@ -15,6 +15,11 @@ public class Mouse extends Finger{
 
 	private HashMap<String,Integer> btnToCode;
 
+	private boolean cursorVisible;
+	public String cursorTexture;
+	public int cursorOffsetX;
+	public int cursorOffsetY;
+
 	public Mouse(){
 		codeToLog = new Keyboard.Log[5];
 		for (int i = 0; i < 5; ++i)
@@ -26,6 +31,8 @@ public class Mouse extends Finger{
 		btnToCode.put("middle", 2);
 		btnToCode.put("back", 3);
 		btnToCode.put("forward", 4);
+
+		cursorVisible = true;
 	}
 
 	public boolean btnHit(String btn){
@@ -42,7 +49,6 @@ public class Mouse extends Finger{
 		Keyboard.Log b = codeToLog[btnToCode.get(btn)];
 		return b.up == Keyboard.t;
 	}
-	
 
 	public boolean clicked(GameObject g){
 		return clicked(g, "left");
@@ -76,8 +82,41 @@ public class Mouse extends Finger{
 	}
 
 	public void setCursorImage(String textureName, int offsetX, int offsetY) {
-		Pixmap pm = new Pixmap(Gdx.files.internal("bdx/textures/"+ textureName));
-		Gdx.input.setCursorImage(pm, offsetX, offsetY);
-		pm.dispose();
-	}	
+		cursorTexture = textureName;
+		cursorOffsetX = offsetX;
+		cursorOffsetY = offsetY;
+		visible(visible());
+	}
+
+	public void setCursorImage(String textureName) {
+		setCursorImage(textureName, 0, 0);
+	}
+
+	public void visible(boolean visible) {
+		cursorVisible = visible;
+
+		if (visible) {
+			if (cursorTexture == null)
+				Gdx.input.setCursorImage(null, 0, 0);
+			else {
+
+				Pixmap px = new Pixmap(Gdx.files.internal("bdx/textures/" + cursorTexture));
+				Gdx.input.setCursorImage(px, cursorOffsetX, cursorOffsetY);
+				px.dispose();
+
+			}
+		}
+		else {
+
+			Pixmap px = new Pixmap(16, 16, Pixmap.Format.RGBA8888);
+			Gdx.input.setCursorImage(px, 0, 0);
+			px.dispose();
+
+		}
+	}
+
+	public boolean visible(){
+		return cursorVisible;
+	}
+
 }
