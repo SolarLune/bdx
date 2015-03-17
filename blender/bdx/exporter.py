@@ -63,6 +63,9 @@ def vertices(mesh):
 
 
 def in_active_layer(obj):
+    if obj.name not in scene.objects:
+        return False
+
     layer = [i for i, v in enumerate(obj.layers) if v][0]
     active_layers = [i for i, v in enumerate(scene.layers) if v]
 
