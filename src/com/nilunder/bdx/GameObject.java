@@ -228,6 +228,15 @@ public class GameObject implements Named{
 		applyForce(v);
 	}
 	
+	public void applyForceLocal(Vector3f vec){
+		applyForce(orientation().mult(vec));
+	}
+	
+	public void applyForceLocal(float x, float y, float z){
+		Vector3f v = new Vector3f(x, y, z);
+		applyForceLocal(v);
+	}
+	
 	public void velocity(Vector3f vec){
 		body.activate();
 		body.setLinearVelocity(vec);
