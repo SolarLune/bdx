@@ -253,6 +253,21 @@ public class GameObject implements Named{
 		return v;
 	}
 	
+	public void velocityLocal(Vector3f vec){
+		velocity(orientation().mult(vec));
+	}
+	
+	public void velocityLocal(float x, float y, float z){
+		Vector3f v = new Vector3f(x, y, z);
+		velocityLocal(v);
+	}
+	
+	public Vector3f velocityLocal(){
+		Vector3f v = new Vector3f();
+		body.getLinearVelocity(v);
+		return orientation().mult(v);
+	}
+	
 	public void angularVelocity(Vector3f vec){
 		body.activate();
 		body.setAngularVelocity(vec);
