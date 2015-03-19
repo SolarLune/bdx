@@ -5,6 +5,7 @@ import java.util.*;
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.files.*;
 
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.ArrayListNamed;
@@ -80,6 +81,9 @@ public class Bdx{
 		for (int i = 0; i < 10; ++i){
 			allocatedFingers.add(new Finger(i));
 		}
+
+		ShaderProgram.pedantic = false;
+
 	}
 
 	public static void updateInput(){
