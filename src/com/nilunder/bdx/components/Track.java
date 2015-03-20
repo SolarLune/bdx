@@ -30,7 +30,7 @@ public class Track extends Component {
 				target = null;
 				return;
 			}
-			Vector3f vec = target.position().plus(offset).minus(g.position());
+			Vector3f vec = target.position().plus(target.orientation().mult(offset)).minus(g.position());
 			g.alignAxisToVec(upAxis, upVec);
 			g.alignAxisToVec(axis, vec);
 		}
