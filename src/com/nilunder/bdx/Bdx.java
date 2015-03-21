@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.glutils.*;
 
+import com.nilunder.bdx.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.*;
@@ -67,6 +68,7 @@ public class Bdx{
 	public static Mouse mouse;
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
+	public static ArrayList<Component> components;
 
 	public static ArrayList<Finger> allocatedFingers;
 	private static ModelBatch modelBatch;
@@ -83,6 +85,7 @@ public class Bdx{
 		mouse = new Mouse();
 		keyboard = new Keyboard();
 		fingers = new ArrayList<Finger>(); 
+		components = new ArrayList<Component>();
 
 		allocatedFingers = new ArrayList<Finger>();
 		for (int i = 0; i < 10; ++i){
@@ -115,6 +118,11 @@ public class Bdx{
 				fingers.add(f);
 		}
 		// ------------------------------
+		
+		for (Component c : components){
+			if (c.state != null)
+				c.state.main();
+		}
 		
 		profiler.stop("__input");
 
