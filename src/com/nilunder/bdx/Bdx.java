@@ -70,7 +70,7 @@ public class Bdx{
 	public static ArrayList<Finger> fingers;
 	public static ArrayList<Component> components;
 
-	public static ArrayList<Finger> allocatedFingers;
+	private static ArrayList<Finger> allocatedFingers;
 	private static ModelBatch modelBatch;
 	private static FrameBuffer frameBuffer;
 	private static SpriteBatch spriteBatch;
