@@ -4,12 +4,14 @@ import java.util.*;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.files.*;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.glutils.*;
 
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
-import com.nilunder.bdx.utils.ArrayListNamed;
-import com.nilunder.bdx.utils.Profiler;
+import com.nilunder.bdx.utils.*;
 
 public class Bdx{
 
@@ -65,7 +67,11 @@ public class Bdx{
 	public static Mouse mouse;
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
+
 	public static ArrayList<Finger> allocatedFingers;
+	private static ModelBatch modelBatch;
+	private static FrameBuffer frameBuffer;
+	private static SpriteBatch spriteBatch;
 
 	public static void init(){
 		time = 0;
@@ -83,11 +89,24 @@ public class Bdx{
 			allocatedFingers.add(new Finger(i));
 		}
 
+		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers));
+
+		modelBatch = new ModelBatch();
+
 		ShaderProgram.pedantic = false;
+		frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+		spriteBatch = new SpriteBatch();
 
 	}
 
-	public static void updateInput(){
+
+	public static void main(){
+		profiler.start("__graphics");
+		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		profiler.stop("__graphics");
+
+		// -------- Update Input --------
 		time += TICK_TIME;
 		++Keyboard.t;
 		fingers.clear();
@@ -95,5 +114,55 @@ public class Bdx{
 			if (f.down() || f.up())
 				fingers.add(f);
 		}
+		// ------------------------------
+		
+		profiler.stop("__input");
+
+		for (Scene scene : (ArrayListNamed<Scene>)scenes.clone()){
+			scene.update();
+
+			profiler.start("__render");
+
+			// ------- Render Scene --------
+			if (scene.filter != null) {
+				frameBuffer.begin();
+				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			}
+
+			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+			modelBatch.begin(scene.cam);
+			for (GameObject g : scene.objects){
+				if (g.visible()){
+					modelBatch.render(g.modelInstance);
+				}
+			}
+			modelBatch.end();
+
+			if (scene.filter != null) {
+
+				frameBuffer.end();
+				Texture t = frameBuffer.getColorBufferTexture();
+				t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+				TextureRegion r = new TextureRegion(t);
+				r.flip(false, true);
+
+				spriteBatch.begin();
+				spriteBatch.setShader(scene.filter);
+				spriteBatch.draw(r, 0, 0);
+				spriteBatch.end();
+
+			}
+			// -----------------------------
+			
+			profiler.stop("__render");
+		}
+
+		profiler.update();
+	}
+
+	public static void dispose(){
+		modelBatch.dispose();
+		spriteBatch.dispose();
 	}
 }
