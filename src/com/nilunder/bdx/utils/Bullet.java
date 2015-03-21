@@ -24,7 +24,7 @@ import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
-import com.nilunder.bdx.GameObject;
+import com.nilunder.bdx.*;
 
 public class Bullet {
 	
@@ -44,7 +44,7 @@ public class Bullet {
 		m.triangleIndexStride = (Short.SIZE/8) * 3;
 		m.numVertices = mesh.getNumVertices();
 		m.vertexBase = verts;
-		m.vertexStride = (Float.SIZE/8) * 5;
+		m.vertexStride = (Float.SIZE/8) * Bdx.VERT_STRIDE;
 		
 		return m;
 	}

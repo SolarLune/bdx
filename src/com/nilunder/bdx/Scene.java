@@ -103,7 +103,7 @@ public class Scene implements Named{
 
 		
 		defaultMaterial = new Material();
-		defaultModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.TextureCoordinates);
+		defaultModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 
 		models = new HashMap<String,Model>();
 		textures = new HashMap<String,Texture>();
@@ -471,10 +471,10 @@ public class Scene implements Named{
 		short idx = 0;
 		for (JsonValue mat : model){
 			MeshPartBuilder mpb = builder.part(model.name, GL20.GL_TRIANGLES,
-					Usage.Position | Usage.TextureCoordinates, materials.get(mat.name));
+					Usage.Position | Usage.Normal | Usage.TextureCoordinates, materials.get(mat.name));
 			float verts[] = mat.asFloatArray();
 			mpb.vertex(verts);
-			int len = verts.length / 5;
+			int len = verts.length / Bdx.VERT_STRIDE;
 			for (short i = 0; i < len; ++i){
 				mpb.index(idx);
 				idx += 1;

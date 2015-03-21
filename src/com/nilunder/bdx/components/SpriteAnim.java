@@ -205,14 +205,14 @@ public class SpriteAnim extends Component {
 	private Vector2f uvFrame(){
 		Mesh mesh = g.modelInstance.model.meshes.first();
 		int n = mesh.getNumVertices();
-		float[] verts = new float[n*5];
+		float[] verts = new float[n*Bdx.VERT_STRIDE];
 		mesh.getVertices(0, verts.length, verts);
 
 		Vector2f frame = new Vector2f(0, 0);
 
-		int uvStart = 3;
+		int uvStart = Bdx.VERT_STRIDE - 2;
 		for (int v = 0; v < n; ++v){
-			int i = v * 5;
+			int i = v * Bdx.VERT_STRIDE;
 			frame.x += verts[i + uvStart];
 			frame.y += verts[i + uvStart + 1];
 		}

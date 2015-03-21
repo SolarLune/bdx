@@ -55,6 +55,7 @@ public class Bdx{
 	}
 
 	public static final float TICK_TIME = 1f/60f;
+	public static final int VERT_STRIDE = 8;
 	public static float time;
 	public static Profiler profiler;
 	public static ArrayListScenes scenes;

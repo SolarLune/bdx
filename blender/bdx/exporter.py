@@ -57,7 +57,7 @@ def vertices(mesh):
         flip_uvs(poly_uvs)
 
         for v, uv in zip(poly_verts, poly_uvs):
-            verts += v + list(uv)
+            verts += v + list(poly.normal) + list(uv)
 
     return verts
 
@@ -110,7 +110,7 @@ def used_meshes(objects):
 def srl_models(meshes):
     name_model = {}
 
-    tfs = 3 * 5 # triangle float size: 3 verts at 5 floats each
+    tfs = 3 * 8 # triangle float size: 3 verts at 8 floats each
 
     for mesh in meshes:
         m_tris = mat_tris(mesh)
