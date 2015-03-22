@@ -22,9 +22,15 @@ public class Random{
 		return R.nextFloat();
 	}
 
+	public static float random(float min, float max){
+		return (min + (random() * (max - min)));
+	}
+
 	public static Vector3f direction(){
 		Vector3f vec = vector();
 		vec.normalize();
+		if (vec.length() == 0)
+			vec = new Vector3f(1, 0, 0);
 		return vec;
 	}
 
