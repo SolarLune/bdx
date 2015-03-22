@@ -66,6 +66,7 @@ public class Bdx{
 	public static Sounds sounds;
 	public static Music music;
 	public static Mouse mouse;
+	public static InputMaps imaps;
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
 	public static ArrayList<Component> components;
@@ -83,6 +84,7 @@ public class Bdx{
 		sounds = new Sounds();
 		music = new Music();
 		mouse = new Mouse();
+		imaps = new InputMaps();
 		keyboard = new Keyboard();
 		fingers = new ArrayList<Finger>(); 
 		components = new ArrayList<Component>();
