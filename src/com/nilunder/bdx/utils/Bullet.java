@@ -2,28 +2,20 @@ package com.nilunder.bdx.utils;
 
 import java.nio.ByteBuffer;
 
-import javax.vecmath.AxisAngle4f;
-import javax.vecmath.Matrix3f;
 import javax.vecmath.Vector3f;
 
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.JsonValue;
 import com.bulletphysics.collision.dispatch.CollisionFlags;
-import com.bulletphysics.collision.shapes.BoxShape;
-import com.bulletphysics.collision.shapes.BvhTriangleMeshShape;
-import com.bulletphysics.collision.shapes.CollisionShape;
-import com.bulletphysics.collision.shapes.IndexedMesh;
-import com.bulletphysics.collision.shapes.ScalarType;
-import com.bulletphysics.collision.shapes.SphereShape;
-import com.bulletphysics.collision.shapes.TriangleIndexVertexArray;
+import com.bulletphysics.collision.shapes.*;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
 import com.bulletphysics.linearmath.DefaultMotionState;
 import com.bulletphysics.linearmath.MotionState;
 import com.bulletphysics.linearmath.Transform;
+import com.bulletphysics.util.ObjectArrayList;
 import com.nilunder.bdx.*;
 
 public class Bullet {
@@ -58,7 +50,14 @@ public class Bullet {
 		}else if (bounds.equals("SPHERE")){
 			float radius = mesh.calculateRadius(0f, 0f, 0f);
 			return new SphereShape(radius);
-			
+		}else if (bounds.equals("CONVEX_HULL")){
+			float[] verts = new float[mesh.getNumVertices() * mesh.getVertexSize()];
+			mesh.getVertices(verts);
+			ObjectArrayList<Vector3f> vertList = new ObjectArrayList<Vector3f>();
+			for (int i = 0; i < mesh.getNumVertices() * Bdx.VERT_STRIDE; i += Bdx.VERT_STRIDE) {
+				vertList.add(new Vector3f(verts[i], verts[i + 1], verts[i + 2]));
+			}
+			return new ConvexHullShape(vertList);
 		}else{ // BOX
 			BoundingBox bbox = mesh.calculateBoundingBox();
 			Vector3 d = bbox.getDimensions().scl(0.5f);
