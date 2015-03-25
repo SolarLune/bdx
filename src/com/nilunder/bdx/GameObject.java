@@ -91,6 +91,9 @@ public class GameObject implements Named{
 			updateLocalTransform();
 			updateLocalScale();
 
+			dynamic(false);
+		}else{
+			dynamic(true);
 		}
 		
 	}
