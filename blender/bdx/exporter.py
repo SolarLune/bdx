@@ -413,7 +413,8 @@ def srl_objects(objects):
                 "restitution": obj.active_material.physics.elasticity if obj.active_material else 0,
                 "ghost": obj.game.use_ghost,
                 "group": sum([2**i for i, v in enumerate(obj.game.collision_group) if v]),
-                "mask": sum([2**i for i, v in enumerate(obj.game.collision_mask) if v])
+                "mask": sum([2**i for i, v in enumerate(obj.game.collision_mask) if v]),
+                "compound": obj.game.use_collision_compound
             }
         }
 
