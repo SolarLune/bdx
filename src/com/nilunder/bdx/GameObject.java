@@ -581,4 +581,24 @@ public class GameObject implements Named{
 
 	}
 
+	public void dynamic(boolean dynamic){
+		Vector3f localInertia = new Vector3f();
+
+		if (dynamic){
+			float mass = json.get("physics").get("mass").asFloat();
+
+			scene.world.removeRigidBody(body);
+			body.setMassProps(mass, localInertia);
+			scene.world.addRigidBody(body);
+
+			body.activate();
+		}else{
+			body.setMassProps(0, localInertia);
+		}
+	}
+
+	public boolean dynamic(){
+		return !body.isStaticOrKinematicObject();
+	}
+
 }
