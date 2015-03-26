@@ -18,6 +18,7 @@ import com.bulletphysics.collision.narrowphase.PersistentManifold;
 import com.bulletphysics.collision.narrowphase.ManifoldPoint;
 import com.bulletphysics.collision.dispatch.CollisionFlags;
 import com.bulletphysics.collision.shapes.CollisionShape;
+import com.bulletphysics.collision.shapes.CompoundShape;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.MatrixUtil;
 import com.bulletphysics.linearmath.Transform;
@@ -80,6 +81,10 @@ public class GameObject implements Named{
 	public void parent(GameObject p){
 		if (parent != null){
 			parent.children.remove(this);
+
+			if (parent.compoundShape() != null)
+				parent.compoundShape().removeChildShape(body.getCollisionShape());
+
 		}
 		
 		parent = p;
@@ -91,11 +96,20 @@ public class GameObject implements Named{
 			updateLocalTransform();
 			updateLocalScale();
 
+			if (parent.compoundShape() != null)
+				parent.compoundShape().addChildShape(new Transform(localTransform), body.getCollisionShape());
+
 			dynamic(false);
 		}else{
 			dynamic(true);
 		}
 		
+	}
+
+	private CompoundShape compoundShape(){
+		if (body.getCollisionShape() instanceof CompoundShape)
+			return (CompoundShape) body.getCollisionShape();
+		return null;
 	}
 	
 	public Vector3f position(){

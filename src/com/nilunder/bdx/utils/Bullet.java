@@ -41,15 +41,18 @@ public class Bullet {
 		return m;
 	}
 
-	public static CollisionShape makeShape(Mesh mesh, String bounds){
+	public static CollisionShape makeShape(Mesh mesh, String bounds, boolean compound){
+
+		CollisionShape shape;
+
 		if (bounds.equals("TRIANGLE_MESH")){
 			TriangleIndexVertexArray mi = new TriangleIndexVertexArray();
 			mi.addIndexedMesh(Bullet.makeMesh(mesh), ScalarType.SHORT);
-			return new BvhTriangleMeshShape(mi, false);
+			shape = new BvhTriangleMeshShape(mi, false);
 			
 		}else if (bounds.equals("SPHERE")){
 			float radius = mesh.calculateRadius(0f, 0f, 0f);
-			return new SphereShape(radius);
+			shape = new SphereShape(radius);
 		}else if (bounds.equals("CONVEX_HULL")){
 			float[] verts = new float[mesh.getNumVertices() * mesh.getVertexSize()];
 			mesh.getVertices(verts);
@@ -57,19 +60,29 @@ public class Bullet {
 			for (int i = 0; i < mesh.getNumVertices() * Bdx.VERT_STRIDE; i += Bdx.VERT_STRIDE) {
 				vertList.add(new Vector3f(verts[i], verts[i + 1], verts[i + 2]));
 			}
-			return new ConvexHullShape(vertList);
+			shape = new ConvexHullShape(vertList);
 		}else{ // BOX
 			BoundingBox bbox = mesh.calculateBoundingBox();
 			Vector3 d = bbox.getDimensions().scl(0.5f);
 			Vector3f dim = new Vector3f(d.x, d.y, d.z);
-			return new BoxShape(dim);
+			shape = new BoxShape(dim);
 		}
+
+		if (compound) {
+			CompoundShape compShape = new CompoundShape();
+			Transform trans = new Transform();
+			trans.setIdentity();
+			compShape.addChildShape(trans, shape);
+			return compShape;
+		}
+		return shape;
+
 	}
 	
 	public static RigidBody makeBody(Mesh mesh, float[] glTransform, JsonValue physics){
 		String boundsType = physics.get("bounds_type").asString();
 		
-		CollisionShape shape = makeShape(mesh, boundsType);
+		CollisionShape shape = makeShape(mesh, boundsType, physics.get("compound").asBoolean());
 		
 		float mass = physics.get("mass").asFloat();
 		String bodyType = physics.get("body_type").asString();
@@ -113,7 +126,7 @@ public class Bullet {
 		CollisionShape shape;
 
 		if (gobj.modelInstance != null){
-			shape = makeShape(gobj.modelInstance.model.meshes.first(), physics.get("bounds_type").asString());
+			shape = makeShape(gobj.modelInstance.model.meshes.first(), physics.get("bounds_type").asString(), physics.get("compound").asBoolean());
 		}else{
 			shape = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
 		}
