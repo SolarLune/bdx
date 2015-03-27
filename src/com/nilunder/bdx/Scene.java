@@ -70,7 +70,7 @@ public class Scene implements Named{
 	private Instantiator instantiator;
 	
 	private HashMap<String, GameObject> templates;
-	public Filter filter;
+	public ArrayList<Filter> filters;
 	
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
@@ -101,7 +101,7 @@ public class Scene implements Named{
 		requestedRestart = false;
 		paused = false;
 
-		
+		filters = new ArrayList<Filter>();
 		defaultMaterial = new Material();
 		defaultModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 

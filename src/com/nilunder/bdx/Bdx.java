@@ -134,7 +134,8 @@ public class Bdx{
 			profiler.start("__render");
 
 			// ------- Render Scene --------
-			if (scene.filter != null) {
+
+			if (scene.filters.size() > 0){
 				frameBuffer.begin();
 				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 			}
@@ -148,17 +149,25 @@ public class Bdx{
 			}
 			modelBatch.end();
 
-			if (scene.filter != null) {
+			if (scene.filters.size() > 0){
 
-				frameBuffer.end();
 				Texture t = frameBuffer.getColorBufferTexture();
 				t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-
 				TextureRegion r = new TextureRegion(t);
 				r.flip(false, true);
 
+				for (Filter filter : scene.filters) {
+
+					spriteBatch.begin();
+					spriteBatch.setShader(filter);
+					spriteBatch.draw(r, 0, 0);
+					spriteBatch.end();
+
+				}
+				
+				frameBuffer.end();
+
 				spriteBatch.begin();
-				spriteBatch.setShader(scene.filter);
 				spriteBatch.draw(r, 0, 0);
 				spriteBatch.end();
 
