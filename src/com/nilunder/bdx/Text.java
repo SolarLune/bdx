@@ -49,12 +49,12 @@ public class Text extends GameObject{
 			float v = c.get("y").asInt();
 
 			float[][] quad = {
-				{x  , y-h, z, u  , v+h},
-				{x+w, y-h, z, u+w, v+h},
-				{x+w, y  , z, u+w, v  },
-				{x+w, y  , z, u+w, v  },
-				{x  , y  , z, u,   v  },
-				{x  , y-h, z, u  , v+h}
+				{x  , y-h, z, 0, 0, 1, u  , v+h},
+				{x+w, y-h, z, 0, 0, 1, u+w, v+h},
+				{x+w, y  , z, 0, 0, 1, u+w, v  },
+				{x+w, y  , z, 0, 0, 1, u+w, v  },
+				{x  , y  , z, 0, 0, 1, u,   v  },
+				{x  , y-h, z, 0, 0, 1, u  , v+h}
 			};
 
 			z += 0.0001;
@@ -64,10 +64,10 @@ public class Text extends GameObject{
 				vert[1] *= scale;
 				vert[0] -= 0.05 + (builtin ? 0.03 : 0);
 				vert[1] += unit_height * (0.76 - (builtin ? 0.05 : 0));
-				vert[3] *= su;
-				vert[4] *= sv;
-				for (float n: vert){
-					verts[vi++] = n;
+				vert[6] *= su;
+				vert[7] *= sv;
+				for (float f: vert){
+					verts[vi++] = f;
 				}
 			}
 		}

@@ -195,7 +195,7 @@ def vertices_text(text, angel_code):
             v[0] -= 0.05 + (0.03 if builtin else 0)
             v[1] += unit_height * (0.76 - (0.05 if builtin else 0))
 
-        quad = [v + uv for v, uv in zip(q, char_uvs(char, ac))]
+        quad = [v + [0, 0, 1] + uv for v, uv in zip(q, char_uvs(char, ac))]
 
         # To triangles
         tris = [quad[i] for i in (0, 1, 2, 2, 3, 0)]
