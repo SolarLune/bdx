@@ -128,7 +128,7 @@ public class Bdx{
 		
 		profiler.stop("__input");
 
-		for (Scene scene : (ArrayListNamed<Scene>)scenes.clone()){
+		for (Scene scene : (ArrayListScenes)scenes.clone()){
 			scene.update();
 
 			profiler.start("__render");
