@@ -20,11 +20,9 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
-
 import com.bulletphysics.collision.broadphase.BroadphaseInterface;
 import com.bulletphysics.collision.broadphase.DbvtBroadphase;
 import com.bulletphysics.collision.dispatch.CollisionDispatcher;
@@ -35,7 +33,6 @@ import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 import com.bulletphysics.linearmath.Transform;
-
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
@@ -71,6 +68,7 @@ public class Scene implements Named{
 	
 	private HashMap<String, GameObject> templates;
 	public ArrayList<Filter> filters;
+	public RenderBuffer lastFrameBuffer;
 	
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
@@ -101,6 +99,8 @@ public class Scene implements Named{
 		requestedRestart = false;
 		paused = false;
 
+		lastFrameBuffer = new RenderBuffer(null);
+		
 		filters = new ArrayList<Filter>();
 		defaultMaterial = new Material();
 		defaultModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
@@ -237,6 +237,10 @@ public class Scene implements Named{
 
 	}
 
+	public void dispose(){
+		lastFrameBuffer.dispose();
+	}
+	
 	private void hookParentChild(){
 		for (GameObject g : templates.values()){
 			String parentName = g.json.get("parent").asString();

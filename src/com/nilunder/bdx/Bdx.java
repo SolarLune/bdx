@@ -73,7 +73,7 @@ public class Bdx{
 
 	private static ArrayList<Finger> allocatedFingers;
 	private static ModelBatch modelBatch;
-	private static FrameBuffer frameBuffer;
+	private static RenderBuffer frameBuffer;
 	private static SpriteBatch spriteBatch;
 
 	public static void init(){
@@ -99,8 +99,10 @@ public class Bdx{
 		modelBatch = new ModelBatch();
 
 		ShaderProgram.pedantic = false;
-		frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+		
 		spriteBatch = new SpriteBatch();
+
+		frameBuffer = new RenderBuffer(spriteBatch);
 
 	}
 
@@ -150,27 +152,26 @@ public class Bdx{
 			modelBatch.end();
 
 			if (scene.filters.size() > 0){
-
-				Texture t = frameBuffer.getColorBufferTexture();
-				t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-				TextureRegion r = new TextureRegion(t);
-				r.flip(false, true);
-
-				for (Filter filter : scene.filters) {
-
-					spriteBatch.begin();
-					spriteBatch.setShader(filter);
-					spriteBatch.draw(r, 0, 0);
-					spriteBatch.end();
-
-				}
 				
 				frameBuffer.end();
+				
+				scene.lastFrameBuffer.getColorBufferTexture().bind(1);
+				Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+								
+				for (Filter filter : scene.filters) {
 
-				spriteBatch.begin();
-				spriteBatch.draw(r, 0, 0);
-				spriteBatch.end();
+					filter.begin();
+					filter.setUniformf("time", Bdx.time);
+					filter.setUniformi("lastFrame", 1);
+					filter.end();
+							
+					frameBuffer.drawTo(frameBuffer, filter);
 
+				}
+				frameBuffer.drawTo(null); //  Draw to screen
+				scene.lastFrameBuffer.clear();
+				frameBuffer.drawTo(scene.lastFrameBuffer);		
+				
 			}
 			// -----------------------------
 			
@@ -179,9 +180,10 @@ public class Bdx{
 
 		profiler.update();
 	}
-
+	
 	public static void dispose(){
 		modelBatch.dispose();
 		spriteBatch.dispose();
+		frameBuffer.dispose();
 	}
 }
