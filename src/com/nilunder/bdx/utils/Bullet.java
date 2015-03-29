@@ -63,7 +63,7 @@ public class Bullet {
 			shape = new ConvexHullShape(vertList);
 		}else{ // BOX
 			BoundingBox bbox = mesh.calculateBoundingBox();
-			Vector3 d = bbox.getDimensions().scl(0.5f);
+			Vector3 d = bbox.getDimensions(new Vector3()).scl(0.5f);
 			Vector3f dim = new Vector3f(d.x, d.y, d.z);
 			shape = new BoxShape(dim);
 		}

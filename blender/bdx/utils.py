@@ -175,7 +175,7 @@ def find_file(pattern, path):
 
 def libgdx_version():
     fp = p.join(project_root(), "build.gradle")
-    _, version, *_ = get_file_line(fp, 20).split("'")
+    _, version, *_ = get_file_line(fp, 21).split("'")
     return version
 
 def internal_java_package():
