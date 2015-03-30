@@ -51,7 +51,8 @@ public class Bullet {
 			shape = new BvhTriangleMeshShape(mi, false);
 			
 		}else if (bounds.equals("SPHERE")){
-			float radius = mesh.calculateRadius(0f, 0f, 0f);
+			Vector3 bbox = mesh.calculateBoundingBox().getDimensions(new Vector3());
+			float radius = Math.max(Math.max(bbox.x, bbox.y), bbox.z) / 2;
 			shape = new SphereShape(radius);
 		}else if (bounds.equals("CAPSULE")){
 			Vector3 dim = mesh.calculateBoundingBox().getDimensions();
