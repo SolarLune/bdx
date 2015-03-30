@@ -206,7 +206,7 @@ public class GameObject implements Named{
 	}
 
 	public void transform(Matrix4f mat, boolean updateLocal){
-		body.activate();
+		body.activate(true);
 		
 		Transform t = new Transform();
 		t.set(mat);
