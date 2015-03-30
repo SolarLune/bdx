@@ -511,7 +511,7 @@ public class GameObject implements Named{
 	}
 
 	public Vector3f axis(int axis){
-		return axis("XYZ".charAt(axis));
+		return axis(String.valueOf("XYZ".charAt(axis)));
 	}
 	
 	public void alignAxisToVec(String axisName, Vector3f vec){
@@ -525,7 +525,7 @@ public class GameObject implements Named{
 	}
 
 	public void alignAxisToVec(int axis, Vector3f vec){
-		alignAxisToVec("XYZ".charAt(axis), vec);
+		alignAxisToVec(String.valueOf("XYZ".charAt(axis)), vec);
 	}
 
 	public Vector4f color(){
