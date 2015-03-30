@@ -44,7 +44,7 @@ public class Bullet {
 	public static CollisionShape makeShape(Mesh mesh, String bounds, boolean compound){
 
 		CollisionShape shape;
-
+	
 		if (bounds.equals("TRIANGLE_MESH")){
 			TriangleIndexVertexArray mi = new TriangleIndexVertexArray();
 			mi.addIndexedMesh(Bullet.makeMesh(mesh), ScalarType.SHORT);
@@ -53,6 +53,11 @@ public class Bullet {
 		}else if (bounds.equals("SPHERE")){
 			float radius = mesh.calculateRadius(0f, 0f, 0f);
 			shape = new SphereShape(radius);
+		}else if (bounds.equals("CAPSULE")){
+			Vector3 dim = mesh.calculateBoundingBox().getDimensions();
+			float radius = Math.max(dim.x, dim.y) / 2;
+			float height = dim.z - (2*radius);
+			shape = new CapsuleShapeZ(radius, height);			
 		}else if (bounds.equals("CONVEX_HULL")){
 			float[] verts = new float[mesh.getNumVertices() * mesh.getVertexSize()];
 			mesh.getVertices(verts);
