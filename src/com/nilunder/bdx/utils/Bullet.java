@@ -55,7 +55,7 @@ public class Bullet {
 			float radius = Math.max(Math.max(bbox.x, bbox.y), bbox.z) / 2;
 			shape = new SphereShape(radius);
 		}else if (bounds.equals("CAPSULE")){
-			Vector3 dim = mesh.calculateBoundingBox().getDimensions();
+			Vector3 dim = mesh.calculateBoundingBox().getDimensions(new Vector3());
 			float radius = Math.max(dim.x, dim.y) / 2;
 			float height = dim.z - (2*radius);
 			shape = new CapsuleShapeZ(radius, height);			
