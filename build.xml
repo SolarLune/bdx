@@ -19,6 +19,7 @@
 			<include name="gdx/${libgdx.version}/**/*.jar" />
 			<include name="gdx-backend-lwjgl/${libgdx.version}/**/*.jar" />
 			<include name="gdx-platform/${libgdx.version}/**/*desktop.jar" />
+			<include name="gdx-controllers/${libgdx.version}/**/*.jar" />
 		</fileset>
 		<fileset dir="${lwjgl.libs.dir}">
 			<include name="**/*.jar" />

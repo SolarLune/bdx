@@ -11,7 +11,7 @@ import com.nilunder.bdx.*;
 
 public class Mouse extends Finger{
 
-	public Keyboard.Log[] codeToLog;
+	public GdxProcessor.UpDownLog[] codeToLog;
 
 	private HashMap<String,Integer> btnToCode;
 
@@ -21,9 +21,9 @@ public class Mouse extends Finger{
 	public int cursorOffsetY;
 
 	public Mouse(){
-		codeToLog = new Keyboard.Log[5];
+		codeToLog = new GdxProcessor.UpDownLog[5];
 		for (int i = 0; i < 5; ++i)
-			codeToLog[i] = new Keyboard.Log();
+			codeToLog[i] = new GdxProcessor.UpDownLog();
 
 		btnToCode = new HashMap<>();
 		btnToCode.put("left", 0);
@@ -36,17 +36,17 @@ public class Mouse extends Finger{
 	}
 
 	public boolean btnHit(String btn){
-		Keyboard.Log b = codeToLog[btnToCode.get(btn)];
+		GdxProcessor.UpDownLog b = codeToLog[btnToCode.get(btn)];
 		return b.hit == Keyboard.t;
 	}
 
 	public boolean btnDown(String btn){
-		Keyboard.Log b = codeToLog[btnToCode.get(btn)];
+		GdxProcessor.UpDownLog b = codeToLog[btnToCode.get(btn)];
 		return b.hit > b.up;
 	}
 
 	public boolean btnUp(String btn){
-		Keyboard.Log b = codeToLog[btnToCode.get(btn)];
+		GdxProcessor.UpDownLog b = codeToLog[btnToCode.get(btn)];
 		return b.up == Keyboard.t;
 	}
 

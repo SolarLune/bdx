@@ -8,21 +8,10 @@ import com.nilunder.bdx.*;
 
 public class Keyboard {
 
-	public static class Log{
-
-		public int hit;
-		public int up;
-
-		public Log(){
-			hit = 0;
-			up = 0;
-		}
-		
-	}
 
 	public static int t;
 
-	public HashMap<Integer, Log> codeToLog;
+	public HashMap<Integer, GdxProcessor.UpDownLog> codeToLog;
 
 	private HashMap<String,Integer> keyToCode;
 
@@ -118,7 +107,7 @@ public class Keyboard {
 
 		codeToLog = new HashMap<>();
 		for (Integer code : keyToCode.values())
-			codeToLog.put(code, new Log());
+			codeToLog.put(code, new GdxProcessor.UpDownLog());
 
 	}
 
@@ -151,18 +140,18 @@ public class Keyboard {
 	}
 
 	public boolean keyHit(String key){
-		Log k = codeToLog.get(keyToCode.get(key));
-		return k.hit == t;
+		GdxProcessor.UpDownLog k = codeToLog.get(keyToCode.get(key));
+		return k.hit == GdxProcessor.currentTick;
 	}
 
 	public boolean keyDown(String key){
-		Log k = codeToLog.get(keyToCode.get(key));
+		GdxProcessor.UpDownLog k = codeToLog.get(keyToCode.get(key));
 		return k.hit > k.up;
 	}
 
 	public boolean keyUp(String key){
-		Log k = codeToLog.get(keyToCode.get(key));
-		return k.up == t;
+		GdxProcessor.UpDownLog k = codeToLog.get(keyToCode.get(key));
+		return k.up == GdxProcessor.currentTick;
 	}
 
 	public int kHit(String key){

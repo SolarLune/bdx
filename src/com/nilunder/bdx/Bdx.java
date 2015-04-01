@@ -66,6 +66,7 @@ public class Bdx{
 	public static Sounds sounds;
 	public static Music music;
 	public static Mouse mouse;
+	public static Gamepad gamepad;
 	public static InputMaps imaps;
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
@@ -84,6 +85,7 @@ public class Bdx{
 		sounds = new Sounds();
 		music = new Music();
 		mouse = new Mouse();
+		gamepad = new Gamepad();
 		imaps = new InputMaps();
 		keyboard = new Keyboard();
 		fingers = new ArrayList<Finger>(); 
@@ -94,7 +96,7 @@ public class Bdx{
 			allocatedFingers.add(new Finger(i));
 		}
 
-		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers));
+		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers, gamepad));
 
 		modelBatch = new ModelBatch();
 
@@ -115,7 +117,7 @@ public class Bdx{
 
 		// -------- Update Input --------
 		time += TICK_TIME;
-		++Keyboard.t;
+		++GdxProcessor.currentTick;
 		fingers.clear();
 		for (Finger f : allocatedFingers){
 			if (f.down() || f.up())
