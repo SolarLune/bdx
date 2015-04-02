@@ -37,7 +37,7 @@ public class Mouse extends Finger{
 
 	public boolean btnHit(String btn){
 		GdxProcessor.UpDownLog b = codeToLog[btnToCode.get(btn)];
-		return b.hit == Keyboard.t;
+		return b.hit == GdxProcessor.currentTick;
 	}
 
 	public boolean btnDown(String btn){
@@ -47,7 +47,7 @@ public class Mouse extends Finger{
 
 	public boolean btnUp(String btn){
 		GdxProcessor.UpDownLog b = codeToLog[btnToCode.get(btn)];
-		return b.up == Keyboard.t;
+		return b.up == GdxProcessor.currentTick;
 	}
 
 	public boolean clicked(GameObject g){

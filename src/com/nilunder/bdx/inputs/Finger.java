@@ -20,7 +20,7 @@ public class Finger extends Pointer {
 	}
 
 	public boolean hit(){
-		return hit == Keyboard.t;
+		return hit == GdxProcessor.currentTick;
 	}
 
 	public boolean down(){
@@ -28,7 +28,7 @@ public class Finger extends Pointer {
 	}
 
 	public boolean up(){
-		return up == Keyboard.t;
+		return up == GdxProcessor.currentTick;
 	}
 
 }

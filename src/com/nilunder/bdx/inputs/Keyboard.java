@@ -8,16 +8,11 @@ import com.nilunder.bdx.*;
 
 public class Keyboard {
 
-
-	public static int t;
-
 	public HashMap<Integer, GdxProcessor.UpDownLog> codeToLog;
 
 	private HashMap<String,Integer> keyToCode;
 
 	public Keyboard(){
-		t = 0;
-
 		keyToCode = new HashMap<>();
 		keyToCode.put("*", -1); // any key
 		keyToCode.put("0", 7);
