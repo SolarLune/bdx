@@ -40,10 +40,7 @@ class CreateBdxProject(bpy.types.Operator):
                "--mainClass", fmt["mainClass"],
                "--sdkLocation", fmt["sdkLocation"]]
 
-        try:
-            subprocess.check_call(cmd)
-        except subprocess.CalledProcessError:
-            raise Exception("Failed to create LibGDX project")
+        subprocess.check_call(cmd)
 
         ut.proot = fmt["dir"]
 
