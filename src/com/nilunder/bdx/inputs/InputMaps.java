@@ -55,6 +55,22 @@ public static class Input{
 					return Bdx.mouse.btnUp(d[1]);
 				}
 			};
+		}else if (d[0].equals("g")){
+			hdu[0] = new FnBool(){
+				public boolean eval(){
+					return Bdx.gamepad.btnHit(d[1]);
+				}
+			};
+			hdu[1] = new FnBool(){
+				public boolean eval(){
+					return Bdx.gamepad.btnDown(d[1]);
+				}
+			};
+			hdu[2] = new FnBool(){
+				public boolean eval(){
+					return Bdx.gamepad.btnUp(d[1]);
+				}
+			};
 		}else{
 			throw new RuntimeException(String.format("Invalid descriptor \"%s\".", descriptor));
 		}
