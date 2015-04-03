@@ -4,6 +4,7 @@ import java.util.*;
 import javax.vecmath.*;
 
 import com.badlogic.gdx.controllers.*;
+import com.badlogic.gdx.utils.*;
 
 import com.nilunder.bdx.*;
 
@@ -40,7 +41,9 @@ public static class Profile{
 	private HashMap<String,Profile> profiles;
 
 	public Gamepad(){
-		controller = Controllers.getControllers().get(0);
+		Array controllers = Controllers.getControllers();
+		if (controllers.size > 0)
+			controller = (Controller)controllers.get(0);
 
 		profiles = new HashMap<String,Profile>();
 

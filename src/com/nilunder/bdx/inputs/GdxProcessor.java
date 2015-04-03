@@ -68,7 +68,8 @@ private static class GamepadAdapter extends ControllerAdapter{
 		this.keyboard = keyboard;
 		this.mouse = mouse;
 		this.allocatedFingers = allocatedFingers;
-		gamepad.controller.addListener(new GamepadAdapter(gamepad));
+		if (gamepad.controller != null)
+			gamepad.controller.addListener(new GamepadAdapter(gamepad));
 	}
 
 	public boolean keyDown(int code){
