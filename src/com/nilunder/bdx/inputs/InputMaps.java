@@ -112,4 +112,16 @@ public static class Inputs extends ArrayList<Input>{
 		return get(name).status(2);
 	}
 
+	public int iHit(String name){
+		return hit(name)?1:0;
+	}
+
+	public int iDown(String name){
+		return down(name)?1:0;
+	}
+
+	public int iUp(String name){
+		return up(name)?1:0;
+	}
+
 }
