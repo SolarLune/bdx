@@ -1,24 +1,81 @@
 package com.nilunder.bdx.utils;
 
-import java.nio.ByteBuffer;
+import java.nio.*;
 
-import javax.vecmath.Vector3f;
+import javax.vecmath.*;
 
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.BoundingBox;
-import com.badlogic.gdx.utils.JsonValue;
-import com.bulletphysics.collision.dispatch.CollisionFlags;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.math.collision.*;
+import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.graphics.glutils.*;
+
+import com.bulletphysics.collision.dispatch.*;
 import com.bulletphysics.collision.shapes.*;
-import com.bulletphysics.dynamics.RigidBody;
-import com.bulletphysics.dynamics.RigidBodyConstructionInfo;
-import com.bulletphysics.linearmath.DefaultMotionState;
-import com.bulletphysics.linearmath.MotionState;
-import com.bulletphysics.linearmath.Transform;
-import com.bulletphysics.util.ObjectArrayList;
+import com.bulletphysics.dynamics.*;
+import com.bulletphysics.linearmath.*;
+import com.bulletphysics.util.*;
+
 import com.nilunder.bdx.*;
 
 public class Bullet {
+
+public static class DebugDrawer extends IDebugDraw{
+
+	private static ShapeRenderer shapeRenderer;
+	private static Vector3 from;
+	private static Vector3 to;
+
+	private boolean canDraw;
+	private boolean debug;
+
+	public DebugDrawer(boolean debug){
+		if (shapeRenderer == null){
+			shapeRenderer = new ShapeRenderer();
+			from = new Vector3();
+			to = new Vector3();
+			this.debug = debug;
+		}
+	}
+
+	public void drawLine(Vector3f from, Vector3f to, Vector3f color){
+		// It appears that this method will be called outside world.debugDrawWorld(),
+		// to draw things that don't appear to be overly relevant.
+		// So, instead of buffering vectors to draw at the right time (between shaperRenderer.begin() and end()),
+		// I simply bail:
+		if (canDraw){
+			shapeRenderer.setColor(color.x, color.y, color.z, 1f);
+			this.from.x = from.x; this.to.x = to.x;
+			this.from.y = from.y; this.to.y = to.y;
+			this.from.z = from.z; this.to.z = to.z;
+			shapeRenderer.line(this.from, this.to);
+		}
+	}
+
+	public int getDebugMode(){
+		if (debug)
+			return DebugDrawModes.DRAW_AABB | DebugDrawModes.DRAW_WIREFRAME;
+		else
+			return DebugDrawModes.NO_DEBUG;
+	}
+
+	public void setDebugMode(int mode){}
+	public void draw3dText(Vector3f v, String s){}
+	public void reportErrorWarning(String s){}
+	public void drawContactPoint(Vector3f a, Vector3f b, float f, int i, Vector3f c){}
+
+	public void drawWorld(DynamicsWorld world, Camera camera){
+		shapeRenderer.setProjectionMatrix(camera.combined);
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		canDraw = true;
+
+		world.debugDrawWorld();
+		
+		shapeRenderer.end();
+		canDraw = false;
+	}
+}
 	
 	public static IndexedMesh makeMesh(Mesh mesh){
 		ByteBuffer indices = ByteBuffer.allocate(mesh.getIndicesBuffer().capacity() * (Short.SIZE/8));

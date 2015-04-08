@@ -175,7 +175,11 @@ public class Bdx{
 				frameBuffer.drawTo(scene.lastFrameBuffer);		
 				
 			}
-			// -----------------------------
+
+			// ------- Render physics debug view --------
+
+			Bullet.DebugDrawer debugDrawer = (Bullet.DebugDrawer)scene.world.getDebugDrawer();
+			debugDrawer.drawWorld(scene.world, scene.cam);
 			
 			profiler.stop("__render");
 		}

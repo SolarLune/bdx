@@ -126,6 +126,7 @@ public class Scene implements Named{
 		name = json.get("name").asString();
 		
 		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+		world.setDebugDrawer(new Bullet.DebugDrawer(json.get("physviz").asBoolean()));
 		gravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
 
 		for (JsonValue mat : json.get("materials")){
