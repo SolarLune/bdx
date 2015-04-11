@@ -10,7 +10,7 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs>{
 
 public static class Input{
 
-	private static class FnBool{
+	public static class FnBool{
 		public boolean eval(){
 			return false;
 		}
@@ -18,8 +18,12 @@ public static class Input{
 
 	public FnBool[] hdu;
 
-	public Input(String descriptor){
+	public Input(){
 		hdu = new FnBool[3];
+	}
+
+	public Input(String descriptor){
+		this();
 
 		final String[] d = descriptor.split(":");
 
