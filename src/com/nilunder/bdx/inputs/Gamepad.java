@@ -10,6 +10,40 @@ import com.nilunder.bdx.*;
 
 public class Gamepad {
 
+public static class Axis{
+	public int code;
+	public float deadZone;
+	public float value; 
+
+	public Axis(int code, float deadZone){
+		this.code = code;
+		this.deadZone = deadZone;
+	}
+
+	public Axis(int code){
+		this(code, 0.25f);
+	}
+}
+
+public static class Stick{
+	public Axis x;
+	public Axis y;
+
+	public Stick(Axis x, Axis y){
+		this.x = x;
+		this.y = y;
+	}
+
+	public Vector3f pos(){
+		return new Vector3f(x.value, -y.value, 0);
+	}
+
+	public void deadZone(float dz){
+		x.deadZone = dz;
+		y.deadZone = dz;
+	}
+}
+
 public static class Profile{
 
 	public static class FnProcessAxis{
@@ -24,13 +58,16 @@ public static class Profile{
 	public HashMap<String,Integer> btnToCode;
 	public HashMap<Integer,GdxProcessor.UpDownLog> codeToLog;
 
-	public HashMap<String,Integer> axisToCode;
-	public HashMap<Integer,Float> axisValues;
+	public HashMap<String,Axis> axes;
+	public HashMap<Integer,Axis> codeToAxis;
+
+	public HashMap<String,Stick> sticks;
 
 	public Profile(String name){
 		this.name = name;
 		btnToCode = new HashMap<String,Integer>();
-		axisToCode = new HashMap<String,Integer>();
+		axes = new HashMap<String,Axis>();
+		sticks = new HashMap<String,Stick>();
 	}
 
 	public GdxProcessor.UpDownLog btnLog(String btn){
@@ -40,6 +77,8 @@ public static class Profile{
 
 	public Controller controller;
 	public Profile profile;
+	public HashMap<String,Axis> axes;
+	public HashMap<String,Stick> sticks;
 
 	private HashMap<String,Profile> profiles;
 
@@ -63,12 +102,15 @@ public static class Profile{
 		p.btnToCode.put("RS", 8);
 		p.btnToCode.put("LS", 9);
 
-		p.axisToCode.put("lx", 0);
-		p.axisToCode.put("ly", 1);
-		p.axisToCode.put("rx", 3);
-		p.axisToCode.put("ry", 4);
-		p.axisToCode.put("LT", 2);
-		p.axisToCode.put("RT", 5);
+		p.axes.put("lx", new Axis(0));
+		p.axes.put("ly", new Axis(1));
+		p.axes.put("rx", new Axis(3));
+		p.axes.put("ry", new Axis(4));
+		p.axes.put("LT", new Axis(2));
+		p.axes.put("RT", new Axis(5));
+
+		p.sticks.put("left", new Stick(p.axes.get("lx"), p.axes.get("ly")));
+		p.sticks.put("right", new Stick(p.axes.get("rx"), p.axes.get("ry")));
 
 		// Each profile has a processAxis reference, which can be
 		// set to a new FnProcessAxis function object, to convert
@@ -98,18 +140,18 @@ public static class Profile{
 
 		// Similarly for available axes, but with +/- 2XX button codes:
 		//
-		p.btnToCode.put("ls-left", -200 - p.axisToCode.get("lx"));
-		p.btnToCode.put("ls-right", 200 + p.axisToCode.get("lx"));
-		p.btnToCode.put("ls-up", -200 - p.axisToCode.get("ly"));
-		p.btnToCode.put("ls-down", 200 + p.axisToCode.get("ly"));
+		p.btnToCode.put("ls-left", -200 - p.axes.get("lx").code);
+		p.btnToCode.put("ls-right", 200 + p.axes.get("lx").code);
+		p.btnToCode.put("ls-up", -200 - p.axes.get("ly").code);
+		p.btnToCode.put("ls-down", 200 + p.axes.get("ly").code);
 
-		p.btnToCode.put("rs-left", -200 - p.axisToCode.get("rx"));
-		p.btnToCode.put("rs-right", 200 + p.axisToCode.get("rx"));
-		p.btnToCode.put("rs-up", -200 - p.axisToCode.get("ry"));
-		p.btnToCode.put("rs-down", 200 + p.axisToCode.get("ry"));
+		p.btnToCode.put("rs-left", -200 - p.axes.get("rx").code);
+		p.btnToCode.put("rs-right", 200 + p.axes.get("rx").code);
+		p.btnToCode.put("rs-up", -200 - p.axes.get("ry").code);
+		p.btnToCode.put("rs-down", 200 + p.axes.get("ry").code);
 
-		p.btnToCode.put("RT", 200 + p.axisToCode.get("RT"));
-		p.btnToCode.put("LT", 200 + p.axisToCode.get("LT"));
+		p.btnToCode.put("RT", 200 + p.axes.get("RT").code);
+		p.btnToCode.put("LT", 200 + p.axes.get("LT").code);
 
 		profiles.put(p.name, p);
 
@@ -124,30 +166,33 @@ public static class Profile{
 		p.btnToCode.put("LB", 4);
 		p.btnToCode.put("RB", 5);
 
-		p.axisToCode.put("lx", 1);
-		p.axisToCode.put("ly", 0);
-		p.axisToCode.put("rx", 2);
-		p.axisToCode.put("ry", 3);
-		p.axisToCode.put("LT", 4);
-		p.axisToCode.put("RT", 5);
+		p.axes.put("lx", new Axis(1));
+		p.axes.put("ly", new Axis(0));
+		p.axes.put("rx", new Axis(2));
+		p.axes.put("ry", new Axis(3));
+		p.axes.put("LT", new Axis(4));
+		p.axes.put("RT", new Axis(5));
 
-		p.btnToCode.put("ls-left", -200 - p.axisToCode.get("lx"));
-		p.btnToCode.put("ls-right", 200 + p.axisToCode.get("lx"));
-		p.btnToCode.put("ls-up", -200 - p.axisToCode.get("ly"));
-		p.btnToCode.put("ls-down", 200 + p.axisToCode.get("ly"));
+		p.sticks.put("left", new Stick(p.axes.get("lx"), p.axes.get("ly")));
+		p.sticks.put("right", new Stick(p.axes.get("rx"), p.axes.get("ry")));
 
-		p.btnToCode.put("rs-left", -200 - p.axisToCode.get("rx"));
-		p.btnToCode.put("rs-right", 200 + p.axisToCode.get("rx"));
-		p.btnToCode.put("rs-up", -200 - p.axisToCode.get("ry"));
-		p.btnToCode.put("rs-down", 200 + p.axisToCode.get("ry"));
+		p.btnToCode.put("ls-left", -200 - p.axes.get("lx").code);
+		p.btnToCode.put("ls-right", 200 + p.axes.get("lx").code);
+		p.btnToCode.put("ls-up", -200 - p.axes.get("ly").code);
+		p.btnToCode.put("ls-down", 200 + p.axes.get("ly").code);
 
-		p.btnToCode.put("RT", 200 + p.axisToCode.get("RT"));
-		p.btnToCode.put("LT", 200 + p.axisToCode.get("LT"));
+		p.btnToCode.put("rs-left", -200 - p.axes.get("rx").code);
+		p.btnToCode.put("rs-right", 200 + p.axes.get("rx").code);
+		p.btnToCode.put("rs-up", -200 - p.axes.get("ry").code);
+		p.btnToCode.put("rs-down", 200 + p.axes.get("ry").code);
+
+		p.btnToCode.put("RT", 200 + p.axes.get("RT").code);
+		p.btnToCode.put("LT", 200 + p.axes.get("LT").code);
 
 		// Unlike the original xbox, which uses one axis per trigger, 
 		// xbox360 gamepads use a single axis for both triggers, where RT
 		// values are positive, while LT values are negative. We convert 
-		// to effectively place RT a different axis index (5), which enables us 
+		// to effectively place RT on a different axis index (5), which enables us 
 		// to use positive values for both triggers.
 		// 
 		p.processAxis = new Profile.FnProcessAxis(){
@@ -173,9 +218,12 @@ public static class Profile{
 			for (Integer code : profile.btnToCode.values())
 				profile.codeToLog.put(code, new GdxProcessor.UpDownLog());
 
-			profile.axisValues = new HashMap<>();
-			for (Integer code : profile.axisToCode.values())
-				profile.axisValues.put(code, 0.f);
+			profile.codeToAxis = new HashMap<>();
+			for (Axis axis : profile.axes.values())
+				profile.codeToAxis.put(axis.code, axis);
+
+			axes = profile.axes;
+			sticks = profile.sticks;
 		}
 	}
 
@@ -194,15 +242,4 @@ public static class Profile{
 		GdxProcessor.UpDownLog b = profile.btnLog(btn);
 		return b.up == GdxProcessor.currentTick;
 	}
-
-	public float axis(String name){
-		return profile.axisValues.get(profile.axisToCode.get(name));
-	}
-
-	public Vector3f stick(String name){
-		if (name.equals("left"))
-			return new Vector3f(axis("lx"), -axis("ly"), 0);
-		return new Vector3f(axis("rx"), -axis("ry"), 0);
-	}
-
 }

@@ -78,7 +78,17 @@ private static class GamepadAdapter extends ControllerAdapter{
 			value = code_value[1];
 		}
 
-		gamepad.profile.axisValues.put(code, value);
+		Gamepad.Axis axis = gamepad.profile.codeToAxis.get(code);
+		if (axis != null){
+			float absVal = Math.abs(value);
+			if (absVal > axis.deadZone){
+				float nv = (absVal - axis.deadZone) / (1 - axis.deadZone);
+				value = value < 0 ? -nv : nv;
+			}else{
+				value = 0;
+			}
+			axis.value = value;
+		}
 
 		code = value >= 0 ? 200 + code : -200 - code;
 		GdxProcessor.UpDownLog b = gamepad.profile.codeToLog.get(code);
@@ -91,11 +101,11 @@ private static class GamepadAdapter extends ControllerAdapter{
 			if (lastVal == null)
 				lastVal = new Float(0);
 
-			if (value > trigger){
-				if (lastVal <= trigger)
+			if (value != 0){
+				if (lastVal == 0)
 					b.hit = GdxProcessor.tick();
 			}else{
-				if (lastVal >= trigger)
+				if (lastVal != 0)
 					b.up = GdxProcessor.tick();
 			}
 
