@@ -427,6 +427,12 @@ def srl_objects(objects):
         elif obj.type == "FONT":
             d["font"] = obj.data.font.name
             d["text"] = obj.data.body
+            
+        elif obj.type == "LAMP":
+            d['lamp'] = {"type": obj.data.type, 
+                          "energy": obj.data.energy,
+                          "color": list([obj.data.color[0], obj.data.color[1], obj.data.color[2], 1]),
+                          "distance": obj.data.distance}
 
     return name_object
 
@@ -445,7 +451,8 @@ def srl_materials(materials):
                 {"texture": texture_name(m),
                  "alpha_blend": "ALPHA" if m.use_transparency else "OPAQUE",
                  "color": list(m.diffuse_color),
-                 "opacity": m.alpha}
+                 "opacity": m.alpha,
+                 "shadeless": m.use_shadeless}
             for m in materials}
 
 
@@ -619,10 +626,17 @@ def export(context, filepath, scene_name, exprun):
     ts = texts(objects)
     fonts = used_fonts(ts)
 
+    if scene.world != None:
+        ambient_color = list(scene.world.ambient_color)
+        ambient_color.append(1)
+    else:
+        ambient_color = [0,0,0,1]
+
     bdx = {
         "name": scene.name,
         "gravity": scene.game_settings.physics_gravity,
         "physviz": scene.game_settings.show_physics_visualization,
+        "ambientColor": ambient_color,
         "models": srl_models(used_meshes(objects)),
         "objects": srl_objects(objects),
         "materials": srl_materials(used_materials(objects)),

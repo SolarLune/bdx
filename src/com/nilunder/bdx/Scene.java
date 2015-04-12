@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
@@ -69,6 +70,7 @@ public class Scene implements Named{
 	private HashMap<String, GameObject> templates;
 	public ArrayList<Filter> filters;
 	public RenderBuffer lastFrameBuffer;
+	public Environment environment;
 	
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
@@ -100,7 +102,9 @@ public class Scene implements Named{
 		paused = false;
 
 		lastFrameBuffer = new RenderBuffer(null);
-		
+		environment = new Environment();
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0, 0, 0, 1));
+				
 		filters = new ArrayList<Filter>();
 		defaultMaterial = new Material();
 		defaultModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
@@ -128,6 +132,7 @@ public class Scene implements Named{
 		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 		world.setDebugDrawer(new Bullet.DebugDrawer(json.get("physviz").asBoolean()));
 		gravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
+		ambientLight(new Vector4f(json.get("ambientColor").asFloatArray()));
 
 		for (JsonValue mat : json.get("materials")){
 			String texName = mat.get("texture").asString();
@@ -135,6 +140,9 @@ public class Scene implements Named{
 			float[] c = mat.get("color").asFloatArray();
 			Material material = new Material(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
 							
+			if (mat.get("shadeless").asBoolean())
+				material.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
+			
 			if (texName != null){
 				Texture texture = textures.get(texName);
 				if (texture == null){
@@ -178,7 +186,13 @@ public class Scene implements Named{
 				Text t = (Text)g;
 				t.font = fonts.get(gobj.get("font").asString());
 			}
-
+			else if (type.equals("LAMP")) {
+				JsonValue settings = gobj.get("lamp");
+				Light l = (Light)g;
+				l.energy(settings.getFloat("energy"));
+				l.color(new Vector4f(settings.get("color").asFloatArray()));
+				l.type = settings.getString("type");
+			}
 
 			g.name = gobj.name;
 
@@ -300,6 +314,15 @@ public class Scene implements Named{
 			Text tt = (Text)gobj;
 			t.font = tt.font;
 			t.useUniqueMesh();
+		}
+		else if (g instanceof Light) {
+			Light l = (Light)g;
+			Light ll = (Light)gobj;
+			l.energy(ll.energy());
+			l.color(ll.color());
+			l.type = ll.type;
+			l.makeLightData();
+			environment.add(l.lightData);
 		}
 
 		return g;
@@ -636,6 +659,19 @@ public class Scene implements Named{
 
 	}
 	
+	public void ambientLight(Vector4f color){
+		ambientLight(color.x, color.y, color.z, color.w);
+	}
+	
+	public void ambientLight(float r, float g, float b, float a) {
+		ColorAttribute ca = (ColorAttribute) environment.get(ColorAttribute.AmbientLight);
+		ca.color.set(r, g, b, a);
+	}
+	
+	public Vector4f ambientLight(){
+		ColorAttribute ca = (ColorAttribute) environment.get(ColorAttribute.AmbientLight);
+		return new Vector4f(ca.color.r, ca.color.g, ca.color.b, ca.color.a);
+	}
 	
 	public void update(){
 		

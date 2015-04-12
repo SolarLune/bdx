@@ -148,7 +148,7 @@ public class Bdx{
 			modelBatch.begin(scene.cam);
 			for (GameObject g : scene.objects){
 				if (g.visible()){
-					modelBatch.render(g.modelInstance);
+					modelBatch.render(g.modelInstance, scene.environment);
 				}
 			}
 			modelBatch.end();
