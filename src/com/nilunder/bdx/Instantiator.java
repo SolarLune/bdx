@@ -12,6 +12,9 @@ public class Instantiator {
 		if (type.equals("FONT")){
 			return new Text();
 		}
+		if (type.equals("LAMP")){
+			return new Light();
+		}
 		return new GameObject();
 	}
 	
