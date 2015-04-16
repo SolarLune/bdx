@@ -238,7 +238,8 @@ def srl_materials_text(texts):
         gmat = {"texture": "__FNT_"+t.font.name+".png",
                 "alpha_blend": "ALPHA",
                 "color": list(m.diffuse_color) if m else [1, 1, 1],
-                "opacity": m.alpha if m else 1} 
+                "opacity": m.alpha if m else 1,
+                "shadeless": True}
 
         name_gmat["__FNT_"+mat_name(m)+t.font.name] = gmat
 
