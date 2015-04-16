@@ -183,8 +183,23 @@ public class Bdx{
 			
 			profiler.stop("__render");
 		}
+		
+		if (profiler.visible){
+			profiler.update();
 
-		profiler.update();
+			// ------- Render profiler scene --------
+			
+			Scene profilerScene = profiler.scene;
+			profilerScene.update();
+			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+			modelBatch.begin(profilerScene.cam);
+			for (GameObject g : profilerScene.objects){
+				if (g.visible()){
+					modelBatch.render(g.modelInstance, profilerScene.environment);
+				}
+			}
+			modelBatch.end();
+		}
 	}
 	
 	public static void dispose(){
