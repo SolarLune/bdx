@@ -37,6 +37,7 @@ import com.bulletphysics.linearmath.Transform;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
+import com.nilunder.bdx.Bdx;
 
 public class Scene implements Named{
 	public static HashMap<String, Instantiator> instantiators;
@@ -134,6 +135,8 @@ public class Scene implements Named{
 		world.setDebugDrawer(new Bullet.DebugDrawer(json.get("physviz").asBoolean()));
 		gravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
 		ambientLight(new Vector4f(json.get("ambientColor").asFloatArray()));
+		if (!Bdx.profiler.visible && json.get("framerateProfile").asBoolean())
+			Bdx.profiler.show();
 
 		for (JsonValue mat : json.get("materials")){
 			String texName = mat.get("texture").asString();

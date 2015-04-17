@@ -639,6 +639,7 @@ def export(context, filepath, scene_name, exprun):
         "name": scene.name,
         "gravity": scene.game_settings.physics_gravity,
         "physviz": scene.game_settings.show_physics_visualization,
+        "framerateProfile": scene.game_settings.show_framerate_profile,
         "ambientColor": ambient_color,
         "models": srl_models(used_meshes(objects)),
         "objects": srl_objects(objects),
