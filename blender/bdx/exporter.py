@@ -239,8 +239,8 @@ def srl_materials_text(texts):
                 "alpha_blend": "ALPHA",
                 "color": list(m.diffuse_color) if m else [1, 1, 1],
                 "opacity": m.alpha if m else 1,
-                "shadeless": True,
-                "backface_culling": m.game_settings.use_backface_culling}
+                "shadeless": m.use_shadeless if m else True,
+                "backface_culling": m.game_settings.use_backface_culling if m else True}
 
         name_gmat["__FNT_"+mat_name(m)+t.font.name] = gmat
 

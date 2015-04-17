@@ -107,6 +107,7 @@ public class Scene implements Named{
 				
 		filters = new ArrayList<Filter>();
 		defaultMaterial = new Material();
+		defaultMaterial.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
 		defaultModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 
 		models = new HashMap<String,Model>();
