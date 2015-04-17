@@ -39,7 +39,7 @@ public class GameObject implements Named{
 	
 	public ArrayListNamed<GameObject> children;
 	
-	public ArrayList<Component> components;
+	public ArrayListNamed<Component> components;
 	
 	public Scene scene;
 
@@ -55,7 +55,7 @@ public class GameObject implements Named{
 		touchingObjects = new ArrayListNamed<GameObject>();
 		touchingObjectsLast = new ArrayListNamed<GameObject>();
 		contactManifolds = new ArrayList<PersistentManifold>();
-		components = new ArrayList<Component>();
+		components = new ArrayListNamed<Component>();
 		children = new ArrayListNamed<GameObject>();
 		valid = true;
 	}
