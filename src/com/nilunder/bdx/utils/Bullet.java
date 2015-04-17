@@ -35,8 +35,8 @@ public static class DebugDrawer extends IDebugDraw{
 			shapeRenderer = new ShapeRenderer();
 			from = new Vector3();
 			to = new Vector3();
-			this.debug = debug;
 		}
+		this.debug = debug;
 	}
 
 	public void drawLine(Vector3f from, Vector3f to, Vector3f color){
