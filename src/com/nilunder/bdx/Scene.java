@@ -621,7 +621,6 @@ public class Scene implements Named{
 			toBeRemoved.clear();
 		}
 		if (requestedRestart){
-			System.out.println("requestedRestart");
 			for (Model m : models.values()){
 				m.dispose();
 			}
