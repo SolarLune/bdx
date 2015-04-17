@@ -198,11 +198,18 @@ public class GameObject implements Named{
 	}
 	
 	public void updateChildTransforms(){
+		Matrix4f pt = transform();
+		Matrix4f ct = new Matrix4f();
+		Matrix4f ms = new Matrix4f(); ms.setIdentity();
+		Vector3f ps = scale();
+		ms.m00 = ps.x; ms.m11 = ps.y; ms.m22 = ps.z;
+		pt.mul(ms);
+
 		for (GameObject c : children){
-			Matrix4f ct = transform();
-			ct.mul(c.localTransform);
+			ct.mul(pt, c.localTransform);
 			c.transform(ct, false);
 		}
+
 	}
 
 	public void transform(Matrix4f mat, boolean updateLocal){
@@ -210,7 +217,8 @@ public class GameObject implements Named{
 		
 		Transform t = new Transform();
 		t.set(mat);
-		
+		t.basis.normalize();
+
 		body.setWorldTransform(t);
 
 		// required for static objects:
@@ -231,6 +239,10 @@ public class GameObject implements Named{
 
 	private void updateLocalTransform(){
 		localTransform = parent.transform();
+		Matrix4f ms = new Matrix4f(); ms.setIdentity();
+		Vector3f ps = scale();
+		ms.m00 = ps.x; ms.m11 = ps.y; ms.m22 = ps.z;
+		localTransform.mul(ms);
 		localTransform.invert();
 		localTransform.mul(transform());
 	}
@@ -444,22 +456,15 @@ public class GameObject implements Named{
 		// Child propagation
 		Vector3f ps = scale();
 		Matrix4f pt = transform();
-		Matrix4f ms = new Matrix4f();
-		Matrix3f rs = new Matrix3f();
-		Vector4f es = new Vector4f();
+		Matrix4f ct = new Matrix4f();
+		Matrix4f ms = new Matrix4f(); ms.setIdentity();
+		ms.m00 = ps.x; ms.m11 = ps.y; ms.m22 = ps.z;
+		pt.mul(ms);
 
 		for (GameObject c : children){
-			ms.setIdentity();
-			ms.m00 = ps.x; ms.m11 = ps.y; ms.m22 = ps.z;
-			pt.mul(ms);
-			ms.mul(pt, c.localTransform);
-			ms.getColumn(0, es); ps.x = es.length();
-			ms.getColumn(1, es); ps.y = es.length();
-			ms.getColumn(2, es); ps.z = es.length();
-			c.scale(ps.mul(c.localScale), false);
-			c.transform().getRotationScale(rs);
-			ms.setRotationScale(rs);
-			c.transform(ms, false);
+			c.scale(scale().mul(c.localScale), false);
+			ct.mul(pt, c.localTransform);
+			c.transform(ct, false);
 		}
 
 		if (parent != null && updateLocal){
