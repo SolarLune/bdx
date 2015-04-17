@@ -143,6 +143,11 @@ public class Scene implements Named{
 			if (mat.get("shadeless").asBoolean())
 				material.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
 			
+			if (mat.get("backface_culling").asBoolean())
+				material.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_BACK));
+			else
+				material.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_NONE));
+			
 			if (texName != null){
 				Texture texture = textures.get(texName);
 				if (texture == null){

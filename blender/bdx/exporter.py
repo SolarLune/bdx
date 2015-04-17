@@ -239,7 +239,8 @@ def srl_materials_text(texts):
                 "alpha_blend": "ALPHA",
                 "color": list(m.diffuse_color) if m else [1, 1, 1],
                 "opacity": m.alpha if m else 1,
-                "shadeless": True}
+                "shadeless": True,
+                "backface_culling": m.game_settings.use_backface_culling}
 
         name_gmat["__FNT_"+mat_name(m)+t.font.name] = gmat
 
@@ -453,7 +454,8 @@ def srl_materials(materials):
                  "alpha_blend": "ALPHA" if m.use_transparency else "OPAQUE",
                  "color": list(m.diffuse_color),
                  "opacity": m.alpha,
-                 "shadeless": m.use_shadeless}
+                 "shadeless": m.use_shadeless,
+                 "backface_culling": m.game_settings.use_backface_culling}
             for m in materials}
 
 
