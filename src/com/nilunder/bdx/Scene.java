@@ -352,6 +352,7 @@ public class Scene implements Named{
 			Matrix3f ori = inst.orientation();
 			ori.mul(g.orientation());
 			g.orientation(ori);
+			g.scale(inst.scale());
 
 			g.props = new HashMap<String, JsonValue>(g.props);
 			g.props.putAll(inst.props);
