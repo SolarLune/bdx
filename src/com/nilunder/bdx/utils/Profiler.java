@@ -40,7 +40,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		startTimes.put(name, TimeUtils.nanoTime());
 	}
 
-	public Long stop(String name){
+	public float stop(String name){
 		long stopTime = TimeUtils.nanoTime();
 		long startTime = startTimes.containsKey(name) ? startTimes.get(name) : lastStopTime;
 		long deltaTime = stopTime - startTime;
@@ -50,7 +50,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 			put(name, storedDeltaTime);
 			lastStopTime = stopTime;
 		}
-		return deltaTime;
+		return deltaTime * 0.000001f;
 	}
 	
 	private void updateDisplay(){
