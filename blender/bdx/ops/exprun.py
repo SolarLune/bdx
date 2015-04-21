@@ -15,6 +15,20 @@ class BdxExpRun(bpy.types.Operator):
         proot = ut.project_root()
         sroot = ut.src_root()
         asset_dir = j(proot, "android", "assets", "bdx")
+        prof_scene_name = "__Profiler"
+
+        # Check if profiler scene exists:
+        bdx_scenes_dir = j(asset_dir, "scenes")
+        profiler_exported = prof_scene_name + ".bdx" in os.listdir(bdx_scenes_dir)
+        
+        if not profiler_exported:
+        
+            # Append profiler scene from default blend file:
+            prof_blend_name = "profiler.blend"
+            prof_scene_path = j(prof_blend_name, "Scene", prof_scene_name)
+            prof_scene_dir = j(ut.gen_root(), prof_blend_name, "Scene", "")
+
+            bpy.ops.wm.append(filepath=prof_scene_path, directory=prof_scene_dir, filename=prof_scene_name)
 
         # Save-out internal java files
         saved_out_files = ut.save_internal_java_files(sroot)
@@ -35,6 +49,10 @@ class BdxExpRun(bpy.types.Operator):
 
             bpy.ops.export_scene.bdx(filepath=file_path, scene_name=scene.name, exprun=True)
 
+        if not profiler_exported:
+        
+            # Remove temporal profiler scene:
+            bpy.data.scenes.remove(bpy.data.scenes[prof_scene_name])
 
         # Modify relevant files:
         bdx_app = j(sroot, "BdxApp.java")
