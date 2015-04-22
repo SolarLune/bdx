@@ -523,6 +523,8 @@ public class GameObject implements Named{
 		Vector3f alignAxis = axis(axisName);
 		Vector3f rotAxis = new Vector3f();
 		rotAxis.cross(alignAxis, vec);
+		if (rotAxis.length() == 0)
+			rotAxis = axis(("XYZ".indexOf(axisName) + 1) % 3);
 		Matrix3f rotMatrix = Matrix3f.rotation(rotAxis, alignAxis.angle(vec));
 		Matrix3f ori = orientation();
 		rotMatrix.mul(ori);
