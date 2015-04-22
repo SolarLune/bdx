@@ -191,10 +191,11 @@ class CreateBdxProject(bpy.types.Operator):
 
         # move textures
         proot = ut.project_root()
-        bdx = j(proot, "android", "assets", "bdx")
-        shutil.rmtree(j(bdx, "textures"))
         unpacked_textures = j(proot, "blender", "textures") 
-        shutil.move(unpacked_textures, bdx)
+        if os.path.isdir(unpacked_textures):
+            bdx = j(proot, "android", "assets", "bdx")
+            shutil.rmtree(j(bdx, "textures"))
+            shutil.move(unpacked_textures, bdx)
 
         # move audio
         unpacked_sounds = j(proot, "blender", "sounds")
