@@ -39,6 +39,9 @@ public class Text extends GameObject{
 				chr = text.charAt(i);
 
 			JsonValue c = char_data.get(Integer.toString(chr));
+			if (c == null)
+				c = char_data.get(Integer.toString(' '));
+
 			int x = pos + c.get("xoffset").asInt();
 			int y = 0 - c.get("yoffset").asInt();
 			int w = c.get("width").asInt();
