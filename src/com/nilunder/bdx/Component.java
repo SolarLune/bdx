@@ -15,4 +15,13 @@ public class Component implements Named {
 	public String name() {
 		return this.getClass().getSimpleName();
 	}
+	
+	public void state(State newState){
+		if (state != null)
+			state.exit();
+		state = newState;
+		if (state != null)
+			state.enter();
+	}
+	
 }

@@ -1,5 +1,9 @@
 package com.nilunder.bdx;
 
-public interface State {
-	public void main();
+public class State {
+	
+	public void enter(){}	
+	public void main(){}
+	public void exit(){}
+	
 }
