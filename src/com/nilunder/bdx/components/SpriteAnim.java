@@ -13,7 +13,7 @@ import com.nilunder.bdx.*;
 import com.nilunder.bdx.utils.Timer;
 
 
-public class SpriteAnim extends Component {
+public class SpriteAnim extends Component<GameObject> {
 
 	public static class Animation extends ArrayList<Vector2f>{
 		public String name;

@@ -6,7 +6,7 @@ import com.nilunder.bdx.State;
 
 import javax.vecmath.Vector3f;
 
-public class Track extends Component {
+public class Track extends Component<GameObject> {
 	public GameObject target;
 	public Vector3f offset;
 	public String axis;

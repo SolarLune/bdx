@@ -4,7 +4,7 @@ import com.nilunder.bdx.Component;
 import com.nilunder.bdx.GameObject;
 import com.nilunder.bdx.State;
 
-public class Halo extends Component {
+public class Halo extends Component<GameObject> {
 
 	public Halo(GameObject g){
 		super(g);

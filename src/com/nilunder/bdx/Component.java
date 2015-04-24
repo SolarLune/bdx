@@ -2,12 +2,12 @@ package com.nilunder.bdx;
 
 import com.nilunder.bdx.utils.Named;
 
-public class Component implements Named {
+public class Component<T extends GameObject> implements Named {
 
 	public State state;
-	protected GameObject g;
+	protected T g;
 	
-	public Component(GameObject g){
+	public Component(T g){
 		this.g = g;
 	}
 

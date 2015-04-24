@@ -8,7 +8,7 @@ import com.bulletphysics.linearmath.MatrixUtil;
 
 import com.nilunder.bdx.*;
 
-public class FAnim extends Component{
+public class FAnim extends Component<GameObject>{
 
 	private static class KeyFrame{
 		public Vector2f handle_left;
