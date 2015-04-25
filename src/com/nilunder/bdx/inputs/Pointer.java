@@ -1,9 +1,10 @@
 package com.nilunder.bdx.inputs;
 
+import java.util.ArrayList;
+
 import javax.vecmath.*;
 
 import com.badlogic.gdx.Gdx;
-
 import com.nilunder.bdx.*;
 
 abstract class Pointer {
@@ -61,4 +62,18 @@ abstract class Pointer {
 	public RayHit ray(){
 		return ray((short)~0, (short)~0);
 	}
+	
+	public ArrayList<RayHit> xray(boolean includeAll, short group, short mask) {
+	
+		Vector3f v = rayDirection();
+		v.length(100);
+
+		return scene.xray(raySource(), v, includeAll, group, mask);
+		
+	}
+	
+	public ArrayList<RayHit> xray(){
+		return xray(false, (short)~0, (short)~0);
+	}
+	
 }
