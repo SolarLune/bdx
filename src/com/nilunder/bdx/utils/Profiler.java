@@ -17,11 +17,13 @@ import javax.vecmath.Vector3f;
 
 
 public class Profiler extends LinkedHashMap<String, Long>{
-	private LinkedHashMap<String, Long> startTimes = new LinkedHashMap<String, Long>();
-	private long totalStartTime = TimeUtils.nanoTime();
+	
+	private final int ticRate = 60;
+	private LinkedHashMap<String, Long> startTimes;
+	private long totalStartTime;
 	private long lastStopTime;
-	private LinkedHashMap<String, Long> nanos = new LinkedHashMap<String, Long>();
-	private LinkedHashMap<String, Float> percents = new LinkedHashMap<String, Float>();
+	private LinkedHashMap<String, Long> nanos;
+	private LinkedHashMap<String, Float> percents;
 	private ArrayList<String> names;
 	private ArrayList<Long> ticTimes;
 	private GameObject display;
@@ -30,16 +32,27 @@ public class Profiler extends LinkedHashMap<String, Long>{
 	private LinkedHashMap<String, Text> texts;
 	private LinkedHashMap<String, GameObject> bars;
 	private Vector3f screenSize;
-	private final int ticRate = 60;
+	private boolean initialized;
 
-	public float avgTicRate = 60f;
-	public float avgTicTime = 1000/60f;
-	public boolean visible = false;
-
+	public float avgTicRate;
+	public float avgTicTime;
+	public boolean visible;
 	public Scene scene;
 
+	public void init(Scene scene){
+		if (initialized) return;
+		visible = scene.json.get("framerateProfile").asBoolean();
+		startTimes = new LinkedHashMap<String, Long>();
+		totalStartTime = TimeUtils.nanoTime();
+		nanos = new LinkedHashMap<String, Long>();
+		percents = new LinkedHashMap<String, Float>();
+		avgTicRate = ticRate;
+		avgTicTime = 1000 / ticRate;
+		initialized = true;
+		if (visible) show();
+	}
+
 	public void show(){
-		visible = true;
 		names = new ArrayList<String>();
 		ticTimes = new ArrayList<Long>();
 		for (int i = 0; i < ticRate; i++)
