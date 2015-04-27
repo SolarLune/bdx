@@ -19,9 +19,11 @@ class BdxExpRun(bpy.types.Operator):
 
         # Check if profiler scene exists:
         bdx_scenes_dir = j(asset_dir, "scenes")
-        profiler_exported = prof_scene_name + ".bdx" in os.listdir(bdx_scenes_dir)
+        no_profile_bdx = prof_scene_name + ".bdx" not in os.listdir(bdx_scenes_dir)
+        show_framerate_profile = bpy.context.scene.game_settings.show_framerate_profile
+        export_profile_scene = show_framerate_profile and no_profile_bdx
         
-        if not profiler_exported:
+        if export_profile_scene:
         
             # Append profiler scene from default blend file:
             prof_blend_name = "profiler.blend"
@@ -49,7 +51,7 @@ class BdxExpRun(bpy.types.Operator):
 
             bpy.ops.export_scene.bdx(filepath=file_path, scene_name=scene.name, exprun=True)
 
-        if not profiler_exported:
+        if export_profile_scene:
         
             # Remove temporal profiler scene:
             bpy.data.scenes.remove(bpy.data.scenes[prof_scene_name])
