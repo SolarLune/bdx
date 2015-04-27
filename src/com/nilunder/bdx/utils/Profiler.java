@@ -33,6 +33,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 	private LinkedHashMap<String, GameObject> bars;
 	private Vector3f screenSize;
 	private float spacing;
+	private String exceptionMessage;
 	private boolean initialized;
 
 	public float avgTicRate;
@@ -49,6 +50,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		percents = new LinkedHashMap<String, Float>();
 		avgTicRate = TIC_RATE;
 		avgTicTime = 1000 / TIC_RATE;
+		exceptionMessage = "User created subsystem names should not start with: \"__\"";
 		initialized = true;
 		if (visible) show();
 	}
@@ -85,6 +87,23 @@ public class Profiler extends LinkedHashMap<String, Long>{
 			lastStopTime = stopTime;
 		}
 		return deltaTime * 0.000001f;
+	}
+	
+	public void remove(String name){
+		if (name.startsWith("__")) throw new RuntimeException(exceptionMessage);
+		startTimes.remove(name);
+		nanos.remove(name);
+		percents.remove(name);
+		super.remove(name);
+		if (visible){
+			names.remove(name);
+			texts.get(name).end();
+			bars.get(name).end();
+			int size = names.size();
+			float offset = names.get(size - 1).startsWith("__") ? spacing * 3f : spacing * 3.5f;
+			Vector3f backgroundScale = new Vector3f(spacing * 23, spacing * size + offset, 1);
+			background.scale(backgroundScale.mul(display.scale()));
+		}
 	}
 	
 	private void updateAvgTicVars(long delta){
