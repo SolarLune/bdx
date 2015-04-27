@@ -18,7 +18,7 @@ import javax.vecmath.Vector3f;
 
 public class Profiler extends LinkedHashMap<String, Long>{
 	
-	private final int ticRate = 60;
+	private final int TIC_RATE = 60;
 	private LinkedHashMap<String, Long> startTimes;
 	private long totalStartTime;
 	private long lastStopTime;
@@ -32,6 +32,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 	private LinkedHashMap<String, Text> texts;
 	private LinkedHashMap<String, GameObject> bars;
 	private Vector3f screenSize;
+	private float spacing;
 	private boolean initialized;
 
 	public float avgTicRate;
@@ -46,17 +47,18 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		totalStartTime = TimeUtils.nanoTime();
 		nanos = new LinkedHashMap<String, Long>();
 		percents = new LinkedHashMap<String, Float>();
-		avgTicRate = ticRate;
-		avgTicTime = 1000 / ticRate;
+		avgTicRate = TIC_RATE;
+		avgTicTime = 1000 / TIC_RATE;
 		initialized = true;
 		if (visible) show();
 	}
 
-	public void show(){
+	private void show(){
+		screenSize = new Vector3f(448, 448, 1);
+		spacing = 0.6f;
 		names = new ArrayList<String>();
 		ticTimes = new ArrayList<Long>();
-		for (int i = 0; i < ticRate; i++)
-			ticTimes.add(1000000000L / ticRate);
+		for (int i = 0; i < TIC_RATE; i++) ticTimes.add(1000000000L / TIC_RATE);
 		texts = new LinkedHashMap<String, Text>();
 		bars = new LinkedHashMap<String, GameObject>();
 		scene = new Scene("__Profiler");
@@ -64,9 +66,8 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		display = scene.add("__PDisplay");
 		background = display.children.get(0);
 		ticInfo = (Text)scene.add("__PText");
-		ticInfo.position(0.6f, -1.2f, 0);
+		ticInfo.position(spacing, -spacing * 1.5f, 0);
 		ticInfo.parent(display);
-		screenSize = new Vector3f(512, 512, 1);
 	}
 	
 	public void start(String name){
@@ -90,9 +91,8 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		ticTimes.remove(0);
 		ticTimes.add(delta);
 		long sumTicTimes = 0;
-		for (long l : ticTimes)
-			sumTicTimes += l;
-		avgTicTime = 1000000000000f / (ticRate * sumTicTimes);
+		for (long l : ticTimes) sumTicTimes += l;
+		avgTicTime = 1000000000000f / (TIC_RATE * sumTicTimes);
 		avgTicRate = 1000 / avgTicTime;
 	}
 
@@ -102,29 +102,29 @@ public class Profiler extends LinkedHashMap<String, Long>{
 			if (!names.contains(name)){
 				names.add(name);
 				int i = names.indexOf(name);
-				float offset = (name.contains("__")) ? 2.4f : 3.0f;
-				Vector3f p = new Vector3f(0.6f, -(0.6f * i + offset), 0);
+				float offset = (name.startsWith("__")) ? spacing * 3 : spacing * 3.5f;
+				Vector3f position = new Vector3f(spacing, -(spacing * i + offset), 0);
 				Vector3f displayScale = display.scale();
 				Text text = (Text)scene.add("__PText");
 				text.scale(displayScale);
-				text.position(p.mul(displayScale));
+				text.position(position.mul(displayScale));
 				text.parent(display);
 				texts.put(name, text);
-				p.x = 10.8f;
+				position.x = spacing * 18;
 				GameObject bar = scene.add("__PBar");
 				bar.scale(displayScale);
-				bar.position(p.mul(displayScale));
+				bar.position(position.mul(displayScale));
 				bar.parent(display);
 				bars.put(name, bar);
-				Vector3f backgroundScale = new Vector3f(14.4f, 0.6f * (i + 1.2f) + offset, 1);
+				Vector3f backgroundScale = new Vector3f(spacing * 23, spacing * (i + 1) + offset, 1);
 				background.scale(backgroundScale.mul(displayScale));
 			}
-			String n = name.contains("__") ? name.split("__")[1] : name;
+			String n = name.startsWith("__") ? name.split("__")[1] : name;
 			float m = nanos.get(name) * 0.000001f;
 			float p = percents.get(name);
-			Vector3f barScale = new Vector3f(p, 1, 1);
-			texts.get(name).set(String.format("%-14s %4.1f %-3s %4.1f %s", n, m, "ms", p, "%"));
+			Vector3f barScale = new Vector3f(0.04f * spacing * p, 0.4f, 1);
 			bars.get(name).scale(barScale.mul(display.scale()));
+			texts.get(name).set(String.format("%-14s %4.1f %-3s %4.1f %s", n, m, "ms", p, "%"));
 		}
 		Vector3f currScreenSize = new Vector3f(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 1);
 		if (!screenSize.equals(currScreenSize))
