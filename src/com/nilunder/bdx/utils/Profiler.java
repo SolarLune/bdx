@@ -41,9 +41,9 @@ public class Profiler extends LinkedHashMap<String, Long>{
 	public boolean visible;
 	public Scene scene;
 
-	public void init(Scene scene){
+	public void init(boolean framerateProfile){
 		if (initialized) return;
-		visible = scene.json.get("framerateProfile").asBoolean();
+		visible = framerateProfile;
 		startTimes = new LinkedHashMap<String, Long>();
 		totalStartTime = TimeUtils.nanoTime();
 		nanos = new LinkedHashMap<String, Long>();

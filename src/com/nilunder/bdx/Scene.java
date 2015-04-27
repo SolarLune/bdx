@@ -136,7 +136,7 @@ public class Scene implements Named{
 		gravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
 		ambientLight(new Vector4f(json.get("ambientColor").asFloatArray()));
 
-		Bdx.profiler.init();
+		Bdx.profiler.init(json.get("framerateProfile").asBoolean());
 
 		for (JsonValue mat : json.get("materials")){
 			String texName = mat.get("texture").asString();
