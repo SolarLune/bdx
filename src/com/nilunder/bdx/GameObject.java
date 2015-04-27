@@ -294,7 +294,9 @@ public class GameObject implements Named{
 	public Vector3f velocityLocal(){
 		Vector3f v = new Vector3f();
 		body.getLinearVelocity(v);
-		return orientation().mult(v);
+		Matrix3f invOri = orientation();
+		invOri.invert();
+		return invOri.mult(v);
 	}
 	
 	public void angularVelocity(Vector3f vec){
