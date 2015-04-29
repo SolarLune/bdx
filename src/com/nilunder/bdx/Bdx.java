@@ -207,4 +207,8 @@ public class Bdx{
 		spriteBatch.dispose();
 		frameBuffer.dispose();
 	}
+	
+	public static void end(){
+		System.exit(0);
+	}
 }
