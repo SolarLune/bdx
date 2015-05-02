@@ -41,10 +41,29 @@ public class Bdx{
 			if (scene.objects == null)
 				scene.init();
 		}
+		public Scene add(String name){
+			Scene scene = new Scene(name);
+			add(scene);
+			return scene;
+		}
+		public Scene add(int index, String name){
+			Scene scene = new Scene(name);
+			add(index, scene);
+			return scene;
+		}
 		public Scene set(int index, Scene scene){
 			Scene old = remove(index);
 			add(index, scene);
 			return old;
+		}
+		public Scene set(int index, String name){
+			Scene scene = new Scene(name);
+			set(index, scene);
+			return scene;
+		}
+		public Scene remove(String name){
+			int index = indexOf(get(name));
+			return remove(index);
 		}
 		public ArrayList<String> available(){
 			ArrayList<String> scenes = new ArrayList<String>();
