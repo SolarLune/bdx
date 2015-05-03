@@ -53,7 +53,7 @@ public class Scene implements Named{
 
 	private FileHandle scene;
 
-	private HashMap<String,Model> models;
+	public HashMap<String,Model> models;
 	private HashMap<String,Texture> textures;
 	private HashMap<String,Material> materials;
 	public Material defaultMaterial;
