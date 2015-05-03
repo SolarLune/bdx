@@ -598,7 +598,7 @@ public class GameObject implements Named{
 
 	}
 
-	public void useUniqueMesh(){
+	public void useUniqueModel(){
 		String modelName = modelInstance.model.meshParts.get(0).id;
 		JsonValue modelData = scene.json.get("models").get(modelName);
 		uniqueModel = scene.createModel(modelData);
