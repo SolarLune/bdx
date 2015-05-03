@@ -309,6 +309,12 @@ public class GameObject implements Named{
 		angularVelocity(v);
 	}
 	
+	public Vector3f angularVelocity(){
+		Vector3f v = new Vector3f();
+		body.getAngularVelocity(v);
+		return v;
+	}
+	
 	public boolean touching(){
 		return !touchingObjects.isEmpty();
 	}
