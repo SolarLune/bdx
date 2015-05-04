@@ -205,10 +205,10 @@ public class Scene implements Named{
 
 			g.name = gobj.name;
 
-			String meshName = gobj.get("mesh_name").asString();
-			if (meshName != null){
+			String modelName = gobj.get("mesh_name").asString();
+			if (modelName != null){
 				g.visibleNoChildren(gobj.get("visible").asBoolean());
-				g.modelInstance = new ModelInstance(models.get(meshName));
+				g.modelInstance = new ModelInstance(models.get(modelName));
 			}else{
 				g.visibleNoChildren(false);
 				g.modelInstance = new ModelInstance(defaultModel);
@@ -322,7 +322,7 @@ public class Scene implements Named{
 			Text t = (Text)g;
 			Text tt = (Text)gobj;
 			t.font = tt.font;
-			t.useUniqueMesh();
+			t.useUniqueModel();
 		}
 		else if (g instanceof Light) {
 			Light l = (Light)g;
@@ -701,7 +701,7 @@ public class Scene implements Named{
 			}catch (NullPointerException e){
 				throw new RuntimeException("PHYSICS ERROR: Detected collision between Static objects set to Ghost, with Triangle Mesh bounds: Keep them seperated, or use different bounds.");
 			}
-			Bdx.profiler.stop("__worldStep");
+			Bdx.profiler.stop("__worldstep");
 			
 			updateChildBodies();
 			Bdx.profiler.stop("__children");

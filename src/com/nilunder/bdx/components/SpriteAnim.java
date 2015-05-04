@@ -70,10 +70,10 @@ public class SpriteAnim extends Component<GameObject> {
 	private Vector2f frameDim;
 
 	
-	public SpriteAnim(GameObject g, int frameWidth, int frameHeight, boolean rowBased, boolean uniqueMesh){
+	public SpriteAnim(GameObject g, int frameWidth, int frameHeight, boolean rowBased, boolean uniqueModel){
 		super(g);
-		if (uniqueMesh)
-			g.useUniqueMesh();
+		if (uniqueModel)
+			g.useUniqueModel();
 		this.rowBased = rowBased;
 		animations = new HashMap<String, Animation>();
 		ticker = new Timer();
