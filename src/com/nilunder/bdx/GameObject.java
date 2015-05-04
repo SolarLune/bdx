@@ -309,6 +309,12 @@ public class GameObject implements Named{
 		angularVelocity(v);
 	}
 	
+	public Vector3f angularVelocity(){
+		Vector3f v = new Vector3f();
+		body.getAngularVelocity(v);
+		return v;
+	}
+	
 	public boolean touching(){
 		return !touchingObjects.isEmpty();
 	}
@@ -599,6 +605,47 @@ public class GameObject implements Named{
 		ModelInstance mi = new ModelInstance(uniqueModel);
 		mi.transform.set(modelInstance.transform);
 		modelInstance = mi;
+	}
+
+	public void replaceModel(String modelName, boolean updateVisual, boolean updatePhysics){
+		if (modelName.equals(modelInstance.model.meshParts.get(0).id))
+			return;
+		Model model = null;
+		for (Scene sce : Bdx.scenes){
+			if (sce.models.containsKey(modelName)){
+				model = sce.models.get(modelName);
+				break;
+			}
+		}
+		if (model == null) throw new RuntimeException("No model found with name: '" + modelName + "'");
+		Matrix4 trans = modelInstance.transform;
+		if (updateVisual){
+			ModelInstance mi = new ModelInstance(model);
+			mi.transform.set(trans);
+			modelInstance = mi;
+		}
+		if (updatePhysics && body.isInWorld()){
+			Vector3f localInertia = new Vector3f();
+			Vector3f vel = velocity();
+			Vector3f angVel = angularVelocity();
+			scene.world.removeRigidBody(body);
+			body.destroy();
+			JsonValue physics = json.get("physics");
+			body = Bullet.makeBody(model.meshes.first(), trans.getValues(), physics);
+			body.setUserPointer(this);
+			body.setMassProps(physics.get("mass").asFloat(), localInertia);
+			body.updateInertiaTensor();
+			if (dynamic()){
+				velocity(vel);
+				angularVelocity(angVel);
+			}
+			scene.world.addRigidBody(body);
+			scene.world.updateSingleAabb(body);
+		}
+	}
+
+	public void replaceModel(String modelName){
+		replaceModel(modelName, true, false);
 	}
 
 	public String toString(){
