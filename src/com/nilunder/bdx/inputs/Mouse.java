@@ -65,12 +65,20 @@ public class Mouse extends Finger{
 		return false;
 	}
 
-	public Vector2f position(){
-		return new Vector2f(Gdx.input.getX(), Gdx.input.getY());
-	}
-
 	public void position(int x, int y) {
 		Gdx.input.setCursorPosition(x, y);	
+	}
+
+	public void position(Vector2f vec){
+		position((int)vec.x, (int)vec.y);
+	}
+
+	public void positionNormalized(float x, float y){
+		position((int)(x * Gdx.graphics.getWidth()), (int)(y * Gdx.graphics.getHeight()));
+	}
+
+	public void positionNormalized(Vector2f vec){
+		positionNormalized(vec.x, vec.y);
 	}
 
 	public void cursorLock(boolean confine) {
