@@ -74,7 +74,8 @@ public class Mouse extends Finger{
 	}
 
 	public void positionNormalized(float x, float y){
-		position((int)(x * Gdx.graphics.getWidth()), (int)(y * Gdx.graphics.getHeight()));
+		Vector2f c = Bdx.display.center();
+		position((int)(x * c.x * 2), (int)((1 - y) * c.y * 2));
 	}
 
 	public void positionNormalized(Vector2f vec){
