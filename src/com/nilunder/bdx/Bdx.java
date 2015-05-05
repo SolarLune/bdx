@@ -14,9 +14,20 @@ import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.*;
 
+import javax.vecmath.Vector2f;
+
 public class Bdx{
 
 	public static class Display{
+		public void size(int width, int height){
+			Gdx.graphics.setDisplayMode(width, height, fullscreen());
+		}
+		public void size(Vector2f vec){
+			size((int)vec.x, (int)vec.y);
+		}
+		public Vector2f size(){
+			return new Vector2f(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		}
 		public void fullscreen(boolean full){
 			Graphics.DisplayMode dm = Gdx.graphics.getDesktopDisplayMode();
 			Gdx.graphics.setDisplayMode(dm.width, dm.height, full);
