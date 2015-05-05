@@ -16,6 +16,16 @@ abstract class Pointer {
 		this.id = id;
 	}
 	
+	public Vector2f position(){
+		return new Vector2f(Gdx.input.getX(id), Gdx.input.getY(id));
+	}
+
+	public Vector2f positionNormalized(){
+		float x = (float)Gdx.input.getX(id) / Gdx.graphics.getWidth();
+		float y = (float)Gdx.input.getY(id) / Gdx.graphics.getHeight();
+		return new Vector2f(x, y);
+	}
+
 	public Vector4f clipCoords(){
 		float mx = (2.0f * Gdx.input.getX(id)) / Gdx.graphics.getWidth() - 1.0f;
 		float my = 1.0f - (2.0f * Gdx.input.getY(id)) / Gdx.graphics.getHeight();
