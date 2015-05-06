@@ -21,8 +21,9 @@ abstract class Pointer {
 	}
 
 	public Vector2f positionNormalized(){
-		float x = (float)Gdx.input.getX(id) / Gdx.graphics.getWidth();
-		float y = (float)Gdx.input.getY(id) / Gdx.graphics.getHeight();
+		Vector2f c = Bdx.display.center();
+		float x = (float)Gdx.input.getX(id) / (c.x * 2);
+		float y = 1 - (float)Gdx.input.getY(id) / (c.y * 2);
 		return new Vector2f(x, y);
 	}
 

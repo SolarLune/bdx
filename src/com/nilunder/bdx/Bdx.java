@@ -28,6 +28,9 @@ public class Bdx{
 		public Vector2f size(){
 			return new Vector2f(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		}
+		public Vector2f center(){
+			return new Vector2f(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
+		}
 		public void fullscreen(boolean full){
 			Graphics.DisplayMode dm = Gdx.graphics.getDesktopDisplayMode();
 			Gdx.graphics.setDisplayMode(dm.width, dm.height, full);
