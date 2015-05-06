@@ -100,7 +100,7 @@ public class GameObject implements Named{
 				parent.compoundShape().addChildShape(new Transform(localTransform), body.getCollisionShape());
 
 			dynamic(false);
-		}else{
+		}else if (!json.get("physics").get("body_type").asString().equals("NO_COLLISION")){
 			dynamic(true);
 		}
 		
