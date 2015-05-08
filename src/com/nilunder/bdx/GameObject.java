@@ -185,7 +185,12 @@ public class GameObject implements Named{
 		Transform t = new Transform();
 		body.getWorldTransform(t);
 
-		t.basis.normalize();
+		Vector3f v = new Vector3f();
+		for (int i = 0; i < 3; ++i){
+		    t.basis.getColumn(i, v);
+		    v.normalize();
+		    t.basis.setColumn(i, v);
+		}
 		
 		Matrix4f m = new Matrix4f();
 		t.getMatrix(m);
@@ -217,7 +222,13 @@ public class GameObject implements Named{
 		
 		Transform t = new Transform();
 		t.set(mat);
-		t.basis.normalize();
+		
+		Vector3f v = new Vector3f();
+		for (int i = 0; i < 3; ++i){
+		    t.basis.getColumn(i, v);
+		    v.normalize();
+		    t.basis.setColumn(i, v);
+		}
 
 		body.setWorldTransform(t);
 
