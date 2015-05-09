@@ -1,5 +1,6 @@
 package com.nilunder.bdx;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
@@ -16,5 +17,9 @@ public class Filter extends ShaderProgram {
 	}
 	public Filter(FileHandle vertexShader, FileHandle fragmentShader) {
 		this(vertexShader.readString(), fragmentShader.readString());
+	}
+	
+	public static Filter load(String vertexPath, String fragmentPath) {
+		return new Filter(Gdx.files.internal(vertexPath), Gdx.files.internal(fragmentPath));
 	}
 }
