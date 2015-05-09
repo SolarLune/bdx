@@ -108,6 +108,7 @@ public class Bdx{
 	private static ArrayList<Finger> allocatedFingers;
 	private static ModelBatch modelBatch;
 	private static RenderBuffer frameBuffer;
+	private static RenderBuffer tempBuffer;
 	private static SpriteBatch spriteBatch;
 
 	public static void init(){
@@ -138,7 +139,9 @@ public class Bdx{
 		spriteBatch = new SpriteBatch();
 
 		frameBuffer = new RenderBuffer(spriteBatch);
-
+		
+		tempBuffer = new RenderBuffer(spriteBatch);
+		
 	}
 
 
@@ -200,7 +203,9 @@ public class Bdx{
 					filter.setUniformi("lastFrame", 1);
 					filter.end();
 							
-					frameBuffer.drawTo(frameBuffer, filter);
+					tempBuffer.clear();
+					frameBuffer.drawTo(tempBuffer, filter);
+					tempBuffer.drawTo(frameBuffer);
 
 				}
 				frameBuffer.drawTo(null); //  Draw to screen
@@ -239,6 +244,7 @@ public class Bdx{
 		modelBatch.dispose();
 		spriteBatch.dispose();
 		frameBuffer.dispose();
+		tempBuffer.dispose();
 	}
 	
 	public static void end(){
