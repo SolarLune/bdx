@@ -597,7 +597,7 @@ public class Scene implements Named{
 		
 		for (GameObject g : objects){
 			if (g.visible()){
-				g.body.getMotionState().getWorldTransform(trans);
+				g.body.getWorldTransform(trans);
 				trans.getOpenGLMatrix(mt);
 				g.body.getCollisionShape().getLocalScaling(scale);
 				setGLMatrixScale(mt, scale);
