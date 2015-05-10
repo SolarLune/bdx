@@ -49,6 +49,7 @@ public class GameObject implements Named{
 	private boolean visible;
 	private boolean valid;
 	private Model uniqueModel;
+	private float lastNonZeroMass;
 
 	
 	public GameObject() {
@@ -685,6 +686,17 @@ public class GameObject implements Named{
 
 	public boolean dynamic(){
 		return !body.isStaticOrKinematicObject();
+	}
+	
+	public float mass(){
+		return 1 / body.getInvMass();
+	}
+	
+	public void mass(float mass){
+		Vector3f inertia = new Vector3f();
+		body.getCollisionShape().calculateLocalInertia(mass, inertia);
+		body.setMassProps(mass, inertia);
+		lastNonZeroMass = mass;
 	}
 
 }
