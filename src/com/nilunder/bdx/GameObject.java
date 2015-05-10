@@ -673,6 +673,7 @@ public class GameObject implements Named{
 			float mass = json.get("physics").get("mass").asFloat();
 
 			scene.world.removeRigidBody(body);
+			body.getCollisionShape().calculateLocalInertia(mass, localInertia);
 			body.setMassProps(mass, localInertia);
 			scene.world.addRigidBody(body);
 
