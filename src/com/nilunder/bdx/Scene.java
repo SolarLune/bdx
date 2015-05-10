@@ -216,7 +216,9 @@ public class Scene implements Named{
 			Mesh mesh = g.modelInstance.model.meshes.first();
 
 			float[] trans = gobj.get("transform").asFloatArray();
-			g.body = Bullet.makeBody(mesh, trans, gobj.get("physics"));
+			JsonValue physics = gobj.get("physics");
+			g.body = Bullet.makeBody(mesh, trans, physics);
+			g.mass(physics.get("mass").asFloat());
 			g.body.setUserPointer(g);
 			
 			g.props = new HashMap<String, JsonValue>();

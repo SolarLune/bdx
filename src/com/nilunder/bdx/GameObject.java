@@ -49,6 +49,7 @@ public class GameObject implements Named{
 	private boolean visible;
 	private boolean valid;
 	private Model uniqueModel;
+	private float lastNonZeroMass;
 
 	
 	public GameObject() {
@@ -637,7 +638,6 @@ public class GameObject implements Named{
 			modelInstance = mi;
 		}
 		if (updatePhysics && body.isInWorld()){
-			Vector3f localInertia = new Vector3f();
 			Vector3f vel = velocity();
 			Vector3f angVel = angularVelocity();
 			scene.world.removeRigidBody(body);
@@ -645,7 +645,7 @@ public class GameObject implements Named{
 			JsonValue physics = json.get("physics");
 			body = Bullet.makeBody(model.meshes.first(), trans.getValues(), physics);
 			body.setUserPointer(this);
-			body.setMassProps(physics.get("mass").asFloat(), localInertia);
+			mass(lastNonZeroMass);
 			body.updateInertiaTensor();
 			if (dynamic()){
 				velocity(vel);
@@ -667,24 +667,29 @@ public class GameObject implements Named{
 	}
 
 	public void dynamic(boolean dynamic){
-		Vector3f localInertia = new Vector3f();
-
 		if (dynamic){
-			float mass = json.get("physics").get("mass").asFloat();
-
 			scene.world.removeRigidBody(body);
-			body.getCollisionShape().calculateLocalInertia(mass, localInertia);
-			body.setMassProps(mass, localInertia);
+			mass(lastNonZeroMass);
 			scene.world.addRigidBody(body);
-
 			body.activate();
 		}else{
-			body.setMassProps(0, localInertia);
+			body.setMassProps(0, new Vector3f());
 		}
 	}
 
 	public boolean dynamic(){
 		return !body.isStaticOrKinematicObject();
+	}
+	
+	public float mass(){
+		return 1 / body.getInvMass();
+	}
+	
+	public void mass(float mass){
+		Vector3f inertia = new Vector3f();
+		body.getCollisionShape().calculateLocalInertia(mass, inertia);
+		body.setMassProps(mass, inertia);
+		lastNonZeroMass = mass;
 	}
 
 }
