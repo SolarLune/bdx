@@ -56,10 +56,18 @@ class CreateBdxProject(bpy.types.Operator):
         os.mkdir(j(bdx, "audio", "sounds"))
         os.mkdir(j(bdx, "audio", "music"))
         os.mkdir(j(bdx, "fonts"))
+        filters = j(bdx, "filters")
+        os.mkdir(filters)
 
         for png in ut.listdir(ut.gen_root(), pattern="*.png"):
-            shutil.copy(png, textures);
-
+            shutil.copy(png, textures)
+            
+        for frag in ut.listdir(j(ut.gen_root(), "filters"), pattern="*.frag"):
+            shutil.copy(frag, filters)
+            
+        for vert in ut.listdir(j(ut.gen_root(), "filters"), pattern="*.vert"):
+            shutil.copy(vert, filters)
+            
     def create_blender_assets(self):
         """
         Creates the blender directory in the root project,
