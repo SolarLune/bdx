@@ -80,7 +80,7 @@ public static class Profile{
 	public HashMap<String,Axis> axes;
 	public HashMap<String,Stick> sticks;
 
-	private HashMap<String,Profile> profiles;
+	public HashMap<String,Profile> profiles;
 
 	public Gamepad(){
 		Array controllers = Controllers.getControllers();
