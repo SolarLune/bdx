@@ -310,6 +310,7 @@ public class Scene implements Named{
 		g.modelInstance = new ModelInstance(gobj.modelInstance);
 		
 		g.body = Bullet.cloneBody(gobj.body);
+		g.mass(gobj.mass());
 		g.body.setUserPointer(g);
 		g.scale(gobj.scale());
 		
