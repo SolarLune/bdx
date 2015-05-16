@@ -181,7 +181,7 @@ public static class DebugDrawer extends IDebugDraw{
 	public static RigidBody cloneBody(RigidBody body){
 		GameObject gobj = (GameObject)body.getUserPointer();
 		JsonValue physics = gobj.json.get("physics");
-		float mass = physics.get("mass").asFloat();
+		float mass = gobj.mass();
 		
 		Vector3f inertia = new Vector3f();
 		body.getCollisionShape().calculateLocalInertia(mass, inertia);

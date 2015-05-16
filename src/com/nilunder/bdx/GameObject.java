@@ -673,7 +673,8 @@ public class GameObject implements Named{
 			scene.world.addRigidBody(body);
 			body.activate();
 		}else{
-			body.setMassProps(0, new Vector3f());
+			lastNonZeroMass = mass();
+			mass(0);
 		}
 	}
 
@@ -689,7 +690,6 @@ public class GameObject implements Named{
 		Vector3f inertia = new Vector3f();
 		body.getCollisionShape().calculateLocalInertia(mass, inertia);
 		body.setMassProps(mass, inertia);
-		lastNonZeroMass = mass;
 	}
 
 }
