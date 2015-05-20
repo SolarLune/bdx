@@ -91,23 +91,23 @@ public static class Profile{
 
 		Profile p = new Profile("XBOX");
 
-		p.btnToCode.put("X", 3);
-		p.btnToCode.put("Y", 4);
-		p.btnToCode.put("A", 0);
-		p.btnToCode.put("B", 1);
+		p.btnToCode.put("x", 3);
+		p.btnToCode.put("y", 4);
+		p.btnToCode.put("a", 0);
+		p.btnToCode.put("b", 1);
 		p.btnToCode.put("white", 5);
 		p.btnToCode.put("black", 2);
 		p.btnToCode.put("back", 6);
 		p.btnToCode.put("start", 7);
-		p.btnToCode.put("RS", 8);
-		p.btnToCode.put("LS", 9);
+		p.btnToCode.put("rs", 8);
+		p.btnToCode.put("ls", 9);
 
 		p.axes.put("lx", new Axis(0));
 		p.axes.put("ly", new Axis(1));
 		p.axes.put("rx", new Axis(3));
 		p.axes.put("ry", new Axis(4));
-		p.axes.put("LT", new Axis(2));
-		p.axes.put("RT", new Axis(5));
+		p.axes.put("lt", new Axis(2));
+		p.axes.put("rt", new Axis(5));
 
 		p.sticks.put("left", new Stick(p.axes.get("lx"), p.axes.get("ly")));
 		p.sticks.put("right", new Stick(p.axes.get("rx"), p.axes.get("ry")));
@@ -150,8 +150,8 @@ public static class Profile{
 		p.btnToCode.put("rs-up", -200 - p.axes.get("ry").code);
 		p.btnToCode.put("rs-down", 200 + p.axes.get("ry").code);
 
-		p.btnToCode.put("RT", 200 + p.axes.get("RT").code);
-		p.btnToCode.put("LT", 200 + p.axes.get("LT").code);
+		p.btnToCode.put("rt", 200 + p.axes.get("rt").code);
+		p.btnToCode.put("lt", 200 + p.axes.get("lt").code);
 
 		profiles.put(p.name, p);
 
@@ -161,17 +161,17 @@ public static class Profile{
 		p.btnToCode.remove("white");
 		p.btnToCode.remove("black");
 
-		p.btnToCode.put("X", 2);
-		p.btnToCode.put("Y", 3);
-		p.btnToCode.put("LB", 4);
-		p.btnToCode.put("RB", 5);
+		p.btnToCode.put("x", 2);
+		p.btnToCode.put("y", 3);
+		p.btnToCode.put("lb", 4);
+		p.btnToCode.put("rb", 5);
 
 		p.axes.put("lx", new Axis(1));
 		p.axes.put("ly", new Axis(0));
 		p.axes.put("rx", new Axis(2));
 		p.axes.put("ry", new Axis(3));
-		p.axes.put("LT", new Axis(4));
-		p.axes.put("RT", new Axis(5));
+		p.axes.put("lt", new Axis(4));
+		p.axes.put("rt", new Axis(5));
 
 		p.sticks.put("left", new Stick(p.axes.get("lx"), p.axes.get("ly")));
 		p.sticks.put("right", new Stick(p.axes.get("rx"), p.axes.get("ry")));
@@ -186,8 +186,8 @@ public static class Profile{
 		p.btnToCode.put("rs-up", -200 - p.axes.get("ry").code);
 		p.btnToCode.put("rs-down", 200 + p.axes.get("ry").code);
 
-		p.btnToCode.put("RT", 200 + p.axes.get("RT").code);
-		p.btnToCode.put("LT", 200 + p.axes.get("LT").code);
+		p.btnToCode.put("rt", 200 + p.axes.get("rt").code);
+		p.btnToCode.put("lt", 200 + p.axes.get("lt").code);
 
 		// Unlike the original xbox, which uses one axis per trigger, 
 		// xbox360 gamepads use a single axis for both triggers, where RT
