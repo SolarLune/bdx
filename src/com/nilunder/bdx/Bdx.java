@@ -183,7 +183,7 @@ public class Bdx{
 			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 			modelBatch.begin(scene.cam);
 			for (GameObject g : scene.objects){
-				if (g.visible()){
+				if (g.visible() && g.insideFrustum()){
 					modelBatch.render(g.modelInstance, scene.environment);
 				}
 			}
