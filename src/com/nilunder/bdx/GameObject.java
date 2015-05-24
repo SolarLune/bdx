@@ -691,5 +691,17 @@ public class GameObject implements Named{
 		body.getCollisionShape().calculateLocalInertia(mass, inertia);
 		body.setMassProps(mass, inertia);
 	}
+	public boolean insideFrustum() {
+
+	    Vector3f min = new Vector3f();
+		Vector3f max = new Vector3f();
+		
+		body.getAabb(min, max);
+		
+		Vector3f dimensions = max.minus(min);  
+		Vector3f center     = min.plus(max.minus(min).mul(0.5f));
+		
+		return scene.cam.frustum.boundsInFrustum(center.x, center.y, center.z, dimensions.x / 2, dimensions.y / 2, dimensions.z / 2);
+	}
 
 }
