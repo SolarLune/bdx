@@ -34,6 +34,7 @@ public class GameObject implements Named{
 	public ArrayList<PersistentManifold> contactManifolds;
 	public ModelInstance modelInstance;
 	public RigidBody body;
+	public String currBodyType;
 	
 	public HashMap<String, JsonValue> props;
 	
@@ -49,7 +50,7 @@ public class GameObject implements Named{
 	private boolean visible;
 	private boolean valid;
 	private Model uniqueModel;
-	private float lastNonZeroMass;
+	private String lastBodyType;
 
 	
 	public GameObject() {
@@ -59,6 +60,7 @@ public class GameObject implements Named{
 		components = new ArrayListNamed<Component>();
 		children = new ArrayListNamed<GameObject>();
 		valid = true;
+		lastBodyType = "DYNAMIC";
 	}
 
 
@@ -100,9 +102,9 @@ public class GameObject implements Named{
 			if (parent.compoundShape() != null)
 				parent.compoundShape().addChildShape(new Transform(localTransform), body.getCollisionShape());
 
-			dynamic(false);
-		}else if (!json.get("physics").get("body_type").asString().equals("NO_COLLISION")){
-			dynamic(true);
+			dynamics(false);
+		}else{
+			dynamics(true);
 		}
 		
 	}
@@ -638,19 +640,12 @@ public class GameObject implements Named{
 			modelInstance = mi;
 		}
 		if (updatePhysics && body.isInWorld()){
-			Vector3f vel = velocity();
-			Vector3f angVel = angularVelocity();
+			String boundsType = json.get("physics").get("bounds_type").asString();
+			boolean compound = json.get("physics").get("compound").asBoolean();
 			scene.world.removeRigidBody(body);
-			body.destroy();
-			JsonValue physics = json.get("physics");
-			body = Bullet.makeBody(model.meshes.first(), trans.getValues(), physics);
-			body.setUserPointer(this);
-			mass(lastNonZeroMass);
+			body.setCollisionShape(Bullet.makeShape(model.meshes.first(), boundsType, compound));
+			mass(mass());
 			body.updateInertiaTensor();
-			if (dynamic()){
-				velocity(vel);
-				angularVelocity(angVel);
-			}
 			scene.world.addRigidBody(body);
 			scene.world.updateSingleAabb(body);
 		}
@@ -666,20 +661,20 @@ public class GameObject implements Named{
 
 	}
 
-	public void dynamic(boolean dynamic){
-		if (dynamic){
-			scene.world.removeRigidBody(body);
-			mass(lastNonZeroMass);
-			scene.world.addRigidBody(body);
-			body.activate();
+	public void dynamics(boolean enable){
+		if (currBodyType.equals("NO_COLLISION") || enable && dynamics() || !enable && !dynamics()){
+			return;
+		}
+		if (enable){
+			bodyType(lastBodyType);
 		}else{
-			lastNonZeroMass = mass();
-			mass(0);
+			lastBodyType = currBodyType;
+			bodyType("STATIC");
 		}
 	}
 
-	public boolean dynamic(){
-		return !body.isStaticOrKinematicObject();
+	public boolean dynamics(){
+		return !body.isKinematicObject();
 	}
 	
 	public float mass(){
@@ -687,10 +682,61 @@ public class GameObject implements Named{
 	}
 	
 	public void mass(float mass){
+		if (mass == 0){
+			throw new RuntimeException("no zero value allowed: use 'dynamics(false)' instead");
+		}
 		Vector3f inertia = new Vector3f();
 		body.getCollisionShape().calculateLocalInertia(mass, inertia);
 		body.setMassProps(mass, inertia);
 	}
+	
+	public String bodyType(){
+		return currBodyType;
+	}
+	
+	public void bodyType(String s){
+		int flags = body.getCollisionFlags();
+		if (s.equals("NO_COLLISION")){
+			scene.world.removeRigidBody(body);
+			flags &= ~CollisionFlags.KINEMATIC_OBJECT;
+		}else{
+			if (s.equals("STATIC")){
+				flags |= CollisionFlags.KINEMATIC_OBJECT;
+			}else if (s.equals("SENSOR")){
+				flags |= CollisionFlags.KINEMATIC_OBJECT;
+				flags |= CollisionFlags.NO_CONTACT_RESPONSE;
+			}else{
+				
+				// kinematic initialization hack
+				if (mass() == Float.POSITIVE_INFINITY){
+					mass(1); // Blender default
+					scene.world.removeRigidBody(body);
+					flags &= ~CollisionFlags.KINEMATIC_OBJECT;
+					body.setCollisionFlags(flags);
+					scene.world.addRigidBody(body);
+				}
+				
+				flags &= ~CollisionFlags.KINEMATIC_OBJECT;
+				if (s.equals("DYNAMIC")){
+					body.setAngularVelocity(new Vector3f());
+					body.setAngularFactor(0);
+				}else if (s.equals("RIGID_BODY")){
+					body.setAngularFactor(1);
+				}else{
+					throw new RuntimeException(s + " is no valid bodyType name.");
+				}
+			}
+			if (!body.isInWorld()){
+				body.clearForces();
+				body.setLinearVelocity(new Vector3f());
+				scene.world.addRigidBody(body);
+			}
+			body.activate(true);
+		}
+		body.setCollisionFlags(flags);
+		currBodyType = s;
+	}
+
 	public boolean insideFrustum() {
 
 	    Vector3f min = new Vector3f();
