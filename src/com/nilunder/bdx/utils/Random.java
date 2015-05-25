@@ -21,6 +21,13 @@ public class Random{
 		}
 		return R.nextFloat();
 	}
+	
+	public static void seed(long seed){
+		if (R == null)
+			R = new java.util.Random();
+		
+		R.setSeed(seed);
+	}
 
 	public static float random(float min, float max){
 		return (min + (random() * (max - min)));
