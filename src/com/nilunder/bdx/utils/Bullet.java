@@ -161,16 +161,20 @@ public static class DebugDrawer extends IDebugDraw{
 		
 		RigidBody body = new RigidBody(ci);
 		
-		if (bodyType.equals("STATIC")){
-			body.setCollisionFlags(CollisionFlags.KINEMATIC_OBJECT);
-			//body.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
-		}else if (bodyType.equals("DYNAMIC")){
-			body.setAngularFactor(0f);
+		int flags = 0;
+		if (bodyType.equals("SENSOR")){
+			flags = CollisionFlags.KINEMATIC_OBJECT | CollisionFlags.NO_CONTACT_RESPONSE;
+		}else{
+			if (bodyType.equals("STATIC")){
+				flags = CollisionFlags.KINEMATIC_OBJECT;
+				//body.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
+			}else if (bodyType.equals("DYNAMIC")){
+				body.setAngularFactor(0);
+			}
+			if (physics.get("ghost").asBoolean())
+				flags |= CollisionFlags.NO_CONTACT_RESPONSE;
 		}
-		
-		if (bodyType.equals("SENSOR") || physics.get("ghost").asBoolean()){
-			body.setCollisionFlags(CollisionFlags.NO_CONTACT_RESPONSE);
-		}
+		body.setCollisionFlags(flags);
 		
 		body.setRestitution(physics.get("restitution").asFloat());
 		body.setFriction(physics.get("friction").asFloat());
