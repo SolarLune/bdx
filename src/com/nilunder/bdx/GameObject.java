@@ -674,7 +674,7 @@ public class GameObject implements Named{
 	}
 
 	public boolean dynamics(){
-		return !body.isKinematicObject();
+		return body.isInWorld() && !body.isKinematicObject();
 	}
 	
 	public float mass(){
