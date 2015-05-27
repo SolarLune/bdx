@@ -410,6 +410,7 @@ def srl_objects(objects):
             "physics": {
                 "body_type": obj.game.physics_type,
                 "bounds_type": bounds_type(obj),
+                "margin": obj.game.collision_margin,
                 "mass": 0 if static(obj) else obj.game.mass,
                 "friction": obj.active_material.physics.friction if obj.active_material else 0.5,
                 "restitution": obj.active_material.physics.elasticity if obj.active_material else 0,

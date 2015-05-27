@@ -641,9 +641,10 @@ public class GameObject implements Named{
 		}
 		if (updatePhysics && body.isInWorld()){
 			String boundsType = json.get("physics").get("bounds_type").asString();
+			float margin = json.get("physics").get("margin").asFloat();
 			boolean compound = json.get("physics").get("compound").asBoolean();
 			scene.world.removeRigidBody(body);
-			body.setCollisionShape(Bullet.makeShape(model.meshes.first(), boundsType, compound));
+			body.setCollisionShape(Bullet.makeShape(model.meshes.first(), boundsType, margin, compound));
 			mass(mass());
 			body.updateInertiaTensor();
 			scene.world.addRigidBody(body);

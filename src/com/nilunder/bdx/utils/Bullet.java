@@ -98,7 +98,7 @@ public static class DebugDrawer extends IDebugDraw{
 		return m;
 	}
 
-	public static CollisionShape makeShape(Mesh mesh, String bounds, boolean compound){
+	public static CollisionShape makeShape(Mesh mesh, String bounds, float margin, boolean compound){
 
 		CollisionShape shape;
 	
@@ -130,6 +130,7 @@ public static class DebugDrawer extends IDebugDraw{
 			Vector3f dim = new Vector3f(d.x, d.y, d.z);
 			shape = new BoxShape(dim);
 		}
+		shape.setMargin(margin);
 
 		if (compound) {
 			CompoundShape compShape = new CompoundShape();
@@ -143,9 +144,7 @@ public static class DebugDrawer extends IDebugDraw{
 	}
 	
 	public static RigidBody makeBody(Mesh mesh, float[] glTransform, JsonValue physics){
-		String boundsType = physics.get("bounds_type").asString();
-		
-		CollisionShape shape = makeShape(mesh, boundsType, physics.get("compound").asBoolean());
+		CollisionShape shape = makeShape(mesh, physics.get("bounds_type").asString(), physics.get("margin").asFloat(), physics.get("compound").asBoolean());
 		
 		float mass = physics.get("mass").asFloat();
 		String bodyType = physics.get("body_type").asString();
@@ -193,7 +192,7 @@ public static class DebugDrawer extends IDebugDraw{
 		CollisionShape shape;
 
 		if (gobj.modelInstance != null){
-			shape = makeShape(gobj.modelInstance.model.meshes.first(), physics.get("bounds_type").asString(), physics.get("compound").asBoolean());
+			shape = makeShape(gobj.modelInstance.model.meshes.first(), physics.get("bounds_type").asString(), physics.get("margin").asFloat(), physics.get("compound").asBoolean());
 		}else{
 			shape = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
 		}
