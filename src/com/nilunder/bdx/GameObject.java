@@ -450,6 +450,8 @@ public class GameObject implements Named{
 		if (uniqueModel != null)
 			uniqueModel.dispose();
 		scene.remove(this);
+		for (GameObject g : touchingObjects)
+			g.body.activate();
 	}
 
 	public boolean valid(){
