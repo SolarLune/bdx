@@ -213,9 +213,11 @@ public class Scene implements Named{
 				g.visibleNoChildren(false);
 				g.modelInstance = new ModelInstance(defaultModel);
 			}
+			Mesh mesh = g.modelInstance.model.meshes.first();
 			float[] trans = gobj.get("transform").asFloatArray();
-			
-			g.body = Bullet.makeBody(g.modelInstance.model.meshes.first(), trans, gobj.get("physics"));
+			JsonValue origin = json.get("origins").get(modelName);
+			g.origin = origin == null ? new Vector3f() : new Vector3f(origin.asFloatArray());
+			g.body = Bullet.makeBody(mesh, trans, g.origin, gobj.get("physics"));
 			g.currBodyType = gobj.get("physics").get("body_type").asString();
 			g.body.setUserPointer(g);
 			
@@ -309,6 +311,7 @@ public class Scene implements Named{
 		
 		g.body = Bullet.cloneBody(gobj.body);
 		g.currBodyType = gobj.currBodyType;
+		g.origin = gobj.origin;
 		g.body.setUserPointer(g);
 		g.scale(gobj.scale());
 		

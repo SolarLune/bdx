@@ -143,8 +143,9 @@ public static class DebugDrawer extends IDebugDraw{
 
 	}
 	
-	public static RigidBody makeBody(Mesh mesh, float[] glTransform, JsonValue physics){
-		CollisionShape shape = makeShape(mesh, physics.get("bounds_type").asString(), physics.get("margin").asFloat(), physics.get("compound").asBoolean());
+	public static RigidBody makeBody(Mesh mesh, float[] glTransform, Vector3f origin, JsonValue physics){
+		String boundsType = physics.get("bounds_type").asString();
+		CollisionShape shape = makeShape(mesh, boundsType, physics.get("margin").asFloat(), physics.get("compound").asBoolean());
 		
 		float mass = physics.get("mass").asFloat();
 		String bodyType = physics.get("body_type").asString();
@@ -154,7 +155,17 @@ public static class DebugDrawer extends IDebugDraw{
 		
 		Transform startTransform = new Transform();
 		startTransform.setFromOpenGLMatrix(glTransform);
-		MotionState motionState = new DefaultMotionState(startTransform);
+		MotionState motionState;
+		if (boundsType.equals("CONVEX_HULL")){
+			Transform centerOfMassOffset = new Transform();
+			Matrix4f originMatrix = new Matrix4f();
+			originMatrix.set(origin);
+			centerOfMassOffset.set(originMatrix);
+			startTransform.mul(centerOfMassOffset);
+			motionState = new DefaultMotionState(startTransform, centerOfMassOffset);
+		}else{
+			motionState = new DefaultMotionState(startTransform);
+		}
 		
 		RigidBodyConstructionInfo ci = new RigidBodyConstructionInfo(mass, motionState, shape, inertia);
 		

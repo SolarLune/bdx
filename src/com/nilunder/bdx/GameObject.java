@@ -35,6 +35,7 @@ public class GameObject implements Named{
 	public ModelInstance modelInstance;
 	public RigidBody body;
 	public String currBodyType;
+	public Vector3f origin;
 	
 	public HashMap<String, JsonValue> props;
 	
@@ -627,30 +628,57 @@ public class GameObject implements Named{
 	public void replaceModel(String modelName, boolean updateVisual, boolean updatePhysics){
 		if (modelName.equals(modelInstance.model.meshParts.get(0).id))
 			return;
+		
 		Model model = null;
+		JsonValue mOrigin = null;
 		for (Scene sce : Bdx.scenes){
 			if (sce.models.containsKey(modelName)){
 				model = sce.models.get(modelName);
+				mOrigin = sce.json.get("origins").get(modelName);
 				break;
 			}
 		}
-		if (model == null) throw new RuntimeException("No model found with name: '" + modelName + "'");
+		if (model == null){
+			throw new RuntimeException("No model found with name: '" + modelName + "'");
+		}
+		origin = mOrigin == null ? new Vector3f() : new Vector3f(mOrigin.asFloatArray());
 		Matrix4 trans = modelInstance.transform;
+
 		if (updateVisual){
 			ModelInstance mi = new ModelInstance(model);
 			mi.transform.set(trans);
 			modelInstance = mi;
 		}
-		if (updatePhysics && body.isInWorld()){
+		
+		if (updatePhysics){
+			Matrix4f transform = transform();
+			Vector3f scale = scale();
 			String boundsType = json.get("physics").get("bounds_type").asString();
 			float margin = json.get("physics").get("margin").asFloat();
 			boolean compound = json.get("physics").get("compound").asBoolean();
-			scene.world.removeRigidBody(body);
 			body.setCollisionShape(Bullet.makeShape(model.meshes.first(), boundsType, margin, compound));
-			mass(mass());
-			body.updateInertiaTensor();
-			scene.world.addRigidBody(body);
-			scene.world.updateSingleAabb(body);
+			
+			if (boundsType.equals("CONVEX_HULL")){
+				Transform startTransform = new Transform();
+				body.getMotionState().getWorldTransform(startTransform);
+				Matrix4f originMatrix = new Matrix4f();
+				originMatrix.set(origin);
+				Transform centerOfMassTransform = new Transform();
+				centerOfMassTransform.set(originMatrix);
+				centerOfMassTransform.mul(startTransform);
+				body.setCenterOfMassTransform(centerOfMassTransform);
+			}
+			
+			transform(transform);
+			scale(scale);
+
+			if (body.isInWorld()){
+				scene.world.updateSingleAabb(body);
+			}else{ // update Aabb hack for NO_COLLISION
+				scene.world.addRigidBody(body);
+				scene.world.updateSingleAabb(body);
+				scene.world.removeRigidBody(body);
+			}
 		}
 	}
 
@@ -740,17 +768,19 @@ public class GameObject implements Named{
 		currBodyType = s;
 	}
 
-	public boolean insideFrustum() {
-
+	public boolean insideFrustum(){
 	    Vector3f min = new Vector3f();
 		Vector3f max = new Vector3f();
-		
 		body.getAabb(min, max);
+		Vector3f dimHalved = max.minus(min).mul(0.5f);
+		Vector3f center;
+
+		if (origin.length() == 0 || json.get("physics").get("bounds_type").asString().equals("CONVEX_HULL"))
+			center = min.plus(dimHalved);
+		else
+			center = min.plus(dimHalved).plus(orientation().mult(origin).mul(scale()));
 		
-		Vector3f dimensions = max.minus(min);  
-		Vector3f center     = min.plus(max.minus(min).mul(0.5f));
-		
-		return scene.cam.frustum.boundsInFrustum(center.x, center.y, center.z, dimensions.x / 2, dimensions.y / 2, dimensions.z / 2);
+		return scene.cam.frustum.boundsInFrustum(center.x, center.y, center.z, dimHalved.x, dimHalved.y, dimHalved.z);
 	}
 
 }

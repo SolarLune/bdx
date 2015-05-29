@@ -122,6 +122,18 @@ def srl_models(meshes):
 
     return name_model
 
+def srl_origins(objects):
+    name_origin = {}
+    
+    for o in objects:
+        if o.type == "MESH":
+            mesh_name = o.data.name
+            if mesh_name not in name_origin:
+                origin = sum([mt.Vector(fv) for fv in o.bound_box], mt.Vector()) / len(o.bound_box)
+                name_origin[mesh_name] = list(origin)
+    
+    return name_origin
+
 def char_uvs(char, angel_code):
     """
     Return a list of uv coordinates (for a quad)
@@ -643,6 +655,7 @@ def export(context, filepath, scene_name, exprun):
         "framerateProfile": scene.game_settings.show_framerate_profile,
         "ambientColor": ambient_color,
         "models": srl_models(used_meshes(objects)),
+        "origins": srl_origins(objects),
         "objects": srl_objects(objects),
         "materials": srl_materials(used_materials(objects)),
         "cameras": camera_names(scene),
