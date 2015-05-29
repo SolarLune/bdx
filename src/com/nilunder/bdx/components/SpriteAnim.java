@@ -177,7 +177,7 @@ public class SpriteAnim extends Component<GameObject> {
 
 	private State play = new State(){
 		private float nz(float n){
-			return n <= 0 ? Float.MIN_VALUE : n;
+			return n <= 0 ? 0.000001f : n;
 		}
 
 		public void main(){
