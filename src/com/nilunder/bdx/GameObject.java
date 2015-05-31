@@ -726,6 +726,8 @@ public class GameObject implements Named{
 		if (body.isInWorld())
 			scene.world.removeRigidBody(body);
 		if (s.equals("NO_COLLISION")){
+			for (GameObject g : touchingObjects)
+				g.body.activate();
 			flags &= ~CollisionFlags.KINEMATIC_OBJECT;
 		}else{
 			if (s.equals("STATIC")){
