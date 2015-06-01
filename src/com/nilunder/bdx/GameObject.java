@@ -51,7 +51,6 @@ public class GameObject implements Named{
 	private boolean visible;
 	private boolean valid;
 	private Model uniqueModel;
-	private String lastBodyType;
 
 	
 	public GameObject() {
@@ -61,7 +60,6 @@ public class GameObject implements Named{
 		components = new ArrayListNamed<Component>();
 		children = new ArrayListNamed<GameObject>();
 		valid = true;
-		lastBodyType = "DYNAMIC";
 	}
 
 
@@ -692,15 +690,13 @@ public class GameObject implements Named{
 
 	}
 
-	public void dynamics(boolean enable){
-		if (currBodyType.equals("NO_COLLISION") || enable && dynamics() || !enable && !dynamics()){
-			return;
-		}
-		if (enable){
-			bodyType(lastBodyType);
-		}else{
-			lastBodyType = currBodyType;
-			bodyType("STATIC");
+	public void dynamics(boolean restore){
+		if (currBodyType.equals("DYNAMIC") || currBodyType.equals("RIGID_BODY")){
+			if (restore){
+				bodyType(currBodyType);
+			}else{ // suspend
+				body.setCollisionFlags(body.getCollisionFlags() | CollisionFlags.KINEMATIC_OBJECT);
+			}
 		}
 	}
 
@@ -727,8 +723,11 @@ public class GameObject implements Named{
 	
 	public void bodyType(String s){
 		int flags = body.getCollisionFlags();
-		if (s.equals("NO_COLLISION")){
+		if (body.isInWorld())
 			scene.world.removeRigidBody(body);
+		if (s.equals("NO_COLLISION")){
+			for (GameObject g : touchingObjects)
+				g.body.activate();
 			flags &= ~CollisionFlags.KINEMATIC_OBJECT;
 		}else{
 			if (s.equals("STATIC")){
@@ -737,16 +736,17 @@ public class GameObject implements Named{
 				flags |= CollisionFlags.KINEMATIC_OBJECT;
 				flags |= CollisionFlags.NO_CONTACT_RESPONSE;
 			}else{
-				
+				// NO_COLLISION -> DYNAMIC or RIGID_BODY hack
+				if (currBodyType.equals("NO_COLLISION")){
+					body.clearForces();
+					body.setLinearVelocity(new Vector3f());
+				}
 				// kinematic initialization hack
 				if (mass() == Float.POSITIVE_INFINITY){
 					mass(1); // Blender default
-					scene.world.removeRigidBody(body);
 					flags &= ~CollisionFlags.KINEMATIC_OBJECT;
 					body.setCollisionFlags(flags);
-					scene.world.addRigidBody(body);
 				}
-				
 				flags &= ~CollisionFlags.KINEMATIC_OBJECT;
 				if (s.equals("DYNAMIC")){
 					body.setAngularVelocity(new Vector3f());
@@ -757,11 +757,7 @@ public class GameObject implements Named{
 					throw new RuntimeException(s + " is no valid bodyType name.");
 				}
 			}
-			if (!body.isInWorld()){
-				body.clearForces();
-				body.setLinearVelocity(new Vector3f());
-				scene.world.addRigidBody(body);
-			}
+			scene.world.addRigidBody(body);
 			body.activate(true);
 		}
 		body.setCollisionFlags(flags);
