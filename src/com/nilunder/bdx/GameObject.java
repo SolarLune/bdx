@@ -84,9 +84,11 @@ public class GameObject implements Named{
 		if (parent != null){
 			parent.children.remove(this);
 
-			if (parent.compoundShape() != null)
+			if (parent.compoundShape() != null){
+				scene.world.removeRigidBody(parent.body);
 				parent.compoundShape().removeChildShape(body.getCollisionShape());
-
+				scene.world.addRigidBody(parent.body);
+			}
 		}
 		
 		parent = p;
