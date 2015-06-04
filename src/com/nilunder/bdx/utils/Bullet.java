@@ -134,6 +134,7 @@ public static class DebugDrawer extends IDebugDraw{
 
 		if (compound) {
 			CompoundShape compShape = new CompoundShape();
+			compShape.setMargin(0);
 			Transform trans = new Transform();
 			trans.setIdentity();
 			compShape.addChildShape(trans, shape);
