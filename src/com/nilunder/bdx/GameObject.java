@@ -658,6 +658,12 @@ public class GameObject implements Named{
 		}
 		
 		if (updatePhysics){
+			GameObject compParent = parent != null && parent.body.getCollisionShape().isCompound() ? parent : null;
+			boolean isCompChild = compParent != null && !(currBodyType.equals("NO_COLLISION") || currBodyType.equals("SENSOR"));
+			if (isCompChild){
+				parent(null);
+			}
+			
 			Matrix4f transform = transform();
 			Vector3f scale = scale();
 			String boundsType = json.get("physics").get("bounds_type").asString();
@@ -681,10 +687,14 @@ public class GameObject implements Named{
 
 			if (body.isInWorld()){
 				scene.world.updateSingleAabb(body);
-			}else{ // update Aabb hack for NO_COLLISION
+			}else{ // update Aabb hack for when not in world
 				scene.world.addRigidBody(body);
 				scene.world.updateSingleAabb(body);
 				scene.world.removeRigidBody(body);
+			}
+
+			if (isCompChild){
+				parent(compParent);
 			}
 		}
 	}
