@@ -81,16 +81,22 @@ public class GameObject implements Named{
 	}
 	
 	public void parent(GameObject p){
+		parent(p, true);
+	}
+
+	public void parent(GameObject p, boolean compound){
 		CompoundShape compShapeOld = null;
 		
 		if (parent != null){
 			parent.children.remove(this);
 
-			compShapeOld = parent.compoundShape();
-			if (compShapeOld != null){
-				scene.world.removeRigidBody(parent.body);
-				compShapeOld.removeChildShape(body.getCollisionShape());
-				scene.world.addRigidBody(parent.body);
+			if (compound){
+				compShapeOld = parent.compoundShape();
+				if (compShapeOld != null){
+					scene.world.removeRigidBody(parent.body);
+					compShapeOld.removeChildShape(body.getCollisionShape());
+					scene.world.addRigidBody(parent.body);
+				}
 			}
 		}
 		
@@ -103,15 +109,20 @@ public class GameObject implements Named{
 			updateLocalTransform();
 			updateLocalScale();
 
-			if (parent.compoundShape() != null){
-				scene.world.removeRigidBody(body);
-				parent.compoundShape().addChildShape(new Transform(localTransform), body.getCollisionShape());
+			if (compound){
+				CompoundShape compShape = parent.compoundShape();
+				if (compShape != null){
+					scene.world.removeRigidBody(body);
+					compShape.addChildShape(new Transform(localTransform), body.getCollisionShape());
+				}
 			}
 
 			dynamics(false);
+			
 		}else if (currBodyType.equals("STATIC") || currBodyType.equals("SENSOR")){
-			if (compShapeOld != null)
+			if (compound && compShapeOld != null)
 				scene.world.addRigidBody(body);
+			
 		}else{
 			dynamics(true);
 		}
