@@ -279,6 +279,25 @@ public class GameObject implements Named{
 		applyForceLocal(v);
 	}
 	
+	public void applyTorque(Vector3f vec){
+		body.activate();
+		body.applyTorque(vec);
+	}
+	
+	public void applyTorque(float x, float y, float z){
+		Vector3f v = new Vector3f(x, y, z);
+		applyTorque(v);
+	}
+	
+	public void applyTorqueLocal(Vector3f vec){
+		applyTorque(orientation().mult(vec));
+	}
+	
+	public void applyTorqueLocal(float x, float y, float z){
+		Vector3f v = new Vector3f(x, y, z);
+		applyTorqueLocal(v);
+	}
+	
 	public void velocity(Vector3f vec){
 		body.activate();
 		body.setLinearVelocity(vec);
