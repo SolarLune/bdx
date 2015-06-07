@@ -81,12 +81,23 @@ public class GameObject implements Named{
 	}
 	
 	public void parent(GameObject p){
+		parent(p, true);
+	}
+
+	public void parent(GameObject p, boolean compound){
+		CompoundShape compShapeOld = null;
+		
 		if (parent != null){
 			parent.children.remove(this);
 
-			if (parent.compoundShape() != null)
-				parent.compoundShape().removeChildShape(body.getCollisionShape());
-
+			if (compound){
+				compShapeOld = parent.compoundShape();
+				if (compShapeOld != null){
+					scene.world.removeRigidBody(parent.body);
+					compShapeOld.removeChildShape(body.getCollisionShape());
+					scene.world.addRigidBody(parent.body);
+				}
+			}
 		}
 		
 		parent = p;
@@ -98,14 +109,23 @@ public class GameObject implements Named{
 			updateLocalTransform();
 			updateLocalScale();
 
-			if (parent.compoundShape() != null)
-				parent.compoundShape().addChildShape(new Transform(localTransform), body.getCollisionShape());
+			if (compound){
+				CompoundShape compShape = parent.compoundShape();
+				if (compShape != null){
+					scene.world.removeRigidBody(body);
+					compShape.addChildShape(new Transform(localTransform), body.getCollisionShape());
+				}
+			}
 
 			dynamics(false);
+			
+		}else if (currBodyType.equals("STATIC") || currBodyType.equals("SENSOR")){
+			if (compound && compShapeOld != null)
+				scene.world.addRigidBody(body);
+			
 		}else{
 			dynamics(true);
 		}
-		
 	}
 
 	private CompoundShape compoundShape(){
@@ -649,6 +669,12 @@ public class GameObject implements Named{
 		}
 		
 		if (updatePhysics){
+			GameObject compParent = parent != null && parent.body.getCollisionShape().isCompound() ? parent : null;
+			boolean isCompChild = compParent != null && !(currBodyType.equals("NO_COLLISION") || currBodyType.equals("SENSOR"));
+			if (isCompChild){
+				parent(null);
+			}
+			
 			Matrix4f transform = transform();
 			Vector3f scale = scale();
 			String boundsType = json.get("physics").get("bounds_type").asString();
@@ -672,10 +698,14 @@ public class GameObject implements Named{
 
 			if (body.isInWorld()){
 				scene.world.updateSingleAabb(body);
-			}else{ // update Aabb hack for NO_COLLISION
+			}else{ // update Aabb hack for when not in world
 				scene.world.addRigidBody(body);
 				scene.world.updateSingleAabb(body);
 				scene.world.removeRigidBody(body);
+			}
+
+			if (isCompChild){
+				parent(compParent);
 			}
 		}
 	}
