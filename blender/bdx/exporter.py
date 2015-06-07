@@ -134,6 +134,17 @@ def srl_origins(objects):
     
     return name_origin
 
+def srl_dimensions(objects):
+    name_dimensions = {}
+    
+    for o in objects:
+        if o.type == "MESH" or "FONT":
+            data_name = "__FNT_" + o.data.name if o.type == "FONT" else o.data.name
+            if data_name not in name_dimensions:
+                name_dimensions[data_name] = [d / s for d, s in zip(o.dimensions, o.scale)]
+    
+    return name_dimensions
+
 def char_uvs(char, angel_code):
     """
     Return a list of uv coordinates (for a quad)
@@ -656,6 +667,7 @@ def export(context, filepath, scene_name, exprun):
         "ambientColor": ambient_color,
         "models": srl_models(used_meshes(objects)),
         "origins": srl_origins(objects),
+        "dimensions": srl_dimensions(objects),
         "objects": srl_objects(objects),
         "materials": srl_materials(used_materials(objects)),
         "cameras": camera_names(scene),
