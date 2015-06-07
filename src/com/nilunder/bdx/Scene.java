@@ -68,7 +68,7 @@ public class Scene implements Named{
 	
 	private Instantiator instantiator;
 	
-	private HashMap<String, GameObject> templates;
+	public HashMap<String, GameObject> templates;
 	public ArrayList<Filter> filters;
 	public RenderBuffer lastFrameBuffer;
 	public Environment environment;
