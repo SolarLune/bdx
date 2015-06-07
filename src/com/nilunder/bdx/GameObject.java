@@ -36,6 +36,7 @@ public class GameObject implements Named{
 	public RigidBody body;
 	public String currBodyType;
 	public Vector3f origin;
+	public Vector3f dimensionsNoScale;
 	
 	public HashMap<String, JsonValue> props;
 	
@@ -563,10 +564,7 @@ public class GameObject implements Named{
 	}
 
 	public Vector3f dimensions(){
-		Vector3f min = new Vector3f(0, 0, 0);
-		Vector3f max = new Vector3f(0, 0, 0);
-		body.getAabb(min, max);
-		return max.minus(min);
+		return dimensionsNoScale.mul(scale());
 	}
 	
 	public Vector3f axis(String axisName){
@@ -677,10 +675,12 @@ public class GameObject implements Named{
 		
 		Model model = null;
 		JsonValue mOrigin = null;
+		JsonValue mDimNoScale = null;
 		for (Scene sce : Bdx.scenes){
 			if (sce.models.containsKey(modelName)){
 				model = sce.models.get(modelName);
 				mOrigin = sce.json.get("origins").get(modelName);
+				mDimNoScale = sce.json.get("dimensions").get(modelName);
 				break;
 			}
 		}
@@ -688,6 +688,7 @@ public class GameObject implements Named{
 			throw new RuntimeException("No model found with name: '" + modelName + "'");
 		}
 		origin = mOrigin == null ? new Vector3f() : new Vector3f(mOrigin.asFloatArray());
+		dimensionsNoScale = mDimNoScale == null ? new Vector3f(1, 1, 1) : new Vector3f(mDimNoScale.asFloatArray());
 		Matrix4 trans = modelInstance.transform;
 
 		if (updateVisual){
