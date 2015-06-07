@@ -607,14 +607,9 @@ public class GameObject implements Named{
 	}
 
 	public void color(float r, float g, float b, float a){
-
-		for (Material mat : modelInstance.materials){
-
-			ColorAttribute ca = (ColorAttribute) mat.get(ColorAttribute.Diffuse);
-
-			ca.color.set(r, g, b, a);
-
-		}
+		colorNoChildren(r, g, b, a);
+		for (GameObject child : children)
+			child.color(r, g, b, a);
 	}
 
 	public void color(float r, float g, float b){
@@ -623,6 +618,20 @@ public class GameObject implements Named{
 
 	public void color(Vector4f color){
 		color(color.x, color.y, color.z, color.w);
+	}
+	
+	public void colorNoChildren(float r, float g, float b, float a){
+		for (Material mat : modelInstance.materials){
+			ColorAttribute ca = (ColorAttribute) mat.get(ColorAttribute.Diffuse);
+			ca.color.set(r, g, b, a);
+		}
+	}
+	
+	public void colorNoChildren(float r, float g, float b){
+		colorNoChildren(r, g, b, 1);
+	}
+	public void colorNoChildren(Vector4f color){
+		colorNoChildren(color.x, color.y, color.z, color.w);
 	}
 
 	public int[] blendMode(){
