@@ -114,6 +114,7 @@ public static class DebugDrawer extends IDebugDraw{
 				vertList.add(new Vector3f(verts[i], verts[i + 1], verts[i + 2]));
 			}
 			shape = new ConvexHullShape(vertList);
+			margin *= 0.5f;
 		}else{
 			Vector3 d = mesh.calculateBoundingBox().getDimensions(new Vector3()).scl(0.5f);
 			if (bounds.equals("SPHERE")){
@@ -131,6 +132,7 @@ public static class DebugDrawer extends IDebugDraw{
 				float radius = Math.max(d.x, d.y);
 				float height = d.z * 2;
 				shape = new ConeShapeZ(radius, height);
+				margin *= 0.5f;
 			}
 		}
 		shape.setMargin(margin);
