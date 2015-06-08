@@ -274,7 +274,7 @@ public class GameObject implements Named{
 	private void updateLocalTransform(){
 		localTransform = parent.transform();
 		Matrix4f ms = new Matrix4f(); ms.setIdentity();
-		Vector3f ps = scale();
+		Vector3f ps = parent.scale();
 		ms.m00 = ps.x; ms.m11 = ps.y; ms.m22 = ps.z;
 		localTransform.mul(ms);
 		localTransform.invert();
