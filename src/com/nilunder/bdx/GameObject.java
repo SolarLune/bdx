@@ -824,7 +824,7 @@ public class GameObject implements Named{
 	}
 
 	public boolean insideFrustum(){
-	    Vector3f min = new Vector3f();
+		Vector3f min = new Vector3f();
 		Vector3f max = new Vector3f();
 		body.getAabb(min, max);
 		Vector3f dimHalved = max.minus(min).mul(0.5f);
