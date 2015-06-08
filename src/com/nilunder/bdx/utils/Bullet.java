@@ -106,16 +106,6 @@ public static class DebugDrawer extends IDebugDraw{
 			TriangleIndexVertexArray mi = new TriangleIndexVertexArray();
 			mi.addIndexedMesh(Bullet.makeMesh(mesh), ScalarType.SHORT);
 			shape = new BvhTriangleMeshShape(mi, false);
-			
-		}else if (bounds.equals("SPHERE")){
-			Vector3 bbox = mesh.calculateBoundingBox().getDimensions(new Vector3());
-			float radius = Math.max(Math.max(bbox.x, bbox.y), bbox.z) / 2;
-			shape = new SphereShape(radius);
-		}else if (bounds.equals("CAPSULE")){
-			Vector3 dim = mesh.calculateBoundingBox().getDimensions(new Vector3());
-			float radius = Math.max(dim.x, dim.y) / 2;
-			float height = dim.z - (2*radius);
-			shape = new CapsuleShapeZ(radius, height);			
 		}else if (bounds.equals("CONVEX_HULL")){
 			float[] verts = new float[mesh.getNumVertices() * mesh.getVertexSize()];
 			mesh.getVertices(verts);
@@ -124,11 +114,24 @@ public static class DebugDrawer extends IDebugDraw{
 				vertList.add(new Vector3f(verts[i], verts[i + 1], verts[i + 2]));
 			}
 			shape = new ConvexHullShape(vertList);
-		}else{ // BOX
-			BoundingBox bbox = mesh.calculateBoundingBox();
-			Vector3 d = bbox.getDimensions(new Vector3()).scl(0.5f);
-			Vector3f dim = new Vector3f(d.x, d.y, d.z);
-			shape = new BoxShape(dim);
+		}else{
+			Vector3 d = mesh.calculateBoundingBox().getDimensions(new Vector3()).scl(0.5f);
+			if (bounds.equals("SPHERE")){
+				float radius = Math.max(Math.max(d.x, d.y), d.z);
+				shape = new SphereShape(radius);
+			}else if (bounds.equals("BOX")){
+				shape = new BoxShape(new Vector3f(d.x, d.y, d.z));
+			}else if (bounds.equals("CYLINDER")){
+				shape = new CylinderShape(new Vector3f(d.x, d.y, d.z));
+			}else if (bounds.equals("CAPSULE")){
+				float radius = Math.max(d.x, d.y);
+				float height = (d.z - radius) * 2;
+				shape = new CapsuleShapeZ(radius, height);
+			}else{ //"CONE"
+				float radius = Math.max(d.x, d.y);
+				float height = d.z * 2;
+				shape = new ConeShapeZ(radius, height);
+			}
 		}
 		shape.setMargin(margin);
 
