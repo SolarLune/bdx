@@ -123,7 +123,7 @@ public static class DebugDrawer extends IDebugDraw{
 			}else if (bounds.equals("BOX")){
 				shape = new BoxShape(new Vector3f(d.x, d.y, d.z));
 			}else if (bounds.equals("CYLINDER")){
-				shape = new CylinderShape(new Vector3f(d.x, d.y, d.z));
+				shape = new CylinderShapeZ(new Vector3f(d.x, d.y, d.z));
 			}else if (bounds.equals("CAPSULE")){
 				float radius = Math.max(d.x, d.y);
 				float height = (d.z - radius) * 2;
