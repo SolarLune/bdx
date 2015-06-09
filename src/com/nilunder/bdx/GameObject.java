@@ -99,6 +99,9 @@ public class GameObject implements Named{
 					scene.world.addRigidBody(parent.body);
 				}
 			}
+			
+		}else if (p == null){
+			return;
 		}
 		
 		parent = p;
