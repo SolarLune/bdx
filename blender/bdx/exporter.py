@@ -138,7 +138,7 @@ def srl_dimensions(objects):
     name_dimensions = {}
     
     for o in objects:
-        if o.type == "MESH" or "FONT":
+        if o.type in ("MESH", "FONT"):
             data_name = "__FNT_" + o.data.name if o.type == "FONT" else o.data.name
             if data_name not in name_dimensions:
                 name_dimensions[data_name] = [d / s for d, s in zip(o.dimensions, o.scale)]
