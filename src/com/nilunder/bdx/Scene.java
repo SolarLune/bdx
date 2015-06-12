@@ -109,6 +109,8 @@ public class Scene implements Named{
 		filters = new ArrayList<Filter>();
 		defaultMaterial = new Material();
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
+		defaultMaterial.set(new ColorAttribute(ColorAttribute.Diffuse, 1, 1, 1, 1));
+		defaultMaterial.set(new BlendingAttribute());
 		defaultModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 
 		models = new HashMap<String,Model>();
@@ -168,6 +170,10 @@ public class Scene implements Named{
 				material.set(ba);
 				material.set(FloatAttribute.createAlphaTest(0));
 			}
+			else
+				material.set(new BlendingAttribute());
+			
+			
 
 			materials.put(mat.name, material);
 		}

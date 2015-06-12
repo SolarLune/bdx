@@ -638,9 +638,7 @@ public class GameObject implements Named{
 	public int[] blendMode(){
 
 		BlendingAttribute ba = (BlendingAttribute) modelInstance.materials.first().get(BlendingAttribute.Type);
-
 		int[] a = {ba.sourceFunction, ba.destFunction};
-
 		return a;
 
 	}
@@ -650,12 +648,6 @@ public class GameObject implements Named{
 		for (Material mat : modelInstance.materials){
 
 			BlendingAttribute ba = (BlendingAttribute) mat.get(BlendingAttribute.Type);
-
-			if (ba == null){
-				ba = new BlendingAttribute();
-				mat.set(ba);
-			}
-
 			ba.sourceFunction = src;
 			ba.destFunction = dest;
 
