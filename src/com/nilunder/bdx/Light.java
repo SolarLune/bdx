@@ -58,6 +58,12 @@ public class Light extends GameObject {
 	}
 	
 	@Override
+	public void endNoChildren(){				
+		super.endNoChildren();
+		scene.environment.remove(lightData);
+	}
+	
+	@Override
 	public void transform(Matrix4f mat, boolean updateLocal) {
 				
 		super.transform(mat, updateLocal);
