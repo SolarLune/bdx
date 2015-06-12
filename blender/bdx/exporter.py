@@ -32,11 +32,8 @@ class EmptyUV:
     def __getitem__(self, index):
         return self
 
-def flip_uvs(uvs):
-    for v in uvs:
-        v[1] -= 0.5
-        v[1] *= -1
-        v[1] += 0.5
+def flip_uv(uv):
+    uv[1] = 1 - uv[1]
     
 def vertices(mesh):
     uv_act = mesh.uv_layers.active
@@ -47,17 +44,13 @@ def vertices(mesh):
     verts = []
 
     for poly in mesh.polygons:
-        poly_verts = []
-        poly_uvs = []
-
         for li in triform(poly.loop_indices):
-            poly_verts.append(list(mesh.vertices[loop_vert[li]].co))
-            poly_uvs.append(mt.Vector(uv_layer[li].uv))
-
-        flip_uvs(poly_uvs)
-
-        for v, uv in zip(poly_verts, poly_uvs):
-            verts += v + list(poly.normal) + list(uv)
+            vert = mesh.vertices[loop_vert[li]]
+            vert_co = list(vert.co)
+            vert_normal = list(vert.normal) if poly.use_smooth else list(poly.normal)
+            vert_uv = list(uv_layer[li].uv)
+            flip_uv(vert_uv)
+            verts += vert_co + vert_normal + vert_uv
 
     return verts
 
@@ -175,7 +168,7 @@ def char_uvs(char, angel_code):
            pu(x + w, y),
            pu(x, y)]
 
-    #flip_uvs(uvs)
+    #[flip_uv(uv) for uv in uvs]
 
     return uvs
 
