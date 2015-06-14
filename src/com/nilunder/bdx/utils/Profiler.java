@@ -67,6 +67,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		scene.init();
 		display = scene.add("__PDisplay");
 		background = display.children.get(0);
+		background.color(0.125f, 0.125f, 0.125f, 0.5f);
 		ticInfo = (Text)scene.add("__PText");
 		ticInfo.position(spacing, -spacing * 1.5f, 0);
 		ticInfo.parent(display);
