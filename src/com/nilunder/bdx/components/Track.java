@@ -22,6 +22,7 @@ public class Track extends Component<GameObject> {
 		upAxis = "Z";
 		upVec = new Vector3f(0, 0, 1);
 		state = track;
+		state.main();
 	}
 	
 	private State track = new State(){
