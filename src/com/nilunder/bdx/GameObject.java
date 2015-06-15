@@ -45,7 +45,7 @@ public class GameObject implements Named{
 	public ArrayListNamed<Component> components;
 	
 	public Scene scene;
-
+	
 	private GameObject parent;
 	private Matrix4f localTransform;
 	private Vector3f localScale;
