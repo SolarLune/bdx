@@ -9,6 +9,7 @@ public class Halo extends Component<GameObject> {
 	public Halo(GameObject g){
 		super(g);
 		state = track;
+		state.main();
 	}
 	
 	private State track = new State(){
