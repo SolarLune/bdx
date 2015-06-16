@@ -8,7 +8,7 @@ public class NAME extends Instantiator {
 	public GameObject newObject(JsonValue gobj){
 		String name = gobj.name;
 
-		if (name.equals("NAME"))
+		if (gobj.get("class").asString().equals("NAME"))
 			return new NAME();
 
 		return super.newObject(gobj);
