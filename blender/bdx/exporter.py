@@ -386,6 +386,12 @@ def projection_matrix(camd):
     return sum([c for c in mat], [])
 
 
+def get_cls_name(obj):
+    if obj.bdx_cls_use_custom:
+        cls_name = obj.bdx_cls_custom_name
+        return cls_name.replace(".java", "") if cls_name.endswith(".java") else ""
+    return obj.name
+
 
 def srl_objects(objects):
     name_object = {}
@@ -415,6 +421,8 @@ def srl_objects(objects):
         transform = sum([list(v) for v in matrix.col], [])
 
         name_object[obj.name] = {
+            "class": get_cls_name(obj),
+            "use_priority": obj.bdx_cls_use_priority,
             "type": obj.type,
             "properties": {n: p.value for n, p in obj.game.properties.items()},
             "transform": transform,
@@ -514,7 +522,11 @@ def instantiator(objects):
 
     name_class = {path_to_name(fp): path_to_class(fp) for fp in relevant_files}
 
-    shared_names = [o.name for o in objects if o.name in name_class]
+    shared_names = []
+    for o in objects:
+        cls_name = get_cls_name(o)
+        if cls_name in name_class:
+            shared_names.append(cls_name)
 
     if not shared_names:
         return None

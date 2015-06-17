@@ -296,7 +296,7 @@ public class Scene implements Named{
 		ArrayList<GameObject> temps = new ArrayList<GameObject>(templates.values());
 
 		for (GameObject t : temps){
-			if (t.name.contains("init_")){
+			if (t.json.get("use_priority").asBoolean()){
 				Collections.swap(temps, 0, temps.indexOf(t));
 				break;
 			}
