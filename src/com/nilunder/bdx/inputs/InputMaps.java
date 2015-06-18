@@ -76,7 +76,7 @@ public static class Input{
 				}
 			};
 		}else{
-			throw new RuntimeException(String.format("Invalid descriptor \"%s\".", descriptor));
+			throw new RuntimeException("Invalid descriptor \"" + descriptor + "\".");
 		}
 	}
 
