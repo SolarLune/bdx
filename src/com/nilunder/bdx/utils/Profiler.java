@@ -117,7 +117,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 	}
 
 	private void updateDisplay(){
-		ticInfo.set(String.format("%-14s %4.1f %-3s %4.1f %s", "tic info", avgTicTime, "ms", avgTicRate, "fps"));
+		ticInfo.set(formatForDisplay("tic info", avgTicTime, "ms", avgTicRate, "fps"));
 		for (String name : nanos.keySet()){
 			if (!names.contains(name)){
 				names.add(name);
@@ -144,7 +144,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 			float p = percents.get(name);
 			Vector3f barScale = new Vector3f(0.04f * spacing * p, 0.4f, 1);
 			bars.get(name).scale(barScale.mul(display.scale()));
-			texts.get(name).set(String.format("%-14s %4.1f %-3s %4.1f %s", n, m, "ms", p, "%"));
+			texts.get(name).set(formatForDisplay(n, m, "ms", p, "%"));
 		}
 		Vector3f currScreenSize = new Vector3f(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 1);
 		if (!screenSize.equals(currScreenSize))
@@ -183,4 +183,55 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		updateDisplay();
 	}
 	
+	private static String formatForDisplay(String name, float avgTicTime, String timeUnits, float avgTicRate, String valueUnits) {
+		// "%-14s %4.1f %-3s %4.1f %s"
+		StringBuffer buffer = new StringBuffer();
+		
+		addStringWithCharacterPadding(buffer, name, 14, false, ' ');
+		buffer.append(" ");
+		addFloat(buffer, avgTicTime, 4, 1);
+		buffer.append(" ");
+		addStringWithCharacterPadding(buffer, timeUnits, 3, false, ' ');
+		buffer.append(" ");
+		addFloat(buffer, avgTicRate, 4, 1);
+		buffer.append(" ");
+		buffer.append(valueUnits);
+		
+		return buffer.toString();
+	}
+	
+	private static void addFloat(StringBuffer buffer, float value, int integerPadding, int fractionPadding) {
+		String converted = Float.toString(value);
+		String [] split = converted.split("\\.");
+		
+		addStringWithCharacterPadding(buffer, split.length > 0 ? split[0] : "0", integerPadding, true, '0');
+		if (fractionPadding > 0) {
+			buffer.append(".");
+			addStringWithCharacterPadding(buffer, split.length > 1 ? split[1] : "0", fractionPadding, false, '0');	
+		}
+	}
+	
+	private static void addStringWithCharacterPadding(StringBuffer buffer, String value, int padding, boolean padLeft, char character) {
+		if (value != null) {
+			if (value.length() > padding) {
+				buffer.append(value.substring(0, padding));
+			} else {
+				if (padLeft) {
+					padWithCharacter(buffer, padding - value.length(), character);
+					buffer.append(value);
+				} else {
+					buffer.append(value);
+					padWithCharacter(buffer, padding - value.length(), character);
+				}
+			}
+		} else {
+			padWithCharacter(buffer, padding, character);
+		}
+	}
+	
+	private static void padWithCharacter(StringBuffer buffer, int padding, char character) {
+		for (int i = 0; i < padding; i++) {
+			buffer.append(character);
+		}
+	}
 }
