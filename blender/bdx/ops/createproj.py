@@ -56,17 +56,23 @@ class CreateBdxProject(bpy.types.Operator):
         os.mkdir(j(bdx, "audio", "sounds"))
         os.mkdir(j(bdx, "audio", "music"))
         os.mkdir(j(bdx, "fonts"))
-        filters = j(bdx, "filters")
-        os.mkdir(filters)
+        os.mkdir(j(bdx, "shaders"))
+        shaders2D = j(bdx, "shaders", "2d")
+        shaders3D = j(bdx, "shaders", "3d")
+        os.mkdir(shaders2D)
+        os.mkdir(shaders3D)
 
         for png in ut.listdir(ut.gen_root(), pattern="*.png"):
             shutil.copy(png, textures)
             
-        for frag in ut.listdir(j(ut.gen_root(), "filters"), pattern="*.frag"):
-            shutil.copy(frag, filters)
-            
-        for vert in ut.listdir(j(ut.gen_root(), "filters"), pattern="*.vert"):
-            shutil.copy(vert, filters)
+        for frag in ut.listdir(j(ut.gen_root(), "shaders", "2d"), pattern="*.frag"):
+            shutil.copy(frag, shaders2D)  
+        for vert in ut.listdir(j(ut.gen_root(), "shaders", "2d"), pattern="*.vert"):
+            shutil.copy(vert, shaders2D)
+        for frag in ut.listdir(j(ut.gen_root(), "shaders", "3d"), pattern="*.frag"):
+            shutil.copy(frag, shaders3D)  
+        for vert in ut.listdir(j(ut.gen_root(), "shaders", "3d"), pattern="*.vert"):
+            shutil.copy(vert, shaders3D)
             
     def create_blender_assets(self):
         """

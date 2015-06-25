@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
-import com.nilunder.bdx.Filter;
+import com.nilunder.bdx.ShaderProgram;
 
 public class RenderBuffer extends FrameBuffer{
 		
@@ -21,7 +21,7 @@ public class RenderBuffer extends FrameBuffer{
 				
 	}	
 	
-	public void drawTo(RenderBuffer dest,Filter filter){
+	public void drawTo(RenderBuffer dest,ShaderProgram filter){
 		
 		TextureRegion region = new TextureRegion(this.getColorBufferTexture());
 		region.flip(false, true);

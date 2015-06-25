@@ -69,7 +69,7 @@ public class Scene implements Named{
 	private Instantiator instantiator;
 	
 	public HashMap<String, GameObject> templates;
-	public ArrayList<Filter> filters;
+	public ArrayList<ShaderProgram> filters;
 	public RenderBuffer lastFrameBuffer;
 	public Environment environment;
 	
@@ -106,7 +106,7 @@ public class Scene implements Named{
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0, 0, 0, 1));
 				
-		filters = new ArrayList<Filter>();
+		filters = new ArrayList<ShaderProgram>();
 		defaultMaterial = new Material();
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.Diffuse, 1, 1, 1, 1));
@@ -146,6 +146,8 @@ public class Scene implements Named{
 			float[] c = mat.get("color").asFloatArray();
 			Material material = new Material(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
 							
+			material.id = mat.name;
+			
 			if (mat.get("shadeless").asBoolean())
 				material.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
 			
@@ -172,8 +174,6 @@ public class Scene implements Named{
 			}
 			else
 				material.set(new BlendingAttribute());
-			
-			
 
 			materials.put(mat.name, material);
 		}
@@ -273,6 +273,9 @@ public class Scene implements Named{
 
 	public void dispose(){
 		lastFrameBuffer.dispose();
+		for (ShaderProgram sp : filters) {
+			sp.disposeAll();
+		}
 	}
 	
 	private void hookParentChild(){

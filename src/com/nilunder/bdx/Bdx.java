@@ -7,9 +7,7 @@ import com.badlogic.gdx.files.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
-import com.badlogic.gdx.graphics.glutils.*;
-
-import com.nilunder.bdx.*;
+import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.*;
@@ -90,6 +88,15 @@ public class Bdx{
 
 	}
 
+	private static class BDXShaderProvider extends DefaultShaderProvider {
+		@Override
+		public Shader getShader(Renderable renderable) {
+			if (matShaders.containsKey(renderable.material.id))
+				return matShaders.get(renderable.material.id).getShader(renderable);
+			return super.getShader(renderable);
+		}
+	}
+	
 	public static final float TICK_TIME = 1f/60f;
 	public static final int VERT_STRIDE = 8;
 	public static float time;
@@ -104,13 +111,14 @@ public class Bdx{
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
 	public static ArrayList<Component> components;
-
+	public static HashMap<String, ShaderProgram> matShaders;
+	
 	private static ArrayList<Finger> allocatedFingers;
 	private static ModelBatch modelBatch;
 	private static RenderBuffer frameBuffer;
 	private static RenderBuffer tempBuffer;
 	private static SpriteBatch spriteBatch;
-
+	
 	public static void init(){
 		time = 0;
 		profiler = new Profiler();
@@ -124,6 +132,7 @@ public class Bdx{
 		keyboard = new Keyboard();
 		fingers = new ArrayList<Finger>(); 
 		components = new ArrayList<Component>();
+		matShaders = new HashMap<String, ShaderProgram>();
 
 		allocatedFingers = new ArrayList<Finger>();
 		for (int i = 0; i < 10; ++i){
@@ -132,14 +141,11 @@ public class Bdx{
 
 		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers, gamepad));
 
-		modelBatch = new ModelBatch();
-
-		ShaderProgram.pedantic = false;
+		com.badlogic.gdx.graphics.glutils.ShaderProgram.pedantic = false;
 		
+		modelBatch = new ModelBatch(new BDXShaderProvider());
 		spriteBatch = new SpriteBatch();
-
 		frameBuffer = new RenderBuffer(spriteBatch);
-		
 		tempBuffer = new RenderBuffer(spriteBatch);
 		
 	}
@@ -196,7 +202,7 @@ public class Bdx{
 				scene.lastFrameBuffer.getColorBufferTexture().bind(1);
 				Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
 								
-				for (Filter filter : scene.filters) {
+				for (ShaderProgram filter : scene.filters) {
 
 					filter.begin();
 					filter.setUniformf("time", Bdx.time);
@@ -245,9 +251,13 @@ public class Bdx{
 		spriteBatch.dispose();
 		frameBuffer.dispose();
 		tempBuffer.dispose();
+		for (ShaderProgram sp: matShaders.values()) {
+			sp.disposeAll();
+		}
 	}
 	
 	public static void end(){
 		System.exit(0);
 	}
+	
 }
