@@ -117,7 +117,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 	}
 
 	private void updateDisplay(){
-		ticInfo.set(formatForDisplay("tic info", avgTicTime, " ms", avgTicRate, " fps"));
+		ticInfo.set(formatForDisplay("tic info", avgTicTime, "ms", avgTicRate, "fps"));
 		for (String name : nanos.keySet()){
 			if (!names.contains(name)){
 				names.add(name);
@@ -144,7 +144,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 			float p = percents.get(name);
 			Vector3f barScale = new Vector3f(0.04f * spacing * p, 0.4f, 1);
 			bars.get(name).scale(barScale.mul(display.scale()));
-			texts.get(name).set(formatForDisplay(n, m, " ms", p, " %"));
+			texts.get(name).set(formatForDisplay(n, m, "ms", p, "%"));
 		}
 		Vector3f currScreenSize = new Vector3f(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 1);
 		if (!screenSize.equals(currScreenSize))
@@ -188,19 +188,23 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		StringBuffer buffer = new StringBuffer();
 		
 		addStringWithCharacterPadding(buffer, name, 14, false, ' ');
-		addFloat(buffer, avgTicTime, 4, 1);
+		buffer.append(" ");
+		addFloat(buffer, avgTicTime, 4, 1, ' ');
+		buffer.append(" ");
 		addStringWithCharacterPadding(buffer, timeUnits, 3, false, ' ');
-		addFloat(buffer, avgTicRate, 4, 1);
+		buffer.append(" ");
+		addFloat(buffer, avgTicRate, 4, 1, ' ');
+		buffer.append(" ");
 		buffer.append(valueUnits);
 		
 		return buffer.toString();
 	}
 	
-	private static void addFloat(StringBuffer buffer, float value, int integerPadding, int fractionPadding) {
+	private static void addFloat(StringBuffer buffer, float value, int fieldPadding, int fractionPadding, char character) {
 		String converted = Float.toString(value);
 		String [] split = converted.split("\\.");
 		
-		addStringWithCharacterPadding(buffer, split.length > 0 ? split[0] : "0", integerPadding, true, ' ');
+		addStringWithCharacterPadding(buffer, split.length > 0 ? split[0] : "0", fieldPadding - (fractionPadding + 1), true, character);
 		if (fractionPadding > 0) {
 			buffer.append(".");
 			addStringWithCharacterPadding(buffer, split.length > 1 ? split[1] : "0", fractionPadding, false, '0');	
