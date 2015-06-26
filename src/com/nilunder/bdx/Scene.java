@@ -243,10 +243,10 @@ public class Scene implements Named{
 			templates.put(g.name, g);
 			
 		}
-		
-		addInstances();
 
 		hookParentChild();
+		
+		addInstances();
 		
 		cameras = new ArrayList<Camera>();
 		String[] cameraNames = json.get("cameras").asStringArray();
@@ -285,13 +285,6 @@ public class Scene implements Named{
 				g.parent(templates.get(parentName));
 			}
 		}
-		
-		for (GameObject g : objects){
-			String parentName = g.json.get("parent").asString();
-			if (parentName != null){
-				g.parent(objects.get(parentName));
-			}
-		}
 	}
 
 	private void addInstances(){
@@ -307,9 +300,9 @@ public class Scene implements Named{
 
 		for (GameObject gobj : temps){
 			boolean onActiveLayer = gobj.json.get("active").asBoolean();
-			if (onActiveLayer){
+			if (onActiveLayer && gobj.parent() == null){
 				GameObject g = clone(gobj);
-				addToWorldNoChildren(g);
+				addToWorld(g);
 			}
 		}
 		objects.addAll(toBeAdded);
@@ -405,17 +398,14 @@ public class Scene implements Named{
 
 
 	private void addToWorld(GameObject gobj){
-		addToWorldNoChildren(gobj);
-		for (GameObject g : gobj.children){
-			addToWorld(g);
-		}
-	}
-
-	private void addToWorldNoChildren(GameObject gobj){
 		if (!gobj.currBodyType.equals("NO_COLLISION"))
 			world.addRigidBody(gobj.body, gobj.json.get("physics").get("group").asShort(), gobj.json.get("physics").get("mask").asShort());
 		
 		toBeAdded.add(gobj);
+		
+		for (GameObject g : gobj.children){
+			addToWorld(g);
+		}
 	}
 	
 	public GameObject add(GameObject gobj){		
