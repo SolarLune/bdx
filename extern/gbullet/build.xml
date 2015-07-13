@@ -1,0 +1,34 @@
+<project name="gbullet" basedir="." default="build-gbullet-jar">
+	<property name="src.dir" value="src"/>
+	<property name="build.dir" value="build"/>
+	<property name="libs.dir" value="../../blender/bdx/libs"/>
+
+	<path id="master-classpath">
+		<fileset dir="${libs.dir}">
+			<include name="gwt-vecmath.jar"/>
+		</fileset>
+	</path>
+
+	<target name="build-gbullet" description="Compile source tree java files">
+		<mkdir dir="${build.dir}"/>
+		<javac destdir="${build.dir}" 
+			includeantruntime="false"
+			debug="true">
+			<compilerarg line="-encoding utf-8"/>
+			<classpath refid="master-classpath"/>
+			<src path="${src.dir}"/>
+			<exclude name="**/super/**"/>
+		</javac>
+	</target>
+
+	<target name="build-gbullet-jar" depends="build-gbullet">
+		<jar destfile="${libs.dir}/gbullet.jar">
+			<fileset dir="${build.dir}"/>
+			<fileset dir="${src.dir}"/>
+		</jar>
+	</target>
+ 
+	<target name="clean" description="Clean output directories">
+		<delete dir="${build.dir}" />
+	</target>
+</project>

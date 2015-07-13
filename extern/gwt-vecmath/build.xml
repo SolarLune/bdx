@@ -1,0 +1,26 @@
+<project name="gwtvecmath" basedir="." default="build-gwtvecmath-jar">
+	<property name="src.dir" value="src"/>
+	<property name="build.dir" value="build"/>
+	<property name="libs.dir" value="../../blender/bdx/libs"/>
+
+	<target name="build-gwtvecmath" description="Compile source tree java files">
+		<mkdir dir="${build.dir}"/>
+		<javac destdir="${build.dir}" 
+			includeantruntime="false"
+			debug="true">
+			<compilerarg line="-encoding utf-8"/>
+			<src path="${src.dir}"/>
+		</javac>
+	</target>
+
+	<target name="build-gwtvecmath-jar" depends="build-gwtvecmath">
+		<jar destfile="${libs.dir}/gwt-vecmath.jar">
+			<fileset dir="${build.dir}"/>
+			<fileset dir="${src.dir}"/>
+		</jar>
+	</target>
+ 
+	<target name="clean" description="Clean output directories">
+		<delete dir="${build.dir}" />
+	</target>
+</project>

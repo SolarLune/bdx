@@ -26,7 +26,16 @@
 		</fileset>
 	</path>
 
-	<target name="build" description="Compile source tree java files">
+	<target name="build-deps">
+		<ant dir="extern/gwt-vecmath"
+			useNativeBasedir="true"
+			inheritAll="false"/>
+		<ant dir="extern/gbullet"
+			useNativeBasedir="true"
+			inheritAll="false"/>
+	</target>
+
+	<target name="build" depends="build-deps" description="Compile source tree java files">
 		<mkdir dir="${build.dir}"/>
 		<javac destdir="${build.dir}" 
 			includeantruntime="false"
@@ -45,10 +54,21 @@
 	</target>
  
 	<target name="clean" description="Clean output directories">
-		<delete>
-			<fileset dir="${build.dir}">
-				<include name="**/*.class"/>
-			</fileset>
-		</delete>
+		<delete dir="${build.dir}" />
 	</target>
+
+	<target name="clean-deps" description="Clean output directories for subprojects">
+		<ant dir="extern/gwt-vecmath"
+			useNativeBasedir="true"
+			inheritAll="false"
+			target="clean"/>
+		<ant dir="extern/gbullet"
+			useNativeBasedir="true"
+			inheritAll="false"
+			target="clean"/>
+	</target>
+
+	<target name="clean-all" depends="clean,clean-deps" description="clean + clean-deps">
+	</target>
+
 </project>
