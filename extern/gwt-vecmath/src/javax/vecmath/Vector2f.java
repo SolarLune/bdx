@@ -215,5 +215,9 @@ public class Vector2f extends Tuple2f implements java.io.Serializable {
 	   v.y *= n;
 	   return v;
    }
+   
+   public final Vector2f reflected(Vector2f normal){
+	   return normal.mul(-2 * this.dot(normal)).plus(this);  
+   }
 
 }

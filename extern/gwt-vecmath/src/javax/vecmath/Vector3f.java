@@ -254,5 +254,9 @@ public class Vector3f extends Tuple3f implements java.io.Serializable {
 	   a.z /= b.z;
 	   return a;
    }
+   
+   public final Vector3f reflected(Vector3f normal){
+	   return normal.mul(-2 * this.dot(normal)).plus(this);  
+   }
 
 }
