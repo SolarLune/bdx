@@ -38,6 +38,7 @@ import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
 import com.nilunder.bdx.Bdx;
+import com.nilunder.bdx.GameObject.ArrayListGameObject;
 
 public class Scene implements Named{
 	public static HashMap<String, Instantiator> instantiators;
@@ -550,7 +551,7 @@ public class Scene implements Named{
 	
 	private void detectCollisions(){
 		for (GameObject g : objects){
-			ArrayListNamed<GameObject> hitLast = g.touchingObjectsLast;
+			ArrayListGameObject hitLast = g.touchingObjectsLast;
 			g.touchingObjectsLast = g.touchingObjects;
 			g.touchingObjects = hitLast;
 			g.touchingObjects.clear();

@@ -13,7 +13,6 @@ import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonValue;
-
 import com.bulletphysics.collision.narrowphase.PersistentManifold;
 import com.bulletphysics.collision.narrowphase.ManifoldPoint;
 import com.bulletphysics.collision.dispatch.CollisionFlags;
@@ -22,15 +21,14 @@ import com.bulletphysics.collision.shapes.CompoundShape;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.MatrixUtil;
 import com.bulletphysics.linearmath.Transform;
-
 import com.nilunder.bdx.utils.*;
 
 public class GameObject implements Named{
 	public JsonValue json;
 	
 	public String name;
-	public ArrayListNamed<GameObject> touchingObjects;
-	public ArrayListNamed<GameObject> touchingObjectsLast;
+	public ArrayListGameObject touchingObjects;
+	public ArrayListGameObject touchingObjectsLast;
 	public ArrayList<PersistentManifold> contactManifolds;
 	public ModelInstance modelInstance;
 	public RigidBody body;
@@ -40,7 +38,7 @@ public class GameObject implements Named{
 	
 	public HashMap<String, JsonValue> props;
 	
-	public ArrayListNamed<GameObject> children;
+	public ArrayListGameObject children;
 	
 	public ArrayListNamed<Component> components;
 	
@@ -53,13 +51,35 @@ public class GameObject implements Named{
 	private boolean valid;
 	private Model uniqueModel;
 
+	public class ArrayListGameObject extends ArrayListNamed<GameObject> {
+
+		public GameObject getByProperty(String propName){
+			for (GameObject t : this) {
+				if (t.props.containsKey(propName)) {
+					return t;
+				}
+			}
+			return null;
+			
+		}
+		
+		public GameObject getByComponent(String compName){
+			for (GameObject t : this) {
+				if (t.components.get(compName) != null) {
+					return t;
+				}
+			}
+			return null;
+		}
+		
+	}
 	
 	public GameObject() {
-		touchingObjects = new ArrayListNamed<GameObject>();
-		touchingObjectsLast = new ArrayListNamed<GameObject>();
+		touchingObjects = new ArrayListGameObject();
+		touchingObjectsLast = new ArrayListGameObject();
 		contactManifolds = new ArrayList<PersistentManifold>();
 		components = new ArrayListNamed<Component>();
-		children = new ArrayListNamed<GameObject>();
+		children = new ArrayListGameObject();
 		valid = true;
 	}
 
@@ -379,6 +399,14 @@ public class GameObject implements Named{
 		return touchingObjects.get(name) != null;
 	}
 	
+	public boolean touchingProperty(String propName){
+		return touchingObjects.getByProperty(propName) != null;
+	}
+	
+	public boolean touchingComponent(String compName){
+		return touchingObjects.getByComponent(compName) != null;
+	}
+	
 	public boolean hit(){
 		for (GameObject g: touchingObjects){
 			if (!touchingObjectsLast.contains(g)){
@@ -389,8 +417,27 @@ public class GameObject implements Named{
 	}
 	
 	public boolean hit(String name){
-		return touchingObjects.get(name) != null && 
-			touchingObjectsLast.get(name) == null;
+		for (GameObject g : touchingObjects){
+			if (g.name().equals(name) && !touchingObjectsLast.contains(g))
+				return true;
+		}
+		return false;
+	}
+	
+	public boolean hitProperty(String propName){
+		for (GameObject g : touchingObjects){
+			if (g.props.containsKey(propName) && !touchingObjectsLast.contains(g))
+				return true;
+		}
+		return false;
+	}
+	
+	public boolean hitComponent(String compName){
+		for (GameObject g : touchingObjects){
+			if (g.components.get(compName) != null && !touchingObjectsLast.contains(g))
+				return true;
+		}
+		return false;
 	}
 
 	public float reactionForce(){
