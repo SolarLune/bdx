@@ -5,15 +5,17 @@ import com.nilunder.bdx.utils.Named;
 public class Component<T extends GameObject> implements Named {
 
 	public State state;
+	public String name;
 	protected T g;
 	
 	public Component(T g){
 		this.g = g;
+		name = this.getClass().getSimpleName();
 	}
 
 	@Override
 	public String name() {
-		return this.getClass().getSimpleName();
+		return name;
 	}
 	
 	public void state(State newState){
