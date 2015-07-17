@@ -1,6 +1,8 @@
 __pycache__/
 build/
 bdx.jar
+gbullet.jar
+gwt-vecmath.jar
 .project
 .classes
 .settings
