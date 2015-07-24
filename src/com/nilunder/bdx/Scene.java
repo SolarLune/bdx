@@ -166,15 +166,20 @@ public class Scene implements Named{
 				material.set(TextureAttribute.createDiffuse(texture));
 				texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
 			}
+			
+			BlendingAttribute ba;
 
 			if (mat.get("alpha_blend").asString().equals("ALPHA")) {
-				BlendingAttribute ba = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+				ba = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 				ba.opacity = mat.get("opacity").asFloat();
 				material.set(ba);
 				material.set(FloatAttribute.createAlphaTest(0));
 			}
-			else
-				material.set(new BlendingAttribute());
+			else {
+				ba = new BlendingAttribute();
+				ba.blended = false;
+				material.set(ba);
+			}
 
 			materials.put(mat.name, material);
 		}
