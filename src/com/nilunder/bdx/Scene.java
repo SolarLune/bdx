@@ -404,8 +404,11 @@ public class Scene implements Named{
 
 
 	private void addToWorld(GameObject gobj){
-		if (!gobj.currBodyType.equals("NO_COLLISION"))
+		if (!gobj.currBodyType.equals("NO_COLLISION")){
 			world.addRigidBody(gobj.body, gobj.json.get("physics").get("group").asShort(), gobj.json.get("physics").get("mask").asShort());
+			if (gobj.currBodyType.equals("STATIC"))
+				gobj.deactivate();
+		}
 		
 		toBeAdded.add(gobj);
 		

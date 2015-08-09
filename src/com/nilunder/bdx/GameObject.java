@@ -166,7 +166,7 @@ public class GameObject implements Named{
 	}
 	
 	public void position(Vector3f vec){
-		body.activate();
+		activate();
 		
 		Matrix4f t = transform();
 		t.setTranslation(vec);
@@ -264,7 +264,7 @@ public class GameObject implements Named{
 	}
 
 	public void transform(Matrix4f mat, boolean updateLocal){
-		body.activate(true);
+		activate();
 		
 		Transform t = new Transform();
 		t.set(mat);
@@ -283,7 +283,7 @@ public class GameObject implements Named{
 		if (body.isInWorld() && body.isStaticOrKinematicObject()){
 			scene.world.updateSingleAabb(body);
 			for (GameObject g : touchingObjects)
-				g.body.activate();
+				g.activate();
 		}
 		//
 		
@@ -305,7 +305,7 @@ public class GameObject implements Named{
 	}
 
 	public void applyForce(Vector3f vec){
-		body.activate();
+		activate();
 		body.applyCentralForce(vec);
 	}
 	
@@ -324,7 +324,7 @@ public class GameObject implements Named{
 	}
 	
 	public void applyTorque(Vector3f vec){
-		body.activate();
+		activate();
 		body.applyTorque(vec);
 	}
 	
@@ -343,7 +343,7 @@ public class GameObject implements Named{
 	}
 	
 	public void velocity(Vector3f vec){
-		body.activate();
+		activate();
 		body.setLinearVelocity(vec);
 	}
 	
@@ -376,7 +376,7 @@ public class GameObject implements Named{
 	}
 	
 	public void angularVelocity(Vector3f vec){
-		body.activate();
+		activate();
 		body.setAngularVelocity(vec);
 	}
 	
@@ -540,7 +540,7 @@ public class GameObject implements Named{
 			uniqueModel.dispose();
 		scene.remove(this);
 		for (GameObject g : touchingObjects)
-			g.body.activate();
+			g.activate();
 	}
 
 	public boolean valid(){
@@ -548,7 +548,7 @@ public class GameObject implements Named{
 	}
 	
 	public void scale(float x, float y, float z, boolean updateLocal){
-		body.activate(true);
+		activate();
 		// Set unit scale
 		Matrix4 t = modelInstance.transform;
 		Matrix4 mat_scale = new Matrix4();
@@ -828,7 +828,7 @@ public class GameObject implements Named{
 			scene.world.removeRigidBody(body);
 		if (s.equals("NO_COLLISION")){
 			for (GameObject g : touchingObjects)
-				g.body.activate();
+				g.activate();
 			flags &= ~CollisionFlags.KINEMATIC_OBJECT;
 		}else{
 			if (s.equals("STATIC")){
@@ -859,10 +859,23 @@ public class GameObject implements Named{
 				}
 			}
 			scene.world.addRigidBody(body);
-			body.activate(true);
+			activate();
 		}
 		body.setCollisionFlags(flags);
 		currBodyType = s;
+	}
+	
+	public void activateForced(){
+		body.forceActivationState(1);
+	}
+
+	public void activate(){
+		if (dynamics())
+			activateForced();
+	}
+
+	public void deactivate(){
+		body.forceActivationState(2);
 	}
 
 	public boolean insideFrustum(){
