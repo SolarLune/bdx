@@ -207,10 +207,13 @@ public class Bdx{
 					filter.begin();
 					filter.setUniformf("time", Bdx.time);
 					filter.setUniformi("lastFrame", 1);
+					filter.setUniformf("screenWidth", Bdx.display.size().x);
+					filter.setUniformf("screenHeight", Bdx.display.size().y);
 					filter.end();
 							
 					tempBuffer.clear();
 					frameBuffer.drawTo(tempBuffer, filter);
+					frameBuffer.clear();
 					tempBuffer.drawTo(frameBuffer);
 
 				}
