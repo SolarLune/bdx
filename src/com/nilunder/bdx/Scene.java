@@ -408,6 +408,8 @@ public class Scene implements Named{
 			world.addRigidBody(gobj.body, gobj.json.get("physics").get("group").asShort(), gobj.json.get("physics").get("mask").asShort());
 			if (gobj.currBodyType.equals("STATIC"))
 				gobj.deactivate();
+			if (gobj.parent() != null && gobj.parent().body.getCollisionShape().isCompound())
+				world.removeRigidBody(gobj.body);
 		}
 		
 		toBeAdded.add(gobj);
