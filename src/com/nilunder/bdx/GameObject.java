@@ -867,11 +867,11 @@ public class GameObject implements Named{
 	
 	public void activate(){
 		if (dynamics())
-			body.forceActivationState(1);
+			body.activate();
 	}
 
 	public void deactivate(){
-		body.forceActivationState(2);
+		body.activate(false);
 	}
 
 	public boolean insideFrustum(){
