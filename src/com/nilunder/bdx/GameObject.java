@@ -865,13 +865,9 @@ public class GameObject implements Named{
 		currBodyType = s;
 	}
 	
-	public void activateForced(){
-		body.forceActivationState(1);
-	}
-
 	public void activate(){
 		if (dynamics())
-			activateForced();
+			body.forceActivationState(1);
 	}
 
 	public void deactivate(){
