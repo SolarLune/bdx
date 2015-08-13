@@ -139,9 +139,9 @@ public class GameObject implements Named{
 					scene.world.removeRigidBody(body);
 					compShape.addChildShape(new Transform(localTransform), body.getCollisionShape());
 				}
+			}else{
+				dynamics(false);
 			}
-
-			dynamics(false);
 			
 		}else if (currBodyType.equals("STATIC") || currBodyType.equals("SENSOR")){
 			if (compound && compShapeOld != null)
