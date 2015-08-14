@@ -188,6 +188,11 @@ private static class GamepadAdapter extends ControllerAdapter{
 		return true;
 	}
 
+	public boolean scrolled(int amount){
+		mouse.wheelMove = amount;
+		return true;
+	}
+
 	private static int tick(){
 		return GdxProcessor.currentTick + 1;
 	}
