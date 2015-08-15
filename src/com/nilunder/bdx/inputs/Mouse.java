@@ -19,6 +19,7 @@ public class Mouse extends Finger{
 	public String cursorTexture;
 	public int cursorOffsetX;
 	public int cursorOffsetY;
+	public int wheelMove;
 
 	public Mouse(){
 		codeToLog = new GdxProcessor.UpDownLog[5];
@@ -32,6 +33,7 @@ public class Mouse extends Finger{
 		btnToCode.put("back", 3);
 		btnToCode.put("forward", 4);
 
+		wheelMove = 0;
 		cursorVisible = true;
 	}
 
@@ -63,6 +65,10 @@ public class Mouse extends Finger{
 		}
 
 		return false;
+	}
+	
+	public int wheelMove(){
+		return wheelMove;
 	}
 
 	public void position(int x, int y) {

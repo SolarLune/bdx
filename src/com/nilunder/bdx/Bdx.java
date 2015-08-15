@@ -230,6 +230,7 @@ public class Bdx{
 			
 			profiler.stop("__render");
 		}
+		mouse.wheelMove = 0;
 		
 		if (profiler.visible){
 			profiler.update();
