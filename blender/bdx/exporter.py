@@ -393,6 +393,35 @@ def get_cls_name(obj):
     return obj.name
 
 
+def relevant_region_3d_data():
+    
+    def get_areas_3d_data(areas):
+        return [[a, a.height * a.width] for a in areas if a.type == "VIEW_3D"]
+    
+    r3d = bpy.context.region_data
+    if r3d:
+        if r3d.view_perspective == "CAMERA":
+            return
+    elif bpy.context.scene.camera:
+        return
+    else:
+        a3d = get_areas_3d_data(bpy.context.screen.areas)
+        if not a3d:
+            screens = bpy.data.screens
+            if "BDX" in screens:
+                a3d = get_areas_3d_data(screens["BDX"].areas)
+                if not a3d:
+                    a3d = get_areas_3d_data(sum([list(scr.areas) for scr in screens], []))
+            else:
+                a3d = get_areas_3d_data(sum([list(scr.areas) for scr in screens], []))
+            if not a3d:
+                return
+        if len(a3d) != 1:
+            a3d.sort(key=lambda lst: lst[1])
+        r3d = a3d[-1][0].spaces[0].region_3d
+    return r3d
+
+
 def srl_objects(objects):
     name_object = {}
 
@@ -445,22 +474,70 @@ def srl_objects(objects):
             }
         }
 
-
         d = name_object[obj.name]
 
-        if obj.type == 'CAMERA':
-            d["camera"] = {"projection": projection_matrix(obj.data),
-                           "type": obj.data.type}
+        if obj.type == "CAMERA":
+            d["camera"] = {
+                "projection": projection_matrix(obj.data),
+                "type": obj.data.type
+            }
+            
         elif obj.type == "FONT":
             d["font"] = obj.data.font.name
             d["text"] = obj.data.body
             
         elif obj.type == "LAMP":
-            d['lamp'] = {"type": obj.data.type, 
-                          "energy": obj.data.energy,
-                          "color": list([obj.data.color[0], obj.data.color[1], obj.data.color[2], 1]),
-                          "distance": obj.data.distance}
+            d['lamp'] = {
+                "type": obj.data.type,
+                "energy": obj.data.energy,
+                "color": list([obj.data.color[0], obj.data.color[1], obj.data.color[2], 1]),
+                "distance": obj.data.distance
+            }
+    
+    r3d = relevant_region_3d_data()
+    if r3d:
+        
+        view_type = r3d.view_perspective
+        view_matrix = sum([list(v) for v in r3d.view_matrix.inverted().col], [])
+        view_projection = sum([list(v) for v in r3d.window_matrix.col], [])
+        r = bpy.context.scene.render.resolution_x / bpy.context.scene.render.resolution_y
+        
+        if view_type == "PERSP":
+            view_projection[0] = 1
+            view_projection[5] = r
+        else: # "ORTHO"
+            view_projection[0] = 1 / r3d.view_distance
+            view_projection[5] = r / r3d.view_distance
 
+        name_object["__CAMERA__"] = {
+            "class": "",
+            "use_priority": False,
+            "type": "CAMERA",
+            "properties": {},
+            "transform": view_matrix,
+            "parent": None,
+            "mesh_name": None,
+            "active": True,
+            "visible": False,
+            "instance": None,
+            "physics": {
+                "body_type": "NO_COLLISION",
+                "bounds_type": "BOX",
+                "margin": 0.04,
+                "mass": 1,
+                "friction": 0.5,
+                "restitution": 0,
+                "ghost": False,
+                "group": 1,
+                "mask": 255,
+                "compound": False
+            },
+            "camera": {
+                "projection": view_projection,
+                "type": view_type
+            }
+        }
+    
     return name_object
 
 
@@ -485,9 +562,20 @@ def srl_materials(materials):
 
 
 def camera_names(scene):
-    return [scene.camera.name] + [o.name for o in scene.objects 
-                    if o.type == "CAMERA" 
-                    and o.name != scene.camera.name]
+    cam_names = [o.name for o in scene.objects if o.type == "CAMERA"]
+    r3d = relevant_region_3d_data()
+    if scene.camera:
+        if not r3d and not True in [x & y for (x, y) in zip(scene.camera.layers, scene.layers)]:
+            raise Exception("No active camera in active layer(s)")
+        activ_cam_name = scene.camera.name
+        if activ_cam_name in cam_names:
+            cam_names.remove(activ_cam_name)
+            cam_names.insert(0, activ_cam_name)
+    elif not r3d:
+        raise Exception("No active camera or 3D View data")
+    if r3d:
+        cam_names.insert(0, "__CAMERA__")
+    return cam_names
 
 
 def instantiator(objects):
