@@ -179,6 +179,22 @@ public class GameObject implements Named{
 		position(new Vector3f(x, y, z));
 	}
 	
+	public void move(Vector3f delta){
+		position(position().plus(delta));
+	}
+
+	public void move(float x, float y, float z){
+		move(new Vector3f(x, y, z));
+	}
+	
+	public void moveLocal(Vector3f delta){
+		move(orientation().mult(delta));
+	}
+
+	public void moveLocal(float x, float y, float z){
+		moveLocal(new Vector3f(x, y, z));
+	}
+	
 	public Matrix3f orientation(){
 		Matrix4f t = transform();
 		Matrix3f ori = new Matrix3f();
@@ -207,15 +223,6 @@ public class GameObject implements Named{
 		rotate(rot.x, rot.y, rot.z);
 	}
 
-	public void move(Vector3f delta){
-		position(position().plus(delta));
-	}
-
-	public void move(float x, float y, float z){
-		Vector3f delta = new Vector3f(x, y, z);
-		move(delta);
-	}
-	
 	public void rotateLocal(float x, float y, float z){
 		Matrix3f ori = orientation();
 		
