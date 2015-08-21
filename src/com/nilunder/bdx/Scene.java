@@ -669,6 +669,19 @@ public class Scene implements Named{
 	}
 	
 	private void runObjectLogic(){
+		if (requestedRestart){
+			for (GameObject g : objects){
+				g.endNoChildren();
+			}
+			for (Model m : models.values()){
+				m.dispose();
+			}
+			for (Texture t : textures.values()){
+				t.dispose();
+			}
+			init();
+		}
+
 		Bdx.mouse.scene = this;
 
 		for (Finger f : Bdx.fingers){
@@ -691,18 +704,6 @@ public class Scene implements Named{
 		if (toBeRemoved.size() > 0){
 			objects.removeAll(toBeRemoved);
 			toBeRemoved.clear();
-		}
-		if (requestedRestart){
-			for (GameObject g : objects){
-				g.endNoChildren();
-			}
-			for (Model m : models.values()){
-				m.dispose();
-			}
-			for (Texture t : textures.values()){
-				t.dispose();
-			}
-			init();
 		}
 	}
 	
