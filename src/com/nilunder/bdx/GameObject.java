@@ -152,6 +152,15 @@ public class GameObject implements Named{
 		}
 	}
 
+	public ArrayListGameObject childrenRecursive(){
+		ArrayListGameObject childList = new ArrayListGameObject();
+		for (GameObject child : children) {
+			childList.add(child);
+			childList.addAll(child.childrenRecursive());
+		}
+		return childList;
+	}
+	
 	private CompoundShape compoundShape(){
 		if (body.getCollisionShape() instanceof CompoundShape)
 			return (CompoundShape) body.getCollisionShape();
