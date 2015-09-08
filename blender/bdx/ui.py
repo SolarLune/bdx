@@ -2,21 +2,26 @@ import os
 import bpy
 from . import utils as ut
 
-S = bpy.types.Scene
-O = bpy.types.Object
 P = bpy.props
 
-S.bdx_proj_name = P.StringProperty(name="Project Name")
-S.bdx_java_pack = P.StringProperty(name="Java Package")
-S.bdx_base_path = P.StringProperty(name="Base Path", subtype="DIR_PATH")
-S.bdx_dir_name = P.StringProperty(name="Directory")
-S.bdx_android_sdk = P.StringProperty(name="Android SDK", subtype="DIR_PATH")
+class BdxSceneProps(bpy.types.PropertyGroup):
+    proj_name = P.StringProperty(name="Project Name")
+    java_pack = P.StringProperty(name="Java Package")
+    base_path = P.StringProperty(name="Base Path", subtype="DIR_PATH")
+    dir_name = P.StringProperty(name="Directory")
+    android_sdk = P.StringProperty(name="Android SDK", subtype="DIR_PATH")
+    
+class BdxObjectProps(bpy.types.PropertyGroup):
+    cls_use_custom = P.BoolProperty(name="", description="Use custom Java class for this object")
+    cls_custom_name = P.StringProperty(name="", description="Java class name for this object")
+    cls_use_priority = P.BoolProperty(name="", description="Use execution priority for this object")
+    
+bpy.utils.register_class(BdxSceneProps)
+bpy.utils.register_class(BdxObjectProps)
+bpy.types.Scene.bdx = P.PointerProperty(type=BdxSceneProps)
+bpy.types.Object.bdx = P.PointerProperty(type=BdxObjectProps)
 
-O.bdx_cls_use_custom = P.BoolProperty(name="", description="Use custom Java class for this object")
-O.bdx_cls_custom_name = P.StringProperty(name="", description="Java class name for this object")
-O.bdx_cls_use_priority = P.BoolProperty(name="", description="Use execution priority for this object")
-
-game_property_move_support = sum([n * pow(10, i) for n, i in zip(bpy.app.version, (4, 2, 0))]) >= 27500
+prop_move_support = sum([n * pow(10, i) for n, i in zip(bpy.app.version, (4, 2, 0))]) >= 27500
 
 
 class BdxProject(bpy.types.Panel):
@@ -40,16 +45,16 @@ class BdxProject(bpy.types.Panel):
             r().operator("object.externjava")
 
         else:
-            sc = context.scene
+            sc_bdx = context.scene.bdx
 
             if ut.in_packed_bdx_blend():
                 r().label(text="In packed BDX blend.")
             else:
-                r().prop(sc, "bdx_proj_name")
-                r().prop(sc, "bdx_java_pack")
-                r().prop(sc, "bdx_base_path")
-                r().prop(sc, "bdx_dir_name")
-                r().prop(sc, "bdx_android_sdk")
+                r().prop(sc_bdx, "proj_name")
+                r().prop(sc_bdx, "java_pack")
+                r().prop(sc_bdx, "base_path")
+                r().prop(sc_bdx, "dir_name")
+                r().prop(sc_bdx, "android_sdk")
 
             r().operator("scene.create_bdx_project", text="Create BDX project")
 
@@ -64,25 +69,26 @@ class BdxObject(bpy.types.Panel):
 
     def draw(self, context):
         ob = context.object
+        ob_bdx = ob.bdx
         game = ob.game
 
         layout = self.layout
 
         row = layout.row()
         col = row.column()
-        if ob.bdx_cls_use_priority:
-            col.prop(ob, "bdx_cls_use_priority", icon="FONTPREVIEW")
+        if ob_bdx.cls_use_priority:
+            col.prop(ob_bdx, "cls_use_priority", icon="FONTPREVIEW")
         else:
-            col.prop(ob, "bdx_cls_use_priority", icon="BOOKMARKS")
+            col.prop(ob_bdx, "cls_use_priority", icon="BOOKMARKS")
         col = row.column()
-        if ob.bdx_cls_use_custom:
+        if ob_bdx.cls_use_custom:
             col.active = True
-            col.prop(ob, "bdx_cls_custom_name")
+            col.prop(ob_bdx, "cls_custom_name")
         else:
             col.active = False
             col.label(ob.name + ".java")
         col = row.column()
-        col.prop(ob, "bdx_cls_use_custom")
+        col.prop(ob_bdx, "cls_use_custom")
         
         row = layout.row(align=True)
         is_font = (ob.type == "FONT")
@@ -114,7 +120,7 @@ class BdxObject(bpy.types.Panel):
             row.prop(prop, "type", text="")
             row.prop(prop, "value", text="")
             row.prop(prop, "show_debug", text="", toggle=True, icon="INFO")
-            if game_property_move_support:
+            if prop_move_support:
                 sub = row.row(align=True)
                 props = sub.operator("object.game_property_move", text="", icon="TRIA_UP")
                 props.index = i
