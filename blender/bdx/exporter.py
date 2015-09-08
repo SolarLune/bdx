@@ -387,8 +387,8 @@ def projection_matrix(camd):
 
 
 def get_cls_name(obj):
-    if obj.bdx_cls_use_custom:
-        cls_name = obj.bdx_cls_custom_name
+    if obj.bdx.cls_use_custom:
+        cls_name = obj.bdx.cls_custom_name
         return cls_name.replace(".java", "") if cls_name.endswith(".java") else ""
     return obj.name
 
@@ -451,7 +451,7 @@ def srl_objects(objects):
 
         name_object[obj.name] = {
             "class": get_cls_name(obj),
-            "use_priority": obj.bdx_cls_use_priority,
+            "use_priority": obj.bdx.cls_use_priority,
             "type": obj.type,
             "properties": {n: p.value for n, p in obj.game.properties.items()},
             "transform": transform,

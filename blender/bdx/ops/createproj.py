@@ -12,26 +12,26 @@ class CreateBdxProject(bpy.types.Operator):
     bl_label = "Create BDX project"
 
     def create_libgdx_project(self):
-        sc = bpy.context.scene
+        sc_bdx = bpy.context.scene.bdx
 
-        if (not sc.bdx_android_sdk.strip()):
-            sc.bdx_android_sdk = j(os.getcwd(), "android-sdk")
+        if (not sc_bdx.android_sdk.strip()):
+            sc_bdx.android_sdk = j(os.getcwd(), "android-sdk")
 
         absp = bpy.path.abspath
 
         if ut.in_packed_bdx_blend():
-            sc.bdx_base_path = absp("//")
-            sc.bdx_java_pack = ut.internal_java_package()
+            sc_bdx.base_path = absp("//")
+            sc_bdx.java_pack = ut.internal_java_package()
             blend_name = os.path.basename(bpy.data.filepath).split('.')[0]
-            sc.bdx_proj_name = blend_name
-            sc.bdx_dir_name = sc.bdx_proj_name
+            sc_bdx.proj_name = blend_name
+            sc_bdx.dir_name = sc_bdx.proj_name
 
         fmt = {"program": j(ut.gen_root(), "gdx-setup.jar"),
-               "dir": j(absp(sc.bdx_base_path), sc.bdx_dir_name),
-               "name": sc.bdx_proj_name,
-               "package": sc.bdx_java_pack,
+               "dir": j(absp(sc_bdx.base_path), sc_bdx.dir_name),
+               "name": sc_bdx.proj_name,
+               "package": sc_bdx.java_pack,
                "mainClass": "BdxApp",
-               "sdkLocation": absp(sc.bdx_android_sdk)}
+               "sdkLocation": absp(sc_bdx.android_sdk)}
 
         cmd = ["java", "-jar", fmt["program"],
                "--dir", fmt["dir"],
@@ -91,8 +91,8 @@ class CreateBdxProject(bpy.types.Operator):
         gdx_build_gradle = j(ut.project_root(), "build.gradle")
         shutil.copy(bdx_build_gradle, gdx_build_gradle)
 
-        sc = bpy.context.scene
-        ut.set_file_var(gdx_build_gradle, "appName", "'{}'".format(sc.bdx_proj_name))
+        sc_bdx = bpy.context.scene.bdx
+        ut.set_file_var(gdx_build_gradle, "appName", "'{}'".format(sc_bdx.proj_name))
 
     def set_android_sdk_version(self):
         """
@@ -117,7 +117,7 @@ class CreateBdxProject(bpy.types.Operator):
         def compile_sdk_sort_key(strv):
             return int(strv.split('-')[-1])
             
-        android_sdk_dir = bpy.context.scene.bdx_android_sdk
+        android_sdk_dir = bpy.context.scene.bdx.android_sdk
         
         build_tools_dir = j(android_sdk_dir, "build-tools")
         build_tools_version = get_version_dir_name(build_tools_dir, build_tools_sort_key, "20.0.0")
@@ -135,7 +135,7 @@ class CreateBdxProject(bpy.types.Operator):
         shutil.copy(bdx_app, gdx_app)
 
         ut.set_file_line(gdx_app, 1,
-                         "package " + bpy.context.scene.bdx_java_pack + ';')
+                         "package " + bpy.context.scene.bdx.java_pack + ';')
 
     def replace_desktop_launcher(self):
         n = "DesktopLauncher.java"
@@ -143,13 +143,13 @@ class CreateBdxProject(bpy.types.Operator):
         gdx_dl = j(ut.src_root("desktop", n), n)
         shutil.copy(bdx_dl, gdx_dl);
 
-        sc = bpy.context.scene
+        sc_bdx = bpy.context.scene.bdx
 
         ut.set_file_line(gdx_dl, 1,
-                         "package " + sc.bdx_java_pack + '.desktop;')
+                         "package " + sc_bdx.java_pack + '.desktop;')
 
         ut.set_file_line(gdx_dl, 5,
-                         "import " + sc.bdx_java_pack + ".BdxApp;")
+                         "import " + sc_bdx.java_pack + ".BdxApp;")
 
     def replace_android_launcher(self):
         n = "AndroidLauncher.java"
@@ -157,13 +157,13 @@ class CreateBdxProject(bpy.types.Operator):
         gdx_al = j(ut.src_root("android", n), n)
         shutil.copy(bdx_al, gdx_al)
 
-        sc = bpy.context.scene
+        sc_bdx = bpy.context.scene.bdx
 
         ut.set_file_line(gdx_al, 1,
-                         "package " + sc.bdx_java_pack + '.android;')
+                         "package " + sc_bdx.java_pack + '.android;')
 
         ut.set_file_line(gdx_al, 8,
-                         "import " + sc.bdx_java_pack + ".BdxApp;")
+                         "import " + sc_bdx.java_pack + ".BdxApp;")
 
     def copy_bdx_libs(self):
         bdx_libs = j(ut.plugin_root(), "libs")
