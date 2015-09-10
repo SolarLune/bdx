@@ -225,7 +225,6 @@ class CreateBdxProject(bpy.types.Operator):
             shutil.rmtree(unpacked_sounds)
 
     def set_internal_package(self):
-        sc = bpy.context.scene
         sacky_java = bpy.data.texts["Sacky.java"]
         sacky_java.lines[0].body = "package " + ut.package_name() + ';'
 
