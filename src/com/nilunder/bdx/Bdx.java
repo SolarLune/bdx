@@ -264,4 +264,12 @@ public class Bdx{
 		System.exit(0);
 	}
 	
+	public static void resize(int width, int height) {
+		spriteBatch.getProjectionMatrix().setToOrtho2D(0, 0, width, height);
+		frameBuffer = new RenderBuffer(spriteBatch);		// Have to recreate all render buffers and adjust the projection matrix as the window size has changed
+		tempBuffer = new RenderBuffer(spriteBatch);
+		for (Scene scene : scenes)
+			scene.lastFrameBuffer = new RenderBuffer(null);
+	}
+	
 }
