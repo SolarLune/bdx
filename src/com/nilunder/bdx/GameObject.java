@@ -549,6 +549,8 @@ public class GameObject implements Named{
 	}
 	
 	public void endNoChildren(){
+		if (!valid)
+			return;
 		onEnd();
 		parent(null);
 		valid = false;

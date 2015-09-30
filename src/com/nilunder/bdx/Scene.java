@@ -656,6 +656,9 @@ public class Scene implements Named{
 			toBeRemoved.clear();
 		}
 		if (requestedRestart){
+			for (GameObject g : objects){
+				g.endNoChildren();
+			}
 			for (Model m : models.values()){
 				m.dispose();
 			}
