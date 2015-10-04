@@ -231,8 +231,10 @@ public class Scene implements Named{
 			JsonValue dimensions = json.get("dimensions").get(modelName);
 			g.origin = origin == null ? new Vector3f() : new Vector3f(origin.asFloatArray());
 			g.dimensionsNoScale = dimensions == null ? new Vector3f(1, 1, 1) : new Vector3f(dimensions.asFloatArray());
-			g.body = Bullet.makeBody(mesh, trans, g.origin, gobj.get("physics"));
-			g.currBodyType = gobj.get("physics").get("body_type").asString();
+			JsonValue physics = gobj.get("physics");
+			g.currBodyType = physics.get("body_type").asString();
+			g.currBoundsType = physics.get("bounds_type").asString();
+			g.body = Bullet.makeBody(mesh, trans, g.origin, physics);
 			g.body.setUserPointer(g);
 			
 			g.props = new HashMap<String, JsonValue>();
@@ -327,6 +329,7 @@ public class Scene implements Named{
 		
 		g.body = Bullet.cloneBody(gobj.body);
 		g.currBodyType = gobj.currBodyType;
+		g.currBoundsType = gobj.currBoundsType;
 		g.origin = gobj.origin;
 		g.dimensionsNoScale = gobj.dimensionsNoScale;
 		g.body.setUserPointer(g);

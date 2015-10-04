@@ -8,6 +8,7 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 
+import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.math.Matrix4;
@@ -33,6 +34,7 @@ public class GameObject implements Named{
 	public ModelInstance modelInstance;
 	public RigidBody body;
 	public String currBodyType;
+	public String currBoundsType;
 	public Vector3f origin;
 	public Vector3f dimensionsNoScale;
 	
@@ -881,6 +883,26 @@ public class GameObject implements Named{
 		}
 		body.setCollisionFlags(flags);
 		currBodyType = s;
+	}
+	
+	public String boundsType(){
+		return currBoundsType;
+	}
+
+	public void boundsType(String s){
+		Mesh mesh = modelInstance.model.meshes.first();
+		CollisionShape shape = body.getCollisionShape();
+		shape = Bullet.makeShape(mesh, s, shape.getMargin(), shape.isCompound());
+		body.setCollisionShape(shape);
+		currBoundsType = s;
+	}
+	
+	public float collisionMargin(){
+		return body.getCollisionShape().getMargin();
+	}
+	
+	public void collisionMargin(float m){
+		body.getCollisionShape().setMargin(m);
 	}
 	
 	public void activate(){
