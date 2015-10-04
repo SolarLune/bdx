@@ -398,6 +398,8 @@ def relevant_region_3d_data():
     def get_areas_3d_data(areas):
         return [[a, a.height * a.width] for a in areas if a.type == "VIEW_3D"]
     
+    if scene != bpy.context.scene:
+        return
     r3d = bpy.context.region_data
     if r3d:
         if r3d.view_perspective == "CAMERA":
