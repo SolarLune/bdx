@@ -12,37 +12,45 @@ import com.nilunder.bdx.ShaderProgram;
 public class RenderBuffer extends FrameBuffer{
 		
 	private SpriteBatch batch;
+	private TextureRegion region;
 		
-	public RenderBuffer(SpriteBatch batch) {
-		
-		super(Pixmap.Format.RGBA8888, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
-		getColorBufferTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+	public RenderBuffer(SpriteBatch batch, int bufferWidth, int bufferHeight) {
+		super(Pixmap.Format.RGBA8888, bufferWidth, bufferHeight, true);
 		this.batch = batch;
-				
+		region = new TextureRegion(this.getColorBufferTexture());
+		region.flip(false, true);
 	}	
 	
+	public RenderBuffer(SpriteBatch batch) {
+		this(batch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());		
+	}
+	
 	public void drawTo(RenderBuffer dest,ShaderProgram filter){
-		
-		TextureRegion region = new TextureRegion(this.getColorBufferTexture());
-		region.flip(false, true);
-		
+
+		if (ShaderProgram.nearestFiltering) {
+			if (dest != null)
+				dest.getColorBufferTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+		}
+		else {
+			if (dest != null)
+				dest.getColorBufferTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+		}
+			
 		if (dest != null)
 			dest.begin();
 				
 		batch.begin();
+		batch.enableBlending();
 		batch.setShader(filter);
-		batch.draw(region, 0, 0);
+		batch.draw(region, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		batch.end();
 		
 		if (dest != null)
 			dest.end();
-		
 	}
-	
+
 	public void drawTo(RenderBuffer dest){
-		
 		drawTo(dest, null);
-		
 	}
 	
 	public void clear(){

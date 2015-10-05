@@ -145,9 +145,9 @@ public class Bdx{
 		
 		modelBatch = new ModelBatch(new BDXShaderProvider());
 		spriteBatch = new SpriteBatch();
+		spriteBatch.setBlendFunction(Gdx.gl.GL_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
 		frameBuffer = new RenderBuffer(spriteBatch);
 		tempBuffer = new RenderBuffer(spriteBatch);
-		
 	}
 
 
@@ -201,22 +201,33 @@ public class Bdx{
 				
 				scene.lastFrameBuffer.getColorBufferTexture().bind(1);
 				Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
-								
-				for (ShaderProgram filter : scene.filters) {
 
+				for (ShaderProgram filter : scene.filters) {
+					
 					filter.begin();
 					filter.setUniformf("time", Bdx.time);
 					filter.setUniformi("lastFrame", 1);
 					filter.setUniformf("screenWidth", Bdx.display.size().x);
 					filter.setUniformf("screenHeight", Bdx.display.size().y);
 					filter.end();
-							
+											
 					tempBuffer.clear();
+					
+					int width = (int) (Gdx.graphics.getWidth() * filter.renderScale.x);
+					int height = (int) (Gdx.graphics.getHeight() * filter.renderScale.y);
+					
+					if (tempBuffer.getWidth() != width || tempBuffer.getHeight() != height)
+						tempBuffer = new RenderBuffer(spriteBatch, width, height);
+					
 					frameBuffer.drawTo(tempBuffer, filter);
-					frameBuffer.clear();
+					
+					if (!filter.overlay)
+						frameBuffer.clear();	
+					
 					tempBuffer.drawTo(frameBuffer);
-
+					
 				}
+				
 				frameBuffer.drawTo(null); //  Draw to screen
 				scene.lastFrameBuffer.clear();
 				frameBuffer.drawTo(scene.lastFrameBuffer);		
