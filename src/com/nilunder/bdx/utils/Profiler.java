@@ -113,7 +113,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		long sumTicTimes = 0;
 		for (long l : ticTimes) sumTicTimes += l;
 		avgTicTime = 1000000000000f / (TIC_RATE * sumTicTimes);
-		avgTicRate = 1000 / avgTicTime;
+		avgTicRate = TIC_RATE * 1000000000f / sumTicTimes;
 	}
 
 	private void updateDisplay(){
