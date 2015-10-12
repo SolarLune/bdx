@@ -7,6 +7,8 @@ import com.badlogic.gdx.files.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
+import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
@@ -88,12 +90,30 @@ public class Bdx{
 
 	}
 
+	private static class BDXDefaultShader extends DefaultShader {
+
+		public BDXDefaultShader(Renderable renderable) {
+			super(renderable);
+		}
+
+		public void render(Renderable renderable, Attributes combinedAttributes)
+		{
+			BlendingAttribute ba = (BlendingAttribute) renderable.material.get(BlendingAttribute.Type);
+			
+			Gdx.gl.glBlendFuncSeparate(ba.sourceFunction, ba.destFunction, GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+			super.render(renderable, combinedAttributes);
+		}
+		
+	}
+
 	private static class BDXShaderProvider extends DefaultShaderProvider {
 		@Override
-		public Shader getShader(Renderable renderable) {
+		protected Shader createShader(Renderable renderable) {
 			if (matShaders.containsKey(renderable.material.id))
 				return matShaders.get(renderable.material.id).getShader(renderable);
-			return super.getShader(renderable);
+			
+			return new BDXDefaultShader(renderable);
 		}
 	}
 	
