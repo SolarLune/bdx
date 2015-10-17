@@ -41,6 +41,7 @@ public class RenderBuffer extends FrameBuffer{
 				
 		batch.begin();
 		batch.enableBlending();
+		batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		batch.setShader(filter);
 		batch.draw(region, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		batch.end();
