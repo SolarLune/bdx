@@ -149,12 +149,10 @@ public static class DebugDrawer extends IDebugDraw{
 
 	}
 	
-	public static RigidBody makeBody(Mesh mesh, float[] glTransform, Vector3f origin, JsonValue physics){
-		String boundsType = physics.get("bounds_type").asString();
+	public static RigidBody makeBody(Mesh mesh, float[] glTransform, Vector3f origin, String bodyType, String boundsType, JsonValue physics){
 		CollisionShape shape = makeShape(mesh, boundsType, physics.get("margin").asFloat(), physics.get("compound").asBoolean());
 		
 		float mass = physics.get("mass").asFloat();
-		String bodyType = physics.get("body_type").asString();
 		
 		Vector3f inertia = new Vector3f();
 		shape.calculateLocalInertia(mass, inertia);
