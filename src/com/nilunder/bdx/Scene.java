@@ -234,7 +234,7 @@ public class Scene implements Named{
 			JsonValue physics = gobj.get("physics");
 			g.currBodyType = physics.get("body_type").asString();
 			g.currBoundsType = physics.get("bounds_type").asString();
-			g.body = Bullet.makeBody(mesh, trans, g.origin, physics);
+			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
 			
 			g.props = new HashMap<String, JsonValue>();

@@ -9,8 +9,15 @@ import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonValue;
@@ -22,6 +29,8 @@ import com.bulletphysics.collision.shapes.CompoundShape;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.MatrixUtil;
 import com.bulletphysics.linearmath.Transform;
+
+import com.nilunder.bdx.Bdx;
 import com.nilunder.bdx.utils.*;
 
 public class GameObject implements Named{
@@ -43,6 +52,8 @@ public class GameObject implements Named{
 	public ArrayListGameObject children;
 	
 	public ArrayListNamed<Component> components;
+	
+	public ArrayList<GameObject> joinedMeshObjects;
 	
 	public Scene scene;
 	
@@ -77,6 +88,7 @@ public class GameObject implements Named{
 	}
 	
 	public GameObject() {
+		joinedMeshObjects = new ArrayList<GameObject>();
 		touchingObjects = new ArrayListGameObject();
 		touchingObjectsLast = new ArrayListGameObject();
 		contactManifolds = new ArrayList<PersistentManifold>();
@@ -722,9 +734,12 @@ public class GameObject implements Named{
 
 	}
 
+	public String modelName(){
+		return modelInstance.model.meshParts.first().id;
+	}
+	
 	public void useUniqueModel(){
-		String modelName = modelInstance.model.meshParts.get(0).id;
-		JsonValue modelData = scene.json.get("models").get(modelName);
+		JsonValue modelData = scene.json.get("models").get(modelName());
 		uniqueModel = scene.createModel(modelData);
 		ModelInstance mi = new ModelInstance(uniqueModel);
 		mi.transform.set(modelInstance.transform);
@@ -732,7 +747,7 @@ public class GameObject implements Named{
 	}
 
 	public void replaceModel(String modelName, boolean updateVisual, boolean updatePhysics){
-		if (modelName.equals(modelInstance.model.meshParts.get(0).id))
+		if (modelName.equals(modelName()))
 			return;
 		
 		Model model = null;
@@ -768,12 +783,11 @@ public class GameObject implements Named{
 			
 			Matrix4f transform = transform();
 			Vector3f scale = scale();
-			String boundsType = json.get("physics").get("bounds_type").asString();
-			float margin = json.get("physics").get("margin").asFloat();
-			boolean compound = json.get("physics").get("compound").asBoolean();
-			body.setCollisionShape(Bullet.makeShape(model.meshes.first(), boundsType, margin, compound));
 			
-			if (boundsType.equals("CONVEX_HULL")){
+			CollisionShape shape = body.getCollisionShape();
+			body.setCollisionShape(Bullet.makeShape(model.meshes.first(), currBoundsType, shape.getMargin(), shape.isCompound()));
+			
+			if (currBoundsType.equals("CONVEX_HULL")){
 				Transform startTransform = new Transform();
 				body.getMotionState().getWorldTransform(startTransform);
 				Matrix4f originMatrix = new Matrix4f();
@@ -804,7 +818,113 @@ public class GameObject implements Named{
 	public void replaceModel(String modelName){
 		replaceModel(modelName, true, false);
 	}
-
+	
+	public void updateJoinedMesh(){
+		
+		// Set invisible and remove body if not joining anything
+		
+		if (joinedMeshObjects.isEmpty()){
+			scene.world.removeRigidBody(body);
+			visible = false;
+			return;
+		}
+		
+		// Join the transformed vertex arrays
+		
+		int VERT_STRIDE = Bdx.VERT_STRIDE;
+		
+		ArrayList<float[]> tvaList = new ArrayList<float[]>();
+		int tvaListJoinedLength = 0;
+		GameObject g = null;
+		
+		for (int k=0; k < joinedMeshObjects.size(); k++){
+			g = joinedMeshObjects.get(k);
+			
+			Vector3f p = g.position();
+			Matrix3f o = g.orientation();
+			Vector3f s = g.scale();
+			
+			Mesh m = g.modelInstance.model.meshes.first();
+			float[] va = new float[m.getNumVertices() * VERT_STRIDE];
+			m.getVertices(0, va.length, va);
+			
+			float[] tva = new float[va.length];
+			int len = va.length / VERT_STRIDE;
+			int j = 0;
+			
+			for (int i=0; i < len; i++){
+				Vector3f vP = new Vector3f(va[j], va[j+1], va[j+2]);
+				Vector3f nP = new Vector3f(va[j+3], va[j+4], va[j+5]);
+				Vector3f vPT = o.mult(vP.mul(s)).plus(p);
+				Vector3f nPT = o.mult(vP.plus(nP)).minus(o.mult(vP));
+				tva[j] = vPT.x;
+				tva[j+1] = vPT.y;
+				tva[j+2] = vPT.z;
+				tva[j+3] = nPT.x;
+				tva[j+4] = nPT.y;
+				tva[j+5] = nPT.z;
+				tva[j+6] = va[j+6];
+				tva[j+7] = va[j+7];
+				j += VERT_STRIDE;
+			}
+			
+			tvaListJoinedLength += tva.length;
+			tvaList.add(tva);
+		}
+		
+		float[] tvaListJoined = new float[tvaListJoinedLength];
+		int j = 0;
+		for (float[] tva : tvaList){
+			int len = tva.length;
+			for (int i=0; i < len; i++){
+				tvaListJoined[i + j] = tva[i];
+			}
+			j += len;
+		}
+		
+		// Build to replace the model
+		
+		ModelBuilder builder = new ModelBuilder();
+		builder.begin();
+		MeshPartBuilder mpb = builder.part(name, GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, g.modelInstance.model.materials.first());
+		mpb.vertex(tvaListJoined);
+		int numIndices = tvaListJoinedLength / VERT_STRIDE;
+		if (numIndices > 32767){
+			throw new RuntimeException("Maximum number of vertices exceeded. Join not more than 10922 triangles."); 
+		}
+		for (short i=0; i < numIndices; i++){
+			mpb.index(i);
+		}
+		uniqueModel = builder.end();
+		modelInstance = new ModelInstance(uniqueModel);
+		
+		// Update visual
+		
+		visible = json.get("visible").asBoolean();
+		Mesh mesh = uniqueModel.meshes.first();
+		BoundingBox bbox = mesh.calculateBoundingBox();
+		Vector3 dimensions = new Vector3();
+		Vector3 center = new Vector3();
+		bbox.getDimensions(dimensions);
+		bbox.getCenter(center);
+		dimensionsNoScale = new Vector3f(dimensions.x, dimensions.y, dimensions.z);
+		origin = new Vector3f(center.x, center.y, center.z);
+		position(new Vector3f());
+		
+		// Update physics
+		
+		scene.world.removeRigidBody(body);
+		body.destroy();
+		float[] trans = new float[]{1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};
+		body = Bullet.makeBody(mesh, trans, origin, currBodyType, currBoundsType, json.get("physics"));
+		body.setUserPointer(this);
+		scene.world.addRigidBody(body);
+		scene.world.updateSingleAabb(body);
+		if (currBodyType.equals("NO_COLLISION")){
+			scene.world.removeRigidBody(body);
+		}
+	}
+	
 	public String toString(){
 
 		return name + " <" + getClass().getName() + "> @" + Integer.toHexString(hashCode());
