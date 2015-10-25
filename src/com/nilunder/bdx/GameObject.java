@@ -1041,7 +1041,7 @@ public class GameObject implements Named{
 		Vector3f dimHalved = max.minus(min).mul(0.5f);
 		Vector3f center;
 
-		if (origin.length() == 0 || json.get("physics").get("bounds_type").asString().equals("CONVEX_HULL"))
+		if (origin.length() == 0 || currBoundsType.equals("CONVEX_HULL") || currBoundsType.equals("TRIANGLE_MESH"))
 			center = min.plus(dimHalved);
 		else
 			center = min.plus(dimHalved).plus(orientation().mult(origin).mul(scale()));
