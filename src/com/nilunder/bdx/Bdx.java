@@ -292,7 +292,7 @@ public class Bdx{
 	}
 	
 	public static void end(){
-		System.exit(0);
+		Gdx.app.exit();
 	}
 	
 	public static void resize(int width, int height) {
