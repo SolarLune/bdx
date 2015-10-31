@@ -256,6 +256,7 @@ def srl_materials_text(texts):
                 "color": list(m.diffuse_color) if m else [1, 1, 1],
                 "opacity": m.alpha if m else 1,
                 "shadeless": m.use_shadeless if m else True,
+                "emit": m.emit if m else 0.0,
                 "backface_culling": m.game_settings.use_backface_culling if m else True}
 
         name_gmat["__FNT_"+mat_name(m)+t.font.name] = gmat
@@ -553,12 +554,13 @@ def srl_materials(materials):
             return os.path.basename(m.active_texture.image.filepath)
         return None
 
-    return {m.name: 
+    return {m.name:
                 {"texture": texture_name(m),
                  "alpha_blend": "ALPHA" if m.use_transparency else "OPAQUE",
                  "color": list(m.diffuse_color),
                  "opacity": m.alpha,
                  "shadeless": m.use_shadeless,
+                 "emit": m.emit,
                  "backface_culling": m.game_settings.use_backface_culling}
             for m in materials}
 

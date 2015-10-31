@@ -30,7 +30,6 @@ import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.MatrixUtil;
 import com.bulletphysics.linearmath.Transform;
 
-import com.nilunder.bdx.Bdx;
 import com.nilunder.bdx.utils.*;
 
 public class GameObject implements Named{
@@ -121,7 +120,7 @@ public class GameObject implements Named{
 
 	public void parent(GameObject p, boolean compound){
 		CompoundShape compShapeOld = null;
-		
+
 		if (parent != null){
 			parent.children.remove(this);
 
@@ -133,17 +132,17 @@ public class GameObject implements Named{
 					scene.world.addRigidBody(parent.body);
 				}
 			}
-			
+
 		}else if (p == null){
 			return;
 		}
-		
+
 		parent = p;
 
 		if (parent != null){
-			
+
 			parent.children.add(this);
-			
+
 			updateLocalTransform();
 			updateLocalScale();
 
@@ -156,11 +155,11 @@ public class GameObject implements Named{
 			}else{
 				dynamics(false);
 			}
-			
+
 		}else if (currBodyType.equals("STATIC") || currBodyType.equals("SENSOR")){
 			if (compound && compShapeOld != null)
 				scene.world.addRigidBody(body);
-			
+
 		}else{
 			dynamics(true);
 		}
@@ -692,10 +691,6 @@ public class GameObject implements Named{
 			child.color(r, g, b, a);
 	}
 
-	public void color(float r, float g, float b){
-		color(r, g, b, 1);
-	}
-
 	public void color(Vector4f color){
 		color(color.x, color.y, color.z, color.w);
 	}
@@ -706,12 +701,41 @@ public class GameObject implements Named{
 			ca.color.set(r, g, b, a);
 		}
 	}
-	
-	public void colorNoChildren(float r, float g, float b){
-		colorNoChildren(r, g, b, 1);
-	}
+
 	public void colorNoChildren(Vector4f color){
 		colorNoChildren(color.x, color.y, color.z, color.w);
+	}
+
+	public Vector3f tint(){
+
+		ColorAttribute ta = (ColorAttribute) modelInstance.materials.get(0).get(Scene.TintColorAttribute.Tint);
+		return new Vector3f(ta.color.r, ta.color.g, ta.color.b);
+
+	}
+
+	public void tint(float r, float g, float b){
+
+		tintNoChildren(r, g, b);
+		for (GameObject child : children)
+			child.tint(r, g, b);
+
+	}
+
+	public void tint(Vector3f color){
+		tint(color.x, color.y, color.z);
+	}
+
+	public void tintNoChildren(float r, float g, float b){
+
+		for (Material mat : modelInstance.materials) {
+			ColorAttribute ta = (ColorAttribute) modelInstance.materials.get(0).get(Scene.TintColorAttribute.Tint);
+			ta.color.set(r, g, b, 1);
+		}
+
+	}
+
+	public void tintNoChildren(Vector3f color) {
+		tintNoChildren(color.x, color.y, color.z);
 	}
 
 	public int[] blendMode(){
@@ -732,6 +756,16 @@ public class GameObject implements Named{
 
 		}
 
+	}
+
+	public boolean shadeless(){
+		IntAttribute sa = (IntAttribute) modelInstance.materials.first().get(Scene.ShadelessAttribute.Shadeless);
+		return sa.value == 1;
+	}
+
+	public void shadeless(boolean shadeless){
+		IntAttribute sa = (IntAttribute) modelInstance.materials.first().get(Scene.ShadelessAttribute.Shadeless);
+		sa.value = shadeless ? 1 : 0;
 	}
 
 	public String modelName(){
