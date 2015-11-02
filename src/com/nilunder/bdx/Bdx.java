@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.nilunder.bdx.inputs.*;
@@ -90,10 +92,13 @@ public class Bdx{
 
 	}
 
-	private static class BDXDefaultShader extends DefaultShader {
+	public static class BDXDefaultShader extends DefaultShader {
+
+		public final int u_shadeless = register("u_shadeless");
+		public final int u_tintColor = register("u_tintColor");
 
 		public BDXDefaultShader(Renderable renderable) {
-			super(renderable);
+			super(renderable, new DefaultShader.Config(Gdx.files.internal("bdx/shaders/3d/default.vert").readString(), Gdx.files.internal("bdx/shaders/3d/default.frag").readString()));
 		}
 
 		public void render(Renderable renderable, Attributes combinedAttributes)
@@ -101,6 +106,18 @@ public class Bdx{
 			BlendingAttribute ba = (BlendingAttribute) renderable.material.get(BlendingAttribute.Type);
 			
 			Gdx.gl.glBlendFuncSeparate(ba.sourceFunction, ba.destFunction, GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+			IntAttribute shadeless = (IntAttribute) renderable.material.get(Scene.ShadelessAttribute.Shadeless);
+
+			set(u_shadeless, 0);
+			if (shadeless != null)
+				set(u_shadeless, shadeless.value);
+
+			ColorAttribute tint = (ColorAttribute) renderable.material.get(Scene.TintColorAttribute.Tint);
+
+			set(u_tintColor, 0, 0, 0, 0);
+			if (tint != null)
+				set(u_tintColor, tint.color);
 
 			super.render(renderable, combinedAttributes);
 		}
@@ -112,7 +129,6 @@ public class Bdx{
 		protected Shader createShader(Renderable renderable) {
 			if (matShaders.containsKey(renderable.material.id))
 				return matShaders.get(renderable.material.id).getShader(renderable);
-			
 			return new BDXDefaultShader(renderable);
 		}
 	}

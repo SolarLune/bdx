@@ -37,7 +37,6 @@ import com.bulletphysics.linearmath.Transform;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
-import com.nilunder.bdx.Bdx;
 import com.nilunder.bdx.GameObject.ArrayListGameObject;
 
 public class Scene implements Named{
@@ -99,6 +98,32 @@ public class Scene implements Named{
 		return name;
 	}
 
+	public static class ShadelessAttribute extends IntAttribute {
+
+		public final static String ShadelessAlias = "Shadeless";
+		public final static long Shadeless = register(ShadelessAlias);
+
+		public ShadelessAttribute(){
+			super(Shadeless, 0);
+		}
+
+	};
+
+	public static class TintColorAttribute extends ColorAttribute {
+
+		public final static String TintAlias = "Tint";
+		public final static long Tint = register(TintAlias);
+
+		static {
+			Mask = Mask | Tint;
+		}
+
+		private TintColorAttribute(float r, float g, float b){
+			super(Tint, r, g, b, 0);
+		}
+
+	}
+
 	public void init(){
 		requestedRestart = false;
 		paused = false;
@@ -146,12 +171,21 @@ public class Scene implements Named{
 
 			float[] c = mat.get("color").asFloatArray();
 			Material material = new Material(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
-							
-			material.id = mat.name;
-			
+
+			material.set(new TintColorAttribute(0, 0, 0));
+
+			IntAttribute shadeless = (IntAttribute) new ShadelessAttribute();
+
 			if (mat.get("shadeless").asBoolean())
-				material.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
-			
+				shadeless.value = 1;
+
+			material.set(shadeless);
+
+			material.id = mat.name;
+
+			float ambientStrength = mat.get("emit").asFloat();
+			material.set(new ColorAttribute(ColorAttribute.AmbientLight, ambientStrength, ambientStrength, ambientStrength, ambientStrength));
+
 			if (mat.get("backface_culling").asBoolean())
 				material.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_BACK));
 			else
