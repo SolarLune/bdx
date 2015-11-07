@@ -96,6 +96,7 @@ public class Bdx{
 
 		public final int u_shadeless = register("u_shadeless");
 		public final int u_tintColor = register("u_tintColor");
+		public final int u_emitColor = register("u_emitColor");
 
 		public BDXDefaultShader(Renderable renderable) {
 			super(renderable, new DefaultShader.Config(Gdx.files.internal("bdx/shaders/3d/default.vert").readString(), Gdx.files.internal("bdx/shaders/3d/default.frag").readString()));
@@ -107,17 +108,23 @@ public class Bdx{
 			
 			Gdx.gl.glBlendFuncSeparate(ba.sourceFunction, ba.destFunction, GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
-			IntAttribute shadeless = (IntAttribute) renderable.material.get(Scene.ShadelessAttribute.Shadeless);
+			IntAttribute shadeless = (IntAttribute) renderable.material.get(Scene.BDXIntAttribute.Shadeless);
 
 			set(u_shadeless, 0);
 			if (shadeless != null)
 				set(u_shadeless, shadeless.value);
 
-			ColorAttribute tint = (ColorAttribute) renderable.material.get(Scene.TintColorAttribute.Tint);
+			ColorAttribute tint = (ColorAttribute) renderable.material.get(Scene.BDXColorAttribute.Tint);
 
-			set(u_tintColor, 0, 0, 0, 0);
+			set(u_tintColor, 0, 0, 0);
 			if (tint != null)
 				set(u_tintColor, tint.color);
+
+			ColorAttribute emit = (ColorAttribute) renderable.material.get(Scene.BDXColorAttribute.Emit);
+
+			set(u_emitColor, 0, 0, 0);
+			if (emit != null)
+				set(u_emitColor, emit.color);
 
 			super.render(renderable, combinedAttributes);
 		}

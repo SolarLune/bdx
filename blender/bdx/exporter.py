@@ -752,9 +752,8 @@ def export(context, filepath, scene_name, exprun):
 
     if scene.world != None:
         ambient_color = list(scene.world.ambient_color)
-        ambient_color.append(1)
     else:
-        ambient_color = [0,0,0,1]
+        ambient_color = [0.0, 0.0, 0.0]
 
     bdx = {
         "name": scene.name,

@@ -708,7 +708,7 @@ public class GameObject implements Named{
 
 	public Vector3f tint(){
 
-		ColorAttribute ta = (ColorAttribute) modelInstance.materials.get(0).get(Scene.TintColorAttribute.Tint);
+		ColorAttribute ta = (ColorAttribute) modelInstance.materials.get(0).get(Scene.BDXColorAttribute.Tint);
 		return new Vector3f(ta.color.r, ta.color.g, ta.color.b);
 
 	}
@@ -728,7 +728,7 @@ public class GameObject implements Named{
 	public void tintNoChildren(float r, float g, float b){
 
 		for (Material mat : modelInstance.materials) {
-			ColorAttribute ta = (ColorAttribute) modelInstance.materials.get(0).get(Scene.TintColorAttribute.Tint);
+			ColorAttribute ta = (ColorAttribute) modelInstance.materials.get(0).get(Scene.BDXColorAttribute.Tint);
 			ta.color.set(r, g, b, 1);
 		}
 
@@ -759,12 +759,12 @@ public class GameObject implements Named{
 	}
 
 	public boolean shadeless(){
-		IntAttribute sa = (IntAttribute) modelInstance.materials.first().get(Scene.ShadelessAttribute.Shadeless);
+		IntAttribute sa = (IntAttribute) modelInstance.materials.first().get(Scene.BDXIntAttribute.Shadeless);
 		return sa.value == 1;
 	}
 
 	public void shadeless(boolean shadeless){
-		IntAttribute sa = (IntAttribute) modelInstance.materials.first().get(Scene.ShadelessAttribute.Shadeless);
+		IntAttribute sa = (IntAttribute) modelInstance.materials.first().get(Scene.BDXIntAttribute.Shadeless);
 		sa.value = shadeless ? 1 : 0;
 	}
 
