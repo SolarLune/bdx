@@ -98,28 +98,30 @@ public class Scene implements Named{
 		return name;
 	}
 
-	public static class ShadelessAttribute extends IntAttribute {
+	public static class BDXIntAttribute extends IntAttribute {
 
 		public final static String ShadelessAlias = "Shadeless";
 		public final static long Shadeless = register(ShadelessAlias);
 
-		public ShadelessAttribute(){
+		public BDXIntAttribute(){
 			super(Shadeless, 0);
 		}
 
 	};
 
-	public static class TintColorAttribute extends ColorAttribute {
+	public static class BDXColorAttribute extends ColorAttribute {
 
 		public final static String TintAlias = "Tint";
 		public final static long Tint = register(TintAlias);
+		public final static String EmitAlias = "Emit";
+		public final static long Emit = register(EmitAlias);
 
 		static {
-			Mask = Mask | Tint;
+			Mask = Mask | Tint | Emit;
 		}
 
-		private TintColorAttribute(float r, float g, float b){
-			super(Tint, r, g, b, 0);
+		private BDXColorAttribute(long type, float r, float g, float b){
+			super(type, r, g, b, 0);
 		}
 
 	}
@@ -162,7 +164,7 @@ public class Scene implements Named{
 		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 		world.setDebugDrawer(new Bullet.DebugDrawer(json.get("physviz").asBoolean()));
 		gravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
-		ambientLight(new Vector4f(json.get("ambientColor").asFloatArray()));
+		ambientLight(new Vector3f(json.get("ambientColor").asFloatArray()));
 
 		Bdx.profiler.init(json.get("framerateProfile").asBoolean());
 
@@ -172,9 +174,9 @@ public class Scene implements Named{
 			float[] c = mat.get("color").asFloatArray();
 			Material material = new Material(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
 
-			material.set(new TintColorAttribute(0, 0, 0));
+			material.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
 
-			IntAttribute shadeless = (IntAttribute) new ShadelessAttribute();
+			IntAttribute shadeless = (IntAttribute) new BDXIntAttribute();
 
 			if (mat.get("shadeless").asBoolean())
 				shadeless.value = 1;
@@ -183,8 +185,8 @@ public class Scene implements Named{
 
 			material.id = mat.name;
 
-			float ambientStrength = mat.get("emit").asFloat();
-			material.set(new ColorAttribute(ColorAttribute.AmbientLight, ambientStrength, ambientStrength, ambientStrength, ambientStrength));
+			float emitStrength = mat.get("emit").asFloat();
+			material.set(new BDXColorAttribute(BDXColorAttribute.Emit, emitStrength, emitStrength, emitStrength));
 
 			if (mat.get("backface_culling").asBoolean())
 				material.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_BACK));
@@ -734,18 +736,18 @@ public class Scene implements Named{
 
 	}
 	
-	public void ambientLight(Vector4f color){
-		ambientLight(color.x, color.y, color.z, color.w);
+	public void ambientLight(Vector3f color){
+		ambientLight(color.x, color.y, color.z);
 	}
 	
-	public void ambientLight(float r, float g, float b, float a) {
+	public void ambientLight(float r, float g, float b) {
 		ColorAttribute ca = (ColorAttribute) environment.get(ColorAttribute.AmbientLight);
-		ca.color.set(r, g, b, a);
+		ca.color.set(r, g, b, 1);
 	}
 	
-	public Vector4f ambientLight(){
+	public Vector3f ambientLight(){
 		ColorAttribute ca = (ColorAttribute) environment.get(ColorAttribute.AmbientLight);
-		return new Vector4f(ca.color.r, ca.color.g, ca.color.b, ca.color.a);
+		return new Vector3f(ca.color.r, ca.color.g, ca.color.b);
 	}
 	
 	public void update(){
