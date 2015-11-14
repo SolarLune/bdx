@@ -154,12 +154,16 @@ private static class GamepadAdapter extends ControllerAdapter{
 	private Mouse mouse;
 	private ArrayList<Finger> allocatedFingers;
 
-	public GdxProcessor(Keyboard keyboard, Mouse mouse, ArrayList<Finger> allocatedFingers, Gamepad gamepad){
+	public GdxProcessor(Keyboard keyboard, Mouse mouse, ArrayList<Finger> allocatedFingers, ArrayList<Gamepad> gamepads){
 		this.keyboard = keyboard;
 		this.mouse = mouse;
 		this.allocatedFingers = allocatedFingers;
-		if (gamepad.controller != null)
-			gamepad.controller.addListener(new GamepadAdapter(gamepad));
+
+		for (Gamepad g : gamepads){
+			if (g.controller != null)
+				g.controller.addListener(new GamepadAdapter(g));
+		}
+
 	}
 
 	public boolean keyDown(int code){

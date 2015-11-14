@@ -3,6 +3,7 @@ package com.nilunder.bdx;
 import java.util.*;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.files.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
@@ -149,7 +150,7 @@ public class Bdx{
 	public static Sounds sounds;
 	public static Music music;
 	public static Mouse mouse;
-	public static Gamepad gamepad;
+	public static ArrayListNamed<Gamepad> gamepads;
 	public static InputMaps imaps;
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
@@ -170,7 +171,12 @@ public class Bdx{
 		sounds = new Sounds();
 		music = new Music();
 		mouse = new Mouse();
-		gamepad = new Gamepad();
+		gamepads = new ArrayListNamed<Gamepad>();
+
+		for (int i = 0; i < Controllers.getControllers().size; i++) {
+			gamepads.add(new Gamepad(i));
+		}
+
 		imaps = new InputMaps();
 		keyboard = new Keyboard();
 		fingers = new ArrayList<Finger>(); 
@@ -182,7 +188,7 @@ public class Bdx{
 			allocatedFingers.add(new Finger(i));
 		}
 
-		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers, gamepad));
+		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers, gamepads));
 
 		com.badlogic.gdx.graphics.glutils.ShaderProgram.pedantic = false;
 		
