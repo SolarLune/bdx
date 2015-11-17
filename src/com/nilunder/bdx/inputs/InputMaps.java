@@ -5,7 +5,6 @@ import java.util.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonWriter;
 import com.nilunder.bdx.*;
 
 
@@ -78,24 +77,30 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 						return r;
 					}
 				};
-			}else if (d[0].equals("g")){
+			}else if (d[0].contains("g")){
+				final int gpIndex;
+				if (descriptor.charAt(1) != ':')
+					gpIndex = Character.getNumericValue(descriptor.charAt(1));
+				else
+					gpIndex = 0;
+
 				hdu[0] = new FnBool(){
 					public boolean eval(){
-						boolean r = Bdx.gamepad.btnHit(d[1]) || forceHit;
+						boolean r = Bdx.gamepads.get(gpIndex).btnHit(d[1]) || forceHit;
 						forceHit = false;
 						return r;
 					}
 				};
 				hdu[1] = new FnBool(){
 					public boolean eval(){
-						boolean r = Bdx.gamepad.btnDown(d[1]) || forceDown;
+						boolean r = Bdx.gamepads.get(gpIndex).btnDown(d[1]) || forceDown;
 						forceDown = false;
 						return r;
 					}
 				};
 				hdu[2] = new FnBool(){
 					public boolean eval(){
-						boolean r = Bdx.gamepad.btnUp(d[1]) || forceUp;
+						boolean r = Bdx.gamepads.get(gpIndex).btnUp(d[1]) || forceUp;
 						forceUp = false;
 						return r;
 					}

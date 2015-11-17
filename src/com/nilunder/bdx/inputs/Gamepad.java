@@ -6,9 +6,9 @@ import javax.vecmath.*;
 import com.badlogic.gdx.controllers.*;
 import com.badlogic.gdx.utils.*;
 
-import com.nilunder.bdx.*;
+import com.nilunder.bdx.utils.Named;
 
-public class Gamepad {
+public class Gamepad implements Named {
 
 public static class Axis{
 	public int code;
@@ -81,11 +81,18 @@ public static class Profile{
 	public HashMap<String,Stick> sticks;
 
 	public HashMap<String,Profile> profiles;
+	private int index;
 
-	public Gamepad(){
+	public Gamepad(int i){
+
+		index = i;
+
 		Array controllers = Controllers.getControllers();
-		if (controllers.size > 0)
-			controller = (Controller)controllers.get(0);
+
+		if (controllers.size > index)
+			controller = (Controller)controllers.get(index);
+		else
+			throw new IndexOutOfBoundsException("ERROR: There is no gamepad connected at index " + index);
 
 		profiles = new HashMap<String,Profile>();
 
@@ -227,7 +234,6 @@ public static class Profile{
 		}
 	}
 
-
 	public boolean btnHit(String btn){
 		GdxProcessor.UpDownLog b = profile.btnLog(btn);
 		return b.hit == GdxProcessor.currentTick;
@@ -242,4 +248,17 @@ public static class Profile{
 		GdxProcessor.UpDownLog b = profile.btnLog(btn);
 		return b.up == GdxProcessor.currentTick;
 	}
+
+	public int index(){
+		return index;
+	}
+
+	public String name(){
+		return controller.getName();
+	}
+
+	public String toString(){
+		return name();
+	}
+
 }
