@@ -1,4 +1,4 @@
-package com.nilunder.bdx.utils;
+package com.nilunder.bdx.gl;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
-import com.nilunder.bdx.ShaderProgram;
 
 public class RenderBuffer extends FrameBuffer{
 		
