@@ -27,7 +27,6 @@ public class Light extends GameObject {
 			
 	public void color(float r, float g, float b, float a){
 		this.color = new Vector4f(r,g,b,a);
-		updateLight();
 	}
 	
 	public Vector4f color(){
@@ -36,7 +35,6 @@ public class Light extends GameObject {
 		
 	public void energy(float energy) {
 		this.energy = energy;
-		updateLight();
 	}
 	
 	public float energy(){

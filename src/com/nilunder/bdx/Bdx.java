@@ -8,11 +8,9 @@ import com.badlogic.gdx.files.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
-import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
-import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
-import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
+import com.nilunder.bdx.gl.BDXShaderProvider;
+import com.nilunder.bdx.gl.RenderBuffer;
+import com.nilunder.bdx.gl.ShaderProgram;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.*;
@@ -93,54 +91,6 @@ public class Bdx{
 
 	}
 
-	public static class BDXDefaultShader extends DefaultShader {
-
-		public final int u_shadeless = register("u_shadeless");
-		public final int u_tintColor = register("u_tintColor");
-		public final int u_emitColor = register("u_emitColor");
-
-		public BDXDefaultShader(Renderable renderable) {
-			super(renderable, new DefaultShader.Config(Gdx.files.internal("bdx/shaders/3d/default.vert").readString(), Gdx.files.internal("bdx/shaders/3d/default.frag").readString()));
-		}
-
-		public void render(Renderable renderable, Attributes combinedAttributes)
-		{
-			BlendingAttribute ba = (BlendingAttribute) renderable.material.get(BlendingAttribute.Type);
-			
-			Gdx.gl.glBlendFuncSeparate(ba.sourceFunction, ba.destFunction, GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
-			IntAttribute shadeless = (IntAttribute) renderable.material.get(Scene.BDXIntAttribute.Shadeless);
-
-			set(u_shadeless, 0);
-			if (shadeless != null)
-				set(u_shadeless, shadeless.value);
-
-			ColorAttribute tint = (ColorAttribute) renderable.material.get(Scene.BDXColorAttribute.Tint);
-
-			set(u_tintColor, 0, 0, 0);
-			if (tint != null)
-				set(u_tintColor, tint.color);
-
-			ColorAttribute emit = (ColorAttribute) renderable.material.get(Scene.BDXColorAttribute.Emit);
-
-			set(u_emitColor, 0, 0, 0);
-			if (emit != null)
-				set(u_emitColor, emit.color);
-
-			super.render(renderable, combinedAttributes);
-		}
-		
-	}
-
-	private static class BDXShaderProvider extends DefaultShaderProvider {
-		@Override
-		protected Shader createShader(Renderable renderable) {
-			if (matShaders.containsKey(renderable.material.id))
-				return matShaders.get(renderable.material.id).getShader(renderable);
-			return new BDXDefaultShader(renderable);
-		}
-	}
-	
 	public static final float TICK_TIME = 1f/60f;
 	public static final int VERT_STRIDE = 8;
 	public static float time;
@@ -156,7 +106,7 @@ public class Bdx{
 	public static ArrayList<Finger> fingers;
 	public static ArrayList<Component> components;
 	public static HashMap<String, ShaderProgram> matShaders;
-	
+
 	private static ArrayList<Finger> allocatedFingers;
 	private static ModelBatch modelBatch;
 	private static RenderBuffer frameBuffer;
@@ -198,7 +148,6 @@ public class Bdx{
 		frameBuffer = new RenderBuffer(spriteBatch);
 		tempBuffer = new RenderBuffer(spriteBatch);
 	}
-
 
 	public static void main(){
 		profiler.start("__graphics");
@@ -315,9 +264,6 @@ public class Bdx{
 		spriteBatch.dispose();
 		frameBuffer.dispose();
 		tempBuffer.dispose();
-		for (ShaderProgram sp: matShaders.values()) {
-			sp.disposeAll();
-		}
 	}
 	
 	public static void end(){

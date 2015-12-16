@@ -34,6 +34,8 @@ import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 import com.bulletphysics.linearmath.Transform;
+import com.nilunder.bdx.gl.RenderBuffer;
+import com.nilunder.bdx.gl.ShaderProgram;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
@@ -220,13 +222,10 @@ public class Scene implements Named{
 			materials.put(mat.name, material);
 		}
 		
-		
 		for (JsonValue model: json.get("models")){
 			models.put(model.name, createModel(model));
 		}
-		
-		
-		
+
 		HashMap<String, JsonValue> fonts = new HashMap<>();
 		for (JsonValue fontj: json.get("fonts")){
 			String font = fontj.asString();
@@ -317,8 +316,8 @@ public class Scene implements Named{
 
 	public void dispose(){
 		lastFrameBuffer.dispose();
-		for (ShaderProgram sp : filters) {
-			sp.disposeAll();
+		for (ShaderProgram s : filters) {
+			s.dispose();
 		}
 	}
 	
@@ -391,6 +390,7 @@ public class Scene implements Named{
 			l.color(ll.color());
 			l.type = ll.type;
 			l.makeLightData();
+			l.updateLight();
 			environment.add(l.lightData);
 		}
 
@@ -681,6 +681,9 @@ public class Scene implements Named{
 			for (Texture t : textures.values()){
 				t.dispose();
 			}
+			for (ShaderProgram s : filters){
+				s.dispose();
+			}
 			init();
 		}
 
@@ -693,6 +696,8 @@ public class Scene implements Named{
 		for (GameObject g : objects){
 			if(!g.valid())
 				continue;
+			if (g instanceof Light)
+				((Light) g).updateLight();
 			for (Component c : g.components){
 				if (c.state != null)
 					c.state.main();
