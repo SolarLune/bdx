@@ -280,8 +280,13 @@ public class Bdx{
 		
 		frameBuffer = new RenderBuffer(spriteBatch);		// Have to recreate all render buffers and adjust the projection matrix as the window size has changed
 		tempBuffer = new RenderBuffer(spriteBatch);
-		for (Scene scene : scenes)
+		for (Scene scene : scenes) {
+
+			if (scene.lastFrameBuffer != null)
+				scene.lastFrameBuffer.dispose();
+
 			scene.lastFrameBuffer = new RenderBuffer(null);
+		}
 	}
 	
 }
