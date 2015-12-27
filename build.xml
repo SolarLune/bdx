@@ -7,7 +7,7 @@
 	<property name="modules" value="${user.home}/.gradle/caches/modules-2/files-2.1" />
 
 	<property name="libgdx.libs.dir" value="${modules}/com.badlogicgames.gdx"/>
-	<property name="libgdx.version" value="1.5.5"/>
+	<property name="libgdx.version" value="1.7.2"/>
 	<property name="lwjgl.libs.dir" location="${modules}/org.lwjgl.lwjgl" />
 
 	<path id="master-classpath">

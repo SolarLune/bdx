@@ -5,7 +5,7 @@ import java.util.*;
 import javax.vecmath.Vector2f;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.*;
 
 import com.nilunder.bdx.*;
 
@@ -107,16 +107,21 @@ public class Mouse extends Finger{
 		setCursorImage(textureName, 0, 0);
 	}
 
+	private void gdx_setCursorImage(Pixmap px, int x, int y){
+		Cursor cursor = Gdx.graphics.newCursor(px, x, y);
+		Gdx.graphics.setCursor(cursor);
+	}
+
 	public void visible(boolean visible) {
 		cursorVisible = visible;
 
 		if (visible) {
 			if (cursorTexture == null)
-				Gdx.input.setCursorImage(null, 0, 0);
+				gdx_setCursorImage(null, 0, 0);
 			else {
 
 				Pixmap px = new Pixmap(Gdx.files.internal("bdx/textures/" + cursorTexture));
-				Gdx.input.setCursorImage(px, cursorOffsetX, cursorOffsetY);
+				gdx_setCursorImage(px, cursorOffsetX, cursorOffsetY);
 				px.dispose();
 
 			}
@@ -124,7 +129,7 @@ public class Mouse extends Finger{
 		else {
 
 			Pixmap px = new Pixmap(16, 16, Pixmap.Format.RGBA8888);
-			Gdx.input.setCursorImage(px, 0, 0);
+			gdx_setCursorImage(px, 0, 0);
 			px.dispose();
 
 		}
