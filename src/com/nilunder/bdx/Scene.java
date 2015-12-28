@@ -316,6 +316,14 @@ public class Scene implements Named{
 
 	public void dispose(){
 		lastFrameBuffer.dispose();
+		defaultModel.dispose();
+
+		for (Model m : models.values()){
+			m.dispose();
+		}
+		for (Texture t : textures.values()){
+			t.dispose();
+		}
 		for (ShaderProgram s : filters) {
 			s.dispose();
 		}
@@ -675,15 +683,7 @@ public class Scene implements Named{
 			for (GameObject g : objects){
 				g.endNoChildren();
 			}
-			for (Model m : models.values()){
-				m.dispose();
-			}
-			for (Texture t : textures.values()){
-				t.dispose();
-			}
-			for (ShaderProgram s : filters){
-				s.dispose();
-			}
+			dispose();
 			init();
 		}
 
