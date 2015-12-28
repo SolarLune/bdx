@@ -19,6 +19,9 @@ import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
@@ -135,6 +138,9 @@ public class Scene implements Named{
 		lastFrameBuffer = new RenderBuffer(null);
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0, 0, 0, 1));
+		environment.set(new PointLightsAttribute());
+		environment.set(new SpotLightsAttribute());
+		environment.set(new DirectionalLightsAttribute());
 				
 		filters = new ArrayList<ShaderProgram>();
 		defaultMaterial = new Material();
@@ -399,7 +405,20 @@ public class Scene implements Named{
 			l.type = ll.type;
 			l.makeLightData();
 			l.updateLight();
-			environment.add(l.lightData);
+
+			if (l.lightData instanceof PointLight) {
+				PointLightsAttribute la = (PointLightsAttribute) environment.get(PointLightsAttribute.Type);
+				la.lights.add((PointLight) l.lightData);
+			}
+			else if (l.lightData instanceof DirectionalLight) {
+				DirectionalLightsAttribute la = (DirectionalLightsAttribute) environment.get(DirectionalLightsAttribute.Type);
+				la.lights.add((DirectionalLight) l.lightData);
+			}
+			else if (l.lightData instanceof SpotLight) {
+				SpotLightsAttribute la = (SpotLightsAttribute) environment.get(SpotLightsAttribute.Type);
+				la.lights.add((SpotLight) l.lightData);
+			}
+
 		}
 
 		return g;
