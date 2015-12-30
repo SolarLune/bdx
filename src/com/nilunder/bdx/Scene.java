@@ -51,6 +51,7 @@ public class Scene implements Named{
 
 	public String name;
 	public LinkedListNamed<GameObject> objects;
+	public LinkedListNamed<Light> lights;
 	public Camera camera;
 	public ArrayList<Camera> cameras;
 	public PerspectiveCamera cam;
@@ -164,6 +165,7 @@ public class Scene implements Named{
 		toBeAdded = new ArrayList<GameObject>();
 		toBeRemoved = new ArrayList<GameObject>();
 		objects = new LinkedListNamed<GameObject>();
+		lights = new LinkedListNamed<Light>();
 		templates = new HashMap<String, GameObject>();
 		
 		json = new JsonReader().parse(scene);
@@ -181,6 +183,9 @@ public class Scene implements Named{
 
 			float[] c = mat.get("color").asFloatArray();
 			Material material = new Material(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
+
+			float[] s = mat.get("spec_color").asFloatArray();
+			material.set(ColorAttribute.createSpecular(s[0], s[1], s[2], 1));
 
 			material.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
 
@@ -362,7 +367,13 @@ public class Scene implements Named{
 				addToWorld(g);
 			}
 		}
-		objects.addAll(toBeAdded);
+
+		for (GameObject g : toBeAdded) {
+			objects.add(g);
+			if (g instanceof Light)
+				lights.add((Light) g);
+		}
+
 		toBeAdded.clear();
 	}
 	
@@ -723,14 +734,22 @@ public class Scene implements Named{
 			}
 			g.main();
 		}
-		if (toBeAdded.size() > 0){
-			objects.addAll(toBeAdded);
-			toBeAdded.clear();
+
+		for (GameObject g : toBeAdded) {
+			objects.add(g);
+			if (g instanceof Light)
+				lights.add((Light) g);
 		}
-		if (toBeRemoved.size() > 0){
-			objects.removeAll(toBeRemoved);
-			toBeRemoved.clear();
+		toBeAdded.clear();
+
+		for (GameObject g : toBeRemoved) {
+			objects.remove(g);
+			if (g instanceof Light)
+				lights.remove(g);
 		}
+
+		toBeRemoved.clear();
+
 	}
 	
 	private void updateChildBodies(){

@@ -94,7 +94,13 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 			return shader;
 		}
 
-		return new BDXDefaultShader(renderable, new DefaultShader.Config(Gdx.files.internal("bdx/shaders/3d/default.vert").readString(),
-				Gdx.files.internal("bdx/shaders/3d/default.frag").readString()));
+		DefaultShader.Config config = new DefaultShader.Config(Gdx.files.internal("bdx/shaders/3d/default.vert").readString(),
+				Gdx.files.internal("bdx/shaders/3d/default.frag").readString());
+
+		config.numPointLights = 128;
+		config.numDirectionalLights = 128;
+		config.numSpotLights = 128;
+
+		return new BDXDefaultShader(renderable, config);
 	}
 }
