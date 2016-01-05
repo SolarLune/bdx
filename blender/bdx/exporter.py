@@ -572,13 +572,13 @@ def camera_names(scene):
     r3d = relevant_region_3d_data()
     if scene.camera:
         if not r3d and not True in [x & y for (x, y) in zip(scene.camera.layers, scene.layers)]:
-            raise Exception("No active camera in active layer(s)")
+            raise Exception("No active camera in active layer(s) in scene: " + scene.name)
         activ_cam_name = scene.camera.name
         if activ_cam_name in cam_names:
             cam_names.remove(activ_cam_name)
             cam_names.insert(0, activ_cam_name)
     elif not r3d:
-        raise Exception("No active camera or 3D View data")
+        raise Exception("No active camera or 3D View data in scene: " + scene.name)
     if r3d:
         cam_names.insert(0, "__CAMERA__")
     return cam_names
