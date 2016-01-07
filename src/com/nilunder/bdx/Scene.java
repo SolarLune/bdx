@@ -376,7 +376,6 @@ public class Scene implements Named{
 
 		toBeAdded.clear();
 	}
-	
 
 	private GameObject cloneNoChildren(GameObject gobj){
 		GameObject g = instantiator.newObject(gobj.json);
@@ -479,7 +478,6 @@ public class Scene implements Named{
 		}
 	}
 
-
 	private void addToWorld(GameObject gobj){
 		if (!gobj.currBodyType.equals("NO_COLLISION")){
 			world.addRigidBody(gobj.body, gobj.json.get("physics").get("group").asShort(), gobj.json.get("physics").get("mask").asShort());
@@ -526,7 +524,6 @@ public class Scene implements Named{
 		toBeRemoved.add(g);
 	}
 
-
 	public RayHit ray(Vector3f src, Vector3f vec){
 		return ray(src, vec, (short)~0, (short)~0);
 	}
@@ -551,7 +548,6 @@ public class Scene implements Named{
 		
 		return rh;
 	}
-
 
 	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec, boolean includeAll){
 		return xray(src, vec, includeAll, (short)~0, (short)~0);
@@ -820,6 +816,24 @@ public class Scene implements Named{
 			detectCollisions();
 			Bdx.profiler.stop("__collisions");
 			
+		}
+
+	}
+
+	public void end(){
+
+		for (GameObject g : objects)
+			g.end();
+
+		dispose();
+
+		if (Bdx.scenes.contains(this)) {
+
+			if (Bdx.scenes.size() > 1)
+				Bdx.scenes.remove(this);
+			else
+				Bdx.end();
+
 		}
 
 	}
