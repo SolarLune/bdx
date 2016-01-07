@@ -19,7 +19,7 @@ class BDXDefaultShader extends DefaultShader {
 	public final int u_tintColor = register("u_tintColor");
 	public final int u_emitColor = register("u_emitColor");
 
-	public boolean customized = false;
+	public String materialName = null;
 
 	public BDXDefaultShader(Renderable renderable, Config config) {
 		super(renderable, config);
@@ -71,7 +71,7 @@ class BDXDefaultShader extends DefaultShader {
 
 		}
 		else {															// This material doesn't have a custom shader.
-			if (customized)												// So never use a custom shader; always use an un-customized one.
+			if (materialName != null)									// So never use a custom shader; always use an un-customized one.
 				return false;
 			else
 				return super.canRender(renderable);
@@ -79,28 +79,40 @@ class BDXDefaultShader extends DefaultShader {
 
 	}
 
-
-
 }
 
 public class BDXShaderProvider extends DefaultShaderProvider {
+
+	public BDXShaderProvider(){
+
+		super(new DefaultShader.Config(Gdx.files.internal("bdx/shaders/3d/default.vert").readString(),
+				Gdx.files.internal("bdx/shaders/3d/default.frag").readString()));
+
+		config.numPointLights = 8;
+		config.numSpotLights = 8;
+		config.numDirectionalLights = 2;
+	}
 
 	public Shader createShader(Renderable renderable) {
 
 		if (Bdx.matShaders.containsKey(renderable.material.id)) {
 			ShaderProgram sp = Bdx.matShaders.get(renderable.material.id);
-			BDXDefaultShader shader = new BDXDefaultShader(renderable, new DefaultShader.Config(), sp);
-			shader.customized = true;
+			BDXDefaultShader shader = new BDXDefaultShader(renderable, config, sp);
+			shader.materialName = renderable.material.id;
 			return shader;
 		}
 
-		DefaultShader.Config config = new DefaultShader.Config(Gdx.files.internal("bdx/shaders/3d/default.vert").readString(),
-				Gdx.files.internal("bdx/shaders/3d/default.frag").readString());
-
-		config.numPointLights = 128;
-		config.numDirectionalLights = 128;
-		config.numSpotLights = 128;
-
 		return new BDXDefaultShader(renderable, config);
 	}
+
+	public void deleteShaders(){
+		for (Shader s : shaders){
+			BDXDefaultShader shader = (BDXDefaultShader) s;
+			if (shader.materialName != null)
+				Bdx.matShaders.remove(shader.materialName);		// Remove the ShaderProgram from the custom Shaders HashMap because
+			s.dispose();										// Shader.dispose() destroys the ShaderProgram, too.
+		}
+		shaders.clear();
+	}
+
 }
