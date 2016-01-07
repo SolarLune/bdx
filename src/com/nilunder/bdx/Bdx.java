@@ -106,6 +106,7 @@ public class Bdx{
 	public static ArrayList<Finger> fingers;
 	public static ArrayList<Component> components;
 	public static HashMap<String, ShaderProgram> matShaders;
+	public static BDXShaderProvider shaderProvider;
 
 	private static ArrayList<Finger> allocatedFingers;
 	private static ModelBatch modelBatch;
@@ -141,8 +142,9 @@ public class Bdx{
 		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers, gamepads));
 
 		com.badlogic.gdx.graphics.glutils.ShaderProgram.pedantic = false;
-		
-		modelBatch = new ModelBatch(new BDXShaderProvider());
+
+		shaderProvider = new BDXShaderProvider();
+		modelBatch = new ModelBatch(shaderProvider);
 		spriteBatch = new SpriteBatch();
 		spriteBatch.setBlendFunction(Gdx.gl.GL_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
 		frameBuffer = new RenderBuffer(spriteBatch);
@@ -264,6 +266,7 @@ public class Bdx{
 		spriteBatch.dispose();
 		frameBuffer.dispose();
 		tempBuffer.dispose();
+		shaderProvider.dispose();
 	}
 	
 	public static void end(){
@@ -288,5 +291,5 @@ public class Bdx{
 			scene.lastFrameBuffer = new RenderBuffer(null);
 		}
 	}
-	
+
 }

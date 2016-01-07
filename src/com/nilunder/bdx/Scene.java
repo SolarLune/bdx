@@ -258,7 +258,13 @@ public class Scene implements Named{
 				Light l = (Light)g;
 				l.energy(settings.getFloat("energy"));
 				l.color(new Vector4f(settings.get("color").asFloatArray()));
-				l.type = settings.getString("type");
+
+				if (settings.getString("type").equals("POINT"))
+					l.type = Light.Type.POINT;
+				else if (settings.getString("type").equals("SUN"))
+					l.type = Light.Type.SUN;
+				else if (settings.getString("type").equals("SPOT"))
+					l.type = Light.Type.SPOT;
 			}
 
 			g.name = gobj.name;
