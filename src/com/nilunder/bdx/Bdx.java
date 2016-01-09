@@ -185,7 +185,7 @@ public class Bdx{
 			}
 
 			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-			modelBatch.begin(scene.cam);
+			modelBatch.begin(scene.camera.data);
 			for (GameObject g : scene.objects){
 				if (g.visible() && g.insideFrustum()){
 					modelBatch.render(g.modelInstance, scene.environment);
@@ -235,7 +235,7 @@ public class Bdx{
 			// ------- Render physics debug view --------
 
 			Bullet.DebugDrawer debugDrawer = (Bullet.DebugDrawer)scene.world.getDebugDrawer();
-			debugDrawer.drawWorld(scene.world, scene.cam);
+			debugDrawer.drawWorld(scene.world, scene.camera.data);
 			
 			profiler.stop("__render");
 		}
@@ -249,7 +249,7 @@ public class Bdx{
 			Scene profilerScene = profiler.scene;
 			profilerScene.update();
 			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-			modelBatch.begin(profilerScene.cam);
+			modelBatch.begin(profilerScene.camera.data);
 			for (GameObject g : profilerScene.objects){
 				if (g.visible()){
 					modelBatch.render(g.modelInstance, profilerScene.environment);
