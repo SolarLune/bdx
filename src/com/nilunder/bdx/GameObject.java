@@ -1080,7 +1080,7 @@ public class GameObject implements Named{
 		else
 			center = min.plus(dimHalved).plus(orientation().mult(origin).mul(scale()));
 		
-		return scene.cam.frustum.boundsInFrustum(center.x, center.y, center.z, dimHalved.x, dimHalved.y, dimHalved.z);
+		return scene.camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, dimHalved.x, dimHalved.y, dimHalved.z);
 	}
 
 }

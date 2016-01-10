@@ -10,7 +10,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
@@ -54,7 +53,6 @@ public class Scene implements Named{
 	public LinkedListNamed<Light> lights;
 	public Camera camera;
 	public ArrayList<Camera> cameras;
-	public PerspectiveCamera cam;
 	public HashMap<Model, Vector2f> modelToFrame;
 
 	private FileHandle scene;
@@ -295,7 +293,7 @@ public class Scene implements Named{
 			}
 			
 			g.json = gobj;
-			
+
 			g.scene = this;
 
 			g.scale(getGLMatrixScale(trans));
@@ -311,11 +309,9 @@ public class Scene implements Named{
 		cameras = new ArrayList<Camera>();
 		String[] cameraNames = json.get("cameras").asStringArray();
 		for (String cn : cameraNames)
-			cameras.add((Camera)objects.get(cn));
+			cameras.add((Camera) objects.get(cn));
+		
 		camera = cameras.get(0);
-
-		cam = new PerspectiveCamera();
-		cam.projection.set(camera.json.get("camera").get("projection").asFloatArray());
 
 		ArrayList<GameObject> rootParents = new ArrayList<GameObject>();
 
@@ -406,7 +402,7 @@ public class Scene implements Named{
 
 		if (g instanceof Camera){
 			Camera c = (Camera)g;
-			Camera cc = (Camera)gobj;
+			c.data.projection.set(c.json.get("camera").get("projection").asFloatArray());
 		}else if (g instanceof Text){
 			Text t = (Text)g;
 			Text tt = (Text)gobj;
@@ -767,17 +763,17 @@ public class Scene implements Named{
 		Transform t = new Transform();
 		float[] m = new float[16];
 		camera.body.getWorldTransform(t);
-		cam.position.set(t.origin.x, t.origin.y, t.origin.z);
+		camera.data.position.set(t.origin.x, t.origin.y, t.origin.z);
 		t.inverse();
 		t.getOpenGLMatrix(m);
-		cam.view.set(m);
-		cam.combined.set(cam.projection);
-		Matrix4.mul(cam.combined.val, cam.view.val);
+		camera.data.view.set(m);
+		camera.data.combined.set(camera.data.projection);
+		Matrix4.mul(camera.data.combined.val, camera.data.view.val);
 
 		// Frustum 
-		cam.invProjectionView.set(cam.combined);
-		Matrix4.inv(cam.invProjectionView.val);
-		cam.frustum.update(cam.invProjectionView);
+		camera.data.invProjectionView.set(camera.data.combined);
+		Matrix4.inv(camera.data.invProjectionView.val);
+		camera.data.frustum.update(camera.data.invProjectionView);
 
 	}
 	

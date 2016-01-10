@@ -1,6 +1,7 @@
 package com.nilunder.bdx;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
 
 import com.bulletphysics.linearmath.Transform;
@@ -9,9 +10,15 @@ import javax.vecmath.*;
 
 public class Camera extends GameObject{
 
+	PerspectiveCamera data;
+
+	public Camera(){
+		data = new PerspectiveCamera();
+	}
+
 	public Matrix4f projection(){
 		Matrix4f m = new Matrix4f();
-		m.set(scene.cam.projection.getValues());
+		m.set(data.projection.getValues());
 		m.transpose();
 		return m;
 	}
@@ -22,13 +29,13 @@ public class Camera extends GameObject{
 		t.getOpenGLMatrix(m);
 		m[11] = mat.m32;
 		m[15] = mat.m33;
-		scene.cam.projection.set(m);
+		data.projection.set(m);
 	}
 
 	public float fov(){
 		Matrix4f p = projection();
 		float fov;
-		String type = scene.camera.json.get("camera").get("type").asString();
+		String type = json.get("camera").get("type").asString();
 		if (type.equals("ORTHO")){
 			fov = 2/p.m11;
 		}else{
@@ -42,7 +49,7 @@ public class Camera extends GameObject{
 		Matrix4f p = projection();
 		float w = Gdx.app.getGraphics().getWidth();
 		float h = Gdx.app.getGraphics().getHeight();
-		String type = scene.camera.json.get("camera").get("type").asString();
+		String type = json.get("camera").get("type").asString();
 		if (type.equals("ORTHO")){
 			p.m00 = 2/fov/(w/h);
 			p.m11 = 2/fov;
@@ -58,7 +65,7 @@ public class Camera extends GameObject{
 
 	public Vector2f screenPosition(Vector3f worldPosition){
 
-		Vector3 out = scene.cam.project(new Vector3(worldPosition.x, worldPosition.y, worldPosition.z));
+		Vector3 out = data.project(new Vector3(worldPosition.x, worldPosition.y, worldPosition.z));
 
 		return new Vector2f(out.x / Gdx.app.getGraphics().getWidth(), out.y / Gdx.app.getGraphics().getHeight());
 
