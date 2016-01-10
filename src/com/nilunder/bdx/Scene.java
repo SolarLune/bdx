@@ -844,4 +844,10 @@ public class Scene implements Named{
 
 	}
 
+	public String toString(){
+
+		return name + " <" + getClass().getName() + "> @" + Integer.toHexString(hashCode());
+
+	}
+
 }
