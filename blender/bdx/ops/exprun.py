@@ -80,6 +80,9 @@ class BdxExpRun(bpy.types.Operator):
         scene = bpy.context.scene
         ut.replace_line_containing(bdx_app, "scenes.add", '\t\tBdx.scenes.add(new Scene("'+scene.name+'"));');
 
+        ut.remove_lines_containing(bdx_app, "Bdx.firstScene = ")
+        ut.insert_lines_after(bdx_app, "scenes.add", ['\t\tBdx.firstScene = "'+scene.name+'";'])
+
         # - DesktopLauncher.java
         rx = str(scene.render.resolution_x)
         ry = str(scene.render.resolution_y)

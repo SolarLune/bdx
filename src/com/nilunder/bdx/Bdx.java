@@ -94,6 +94,7 @@ public class Bdx{
 	public static final float TICK_TIME = 1f/60f;
 	public static final int VERT_STRIDE = 8;
 	public static float time;
+	public static String firstScene;
 	public static Profiler profiler;
 	public static ArrayListScenes scenes;
 	public static Display display;
@@ -267,6 +268,9 @@ public class Bdx{
 		frameBuffer.dispose();
 		tempBuffer.dispose();
 		shaderProvider.dispose();
+		for (ShaderProgram s : Bdx.matShaders.values()) {
+			s.dispose();
+		}
 	}
 	
 	public static void end(){
@@ -290,6 +294,18 @@ public class Bdx{
 
 			scene.lastFrameBuffer = new RenderBuffer(null);
 		}
+	}
+
+	public static void restart(){
+		dispose();
+		for (Scene scene : new ArrayList<Scene>(scenes)) {
+			scenes.remove(scene);
+			scene.end();
+		}
+		if (profiler.scene != null)
+			profiler.scene.end();
+		init();
+		scenes.add(firstScene);
 	}
 
 }
