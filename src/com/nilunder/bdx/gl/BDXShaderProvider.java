@@ -2,6 +2,7 @@ package com.nilunder.bdx.gl;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
@@ -37,20 +38,23 @@ class BDXDefaultShader extends DefaultShader {
 
 		IntAttribute shadeless = (IntAttribute) renderable.material.get(Scene.BDXIntAttribute.Shadeless);
 
-		set(u_shadeless, 0);
-		if (shadeless != null)
+		if (shadeless == null)
+			set(u_shadeless, 0);
+		else
 			set(u_shadeless, shadeless.value);
 
 		ColorAttribute tint = (ColorAttribute) renderable.material.get(Scene.BDXColorAttribute.Tint);
 
-		set(u_tintColor, 0, 0, 0);
-		if (tint != null)
+		if (tint == null)
+			set(u_tintColor, new Color());
+		else
 			set(u_tintColor, tint.color);
 
 		ColorAttribute emit = (ColorAttribute) renderable.material.get(Scene.BDXColorAttribute.Emit);
 
-		set(u_emitColor, 0, 0, 0);
-		if (emit != null)
+		if (emit == null)
+			set(u_emitColor, new Color());
+		else
 			set(u_emitColor, emit.color);
 
 		super.render(renderable, combinedAttributes);
