@@ -146,6 +146,7 @@ public class Scene implements Named{
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.Diffuse, 1, 1, 1, 1));
 		defaultMaterial.set(new BlendingAttribute());
+		defaultMaterial.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
 		defaultModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
 
 		models = new HashMap<String,Model>();

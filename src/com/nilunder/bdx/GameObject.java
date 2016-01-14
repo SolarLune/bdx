@@ -728,7 +728,7 @@ public class GameObject implements Named{
 	public void tintNoChildren(float r, float g, float b){
 
 		for (Material mat : modelInstance.materials) {
-			ColorAttribute ta = (ColorAttribute) modelInstance.materials.get(0).get(Scene.BDXColorAttribute.Tint);
+			ColorAttribute ta = (ColorAttribute) mat.get(Scene.BDXColorAttribute.Tint);
 			ta.color.set(r, g, b, 1);
 		}
 
