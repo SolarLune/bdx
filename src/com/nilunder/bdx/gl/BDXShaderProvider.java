@@ -95,14 +95,26 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 
 	public Shader createShader(Renderable renderable) {
 
+		BDXDefaultShader shader;
+
 		if (Bdx.matShaders.containsKey(renderable.material.id)) {
 			ShaderProgram sp = Bdx.matShaders.get(renderable.material.id);
-			BDXDefaultShader shader = new BDXDefaultShader(renderable, config, sp);
+			shader = new BDXDefaultShader(renderable, config, sp);
 			shader.materialName = renderable.material.id;
-			return shader;
+		}
+		else {
+			if (Bdx.Display.advancedLighting())
+				shader = new BDXDefaultShader(renderable, config);
+			else {
+				DefaultShader.Config lowConfig = new DefaultShader.Config();
+				lowConfig.numPointLights = config.numPointLights;
+				lowConfig.numSpotLights = config.numSpotLights;
+				lowConfig.numDirectionalLights = config.numDirectionalLights;
+				shader = new BDXDefaultShader(renderable, lowConfig);
+			}
 		}
 
-		return new BDXDefaultShader(renderable, config);
+		return shader;
 	}
 
 	public void deleteShaders(){

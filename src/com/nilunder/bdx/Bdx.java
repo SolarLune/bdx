@@ -42,6 +42,13 @@ public class Bdx{
 		public void clearColor(float r, float g, float b, float a){
 			Gdx.gl.glClearColor(r, g, b, a);
 		}
+		public static void advancedLighting(boolean on){
+			advancedLightingOn = on;
+			shaderProvider.deleteShaders();
+		}
+		public static boolean advancedLighting(){
+			return advancedLightingOn;
+		}
 	}
 
 	public static class ArrayListScenes extends ArrayListNamed<Scene>{
@@ -109,6 +116,7 @@ public class Bdx{
 	public static HashMap<String, ShaderProgram> matShaders;
 	public static BDXShaderProvider shaderProvider;
 
+	private static boolean advancedLightingOn;
 	private static ArrayList<Finger> allocatedFingers;
 	private static ModelBatch modelBatch;
 	private static RenderBuffer frameBuffer;
@@ -150,6 +158,7 @@ public class Bdx{
 		spriteBatch.setBlendFunction(Gdx.gl.GL_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
 		frameBuffer = new RenderBuffer(spriteBatch);
 		tempBuffer = new RenderBuffer(spriteBatch);
+		advancedLightingOn = true;
 	}
 
 	public static void main(){
