@@ -183,7 +183,10 @@ public class Scene implements Named{
 			Material material = new Material(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
 
 			float[] s = mat.get("spec_color").asFloatArray();
+
 			material.set(ColorAttribute.createSpecular(s[0], s[1], s[2], 1));
+
+			material.set(FloatAttribute.createShininess(mat.get("shininess").asFloat()));
 
 			material.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
 

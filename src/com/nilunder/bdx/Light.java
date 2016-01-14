@@ -56,7 +56,7 @@ public class Light extends GameObject {
 		if (lightData != null) {
 			if (type.equals(Type.POINT)) {
 				PointLight p = (PointLight)lightData;
-				p.set(color.x, color.y, color.z, position().x, position().y, position().z, energy * 10);
+				p.set(color.x, color.y, color.z, position().x, position().y, position().z, energy);
 			}
 			else if (type.equals(Type.SUN)) {
 				DirectionalLight d = (DirectionalLight)lightData;

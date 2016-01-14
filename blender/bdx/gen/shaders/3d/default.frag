@@ -79,8 +79,8 @@ varying vec3 v_shadowMapUv;
 
 float getShadowness(vec2 offset)
 {
-    const vec4 bitShifts = vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
-    return step(v_shadowMapUv.z, dot(texture2D(u_shadowTexture, v_shadowMapUv.xy + offset), bitShifts));//+(1.0/255.0));	
+	const vec4 bitShifts = vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
+	return step(v_shadowMapUv.z, dot(texture2D(u_shadowTexture, v_shadowMapUv.xy + offset), bitShifts));//+(1.0/255.0));
 }
 
 float getShadow() 
@@ -97,6 +97,24 @@ float getShadow()
 varying vec3 v_ambientLight;
 #endif //separateAmbientFlag
 
+#if defined(numPointLights) && (numPointLights > 0)
+struct PointLight
+{
+	vec3 color;
+	vec3 position;
+};
+uniform PointLight u_pointLights[numPointLights];
+#endif // numPointLights
+
+#if defined(numDirectionalLights) && (numDirectionalLights > 0)
+struct DirectionalLight
+{
+	vec3 color;
+	vec3 direction;
+};
+uniform DirectionalLight u_dirLights[numDirectionalLights];
+#endif // numDirectionalLights
+
 #endif //lightingFlag
 
 #ifdef fogFlag
@@ -104,11 +122,62 @@ uniform vec4 u_fogColor;
 varying float v_fog;
 #endif // fogFlag
 
+varying vec3 v_position;
+varying vec3 view_vec;
 
-
+uniform float u_shininess;
 uniform int u_shadeless;
 uniform vec4 u_tintColor;
 uniform vec4 u_emitColor;
+
+vec3 applyLighting(vec3 inColor){
+
+	vec3 diffuseColor = vec3(u_emitColor.rgb + v_lightDiffuse.rgb);
+	vec3 specColor = vec3(0, 0, 0);
+
+	for (int i = 0; i < numPointLights; i++) {
+
+		vec3 lP = u_pointLights[i].position;
+		float distance = length(lP - v_position);
+		vec3 lightVector = normalize(lP - v_position);
+		float diffuse = max(dot(v_normal, lightVector), 0.0);
+		float attenuation = 1.0 / (1.0 + (0.25 * distance * distance));		// Attenuation
+		diffuse *= attenuation;
+		diffuseColor += (u_pointLights[i].color * diffuse);
+
+		#if defined(specularColorFlag)
+		vec3 reflectVector = normalize(-reflect(lightVector, v_normal));
+		vec3 H = normalize(lightVector + view_vec);
+		float spec = pow(max(dot(v_normal, H), 0), u_shininess);
+		if (diffuse <= 0)
+			spec = 0;
+		specColor += u_specularColor.rgb * u_pointLights[i].color * spec * attenuation;
+		#endif
+	}
+
+	for (int i = 0; i < numDirectionalLights; i++){
+
+		vec3 lightVector = -u_dirLights[i].direction;
+		float diffuse = max(dot(v_normal, lightVector), 0.0);
+		diffuseColor += (u_dirLights[i].color * diffuse);
+
+		#if defined(specularColorFlag)
+		vec3 reflectVector = normalize(-reflect(lightVector, v_normal));
+		vec3 H = normalize(lightVector + view_vec);
+		float spec = pow(max(dot(v_normal, H), 0), u_shininess);
+		if (diffuse <= 0)
+			spec = 0;
+		specColor += u_specularColor.rgb * u_dirLights[i].color * spec;
+		#endif
+
+	}
+
+	inColor *= diffuseColor;
+
+	inColor += specColor;
+
+	return inColor;
+}
 
 void main() {
 	#if defined(normalFlag) 
@@ -138,52 +207,7 @@ void main() {
 	if (u_shadeless == 1)
 		gl_FragColor.rgb = diffuse.rgb;
 	else
-	{
-		#if (!defined(lightingFlag))
-			gl_FragColor.rgb = diffuse.rgb;
-		#elif (!defined(specularFlag))
-			#if defined(ambientFlag) && defined(separateAmbientFlag)
-				#ifdef shadowMapFlag
-					gl_FragColor.rgb = (diffuse.rgb * (v_ambientLight + u_emitColor.rgb + getShadow() * v_lightDiffuse));
-					//gl_FragColor.rgb = texture2D(u_shadowTexture, v_shadowMapUv.xy);
-				#else
-					gl_FragColor.rgb = (diffuse.rgb * (v_ambientLight + u_emitColor.rgb + v_lightDiffuse));
-				#endif //shadowMapFlag
-			#else
-				#ifdef shadowMapFlag
-					gl_FragColor.rgb = getShadow() * (diffuse.rgb * (v_lightDiffuse + u_emitColor.rgb));
-				#else
-					gl_FragColor.rgb = (diffuse.rgb * (v_lightDiffuse + u_emitColor.rgb));
-				#endif //shadowMapFlag
-			#endif
-		#else
-			#if defined(specularTextureFlag) && defined(specularColorFlag)
-				vec3 specular = texture2D(u_specularTexture, v_specularUV).rgb * u_specularColor.rgb * (v_lightSpecular + u_emitColor.rgb);
-			#elif defined(specularTextureFlag)
-				vec3 specular = texture2D(u_specularTexture, v_specularUV).rgb * (v_lightSpecular + u_emitColor.rgb);
-			#elif defined(specularColorFlag)
-				vec3 specular = u_specularColor.rgb * (v_lightSpecular + u_emitColor.rgb);
-			#else
-				vec3 specular = v_lightSpecular + u_emitColor.rgb;
-			#endif
-
-			#if defined(ambientFlag) && defined(separateAmbientFlag)
-				#ifdef shadowMapFlag
-				gl_FragColor.rgb = (diffuse.rgb * (getShadow() * v_lightDiffuse + u_emitColor.rgb + v_ambientLight)) + specular;
-					//gl_FragColor.rgb = texture2D(u_shadowTexture, v_shadowMapUv.xy);
-				#else
-					gl_FragColor.rgb = (diffuse.rgb * (v_lightDiffuse + u_emitColor.rgb + v_ambientLight)) + specular;
-				#endif //shadowMapFlag
-			#else
-				#ifdef shadowMapFlag
-					gl_FragColor.rgb = getShadow() * ((diffuse.rgb * (v_lightDiffuse + u_emitColor.rgb)) + specular);
-				#else
-					gl_FragColor.rgb = (diffuse.rgb * (v_lightDiffuse + u_emitColor.rgb)) + specular;
-				#endif //shadowMapFlag
-			#endif
-		#endif //lightingFlag
-
-	}
+		gl_FragColor.rgb = applyLighting(diffuse.rgb);
 
 	#ifdef fogFlag
 		gl_FragColor.rgb = mix(gl_FragColor.rgb, u_fogColor.rgb, v_fog);
