@@ -115,6 +115,18 @@ struct DirectionalLight
 uniform DirectionalLight u_dirLights[numDirectionalLights];
 #endif // numDirectionalLights
 
+#if defined(numSpotLights) && (numSpotLights > 0)
+struct SpotLight
+{
+	vec3 color;
+	vec3 position;
+	vec3 direction;
+	float cutoffAngle;
+	float exponent;
+};
+uniform SpotLight u_spotLights[numSpotLights];
+#endif
+
 #endif //lightingFlag
 
 #ifdef fogFlag
@@ -135,20 +147,22 @@ vec3 applyLighting(vec3 inColor){
 	vec3 diffuseColor = vec3(u_emitColor.rgb + v_lightDiffuse.rgb);
 	vec3 specColor = vec3(0, 0, 0);
 
+	vec3 normal = normalize(v_normal);
+
 	for (int i = 0; i < numPointLights; i++) {
 
 		vec3 lP = u_pointLights[i].position;
 		float distance = length(lP - v_position);
 		vec3 lightVector = normalize(lP - v_position);
-		float diffuse = max(dot(v_normal, lightVector), 0.0);
-		float attenuation = 1.0 / (1.0 + (0.25 * distance * distance));		// Attenuation
+		float diffuse = max(dot(normal, lightVector), 0.0);
+		float attenuation = 1.0 / (1.0 + (0.25 * distance * distance));  // Light falloff
 		diffuse *= attenuation;
 		diffuseColor += (u_pointLights[i].color * diffuse);
 
 		#if defined(specularColorFlag)
-		vec3 reflectVector = normalize(-reflect(lightVector, v_normal));
+		vec3 reflectVector = normalize(-reflect(lightVector, normal));
 		vec3 H = normalize(lightVector + view_vec);
-		float spec = pow(max(dot(v_normal, H), 0), u_shininess);
+		float spec = pow(max(dot(normal, H), 0), u_shininess);
 		if (diffuse <= 0)
 			spec = 0;
 		specColor += u_specularColor.rgb * u_pointLights[i].color * spec * attenuation;
@@ -158,17 +172,41 @@ vec3 applyLighting(vec3 inColor){
 	for (int i = 0; i < numDirectionalLights; i++){
 
 		vec3 lightVector = -u_dirLights[i].direction;
-		float diffuse = max(dot(v_normal, lightVector), 0.0);
+		float diffuse = max(dot(normal, lightVector), 0.0);
 		diffuseColor += (u_dirLights[i].color * diffuse);
 
 		#if defined(specularColorFlag)
-		vec3 reflectVector = normalize(-reflect(lightVector, v_normal));
+		vec3 reflectVector = normalize(-reflect(lightVector, normal));
 		vec3 H = normalize(lightVector + view_vec);
-		float spec = pow(max(dot(v_normal, H), 0), u_shininess);
+		float spec = pow(max(dot(normal, H), 0), u_shininess);
 		if (diffuse <= 0)
 			spec = 0;
 		specColor += u_specularColor.rgb * u_dirLights[i].color * spec;
 		#endif
+
+	}
+
+	for (int i = 0; i < numSpotLights; i++) {
+		vec3 lP = u_spotLights[i].position;
+		float distance = length(lP - v_position);
+		vec3 lightVector = normalize(lP - v_position);
+		float diffuse = max(dot(normal, lightVector), 0.0);
+
+		float spotEffect = max(dot(normalize(u_spotLights[i].direction), -lightVector), 0);
+
+		if (acos(spotEffect) < u_spotLights[i].cutoffAngle / 2) {
+
+			spotEffect = pow(spotEffect, u_spotLights[i].exponent);
+			float attenuation = spotEffect / (1.0 * (0.25 * distance));
+			diffuse *= attenuation;
+			diffuseColor += (u_spotLights[i].color * diffuse);
+			#if defined(specularColorFlag)
+			vec3 reflectVector = normalize(-reflect(lightVector, normal));
+			vec3 H = normalize(lightVector + view_vec);
+			float spec = pow(max(dot(normal, H), 0), u_shininess);
+			specColor += u_specularColor.rgb * u_spotLights[i].color * spec * attenuation;
+			#endif
+		}
 
 	}
 

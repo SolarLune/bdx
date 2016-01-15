@@ -257,8 +257,6 @@ public class Scene implements Named{
 			else if (type.equals("LAMP")) {
 				JsonValue settings = gobj.get("lamp");
 				Light l = (Light)g;
-				l.energy(settings.getFloat("energy"));
-				l.color(new Vector4f(settings.get("color").asFloatArray()));
 
 				if (settings.getString("type").equals("POINT"))
 					l.type = Light.Type.POINT;
@@ -266,6 +264,13 @@ public class Scene implements Named{
 					l.type = Light.Type.SUN;
 				else if (settings.getString("type").equals("SPOT"))
 					l.type = Light.Type.SPOT;
+
+				l.energy(settings.getFloat("energy"));
+				l.color(new Vector4f(settings.get("color").asFloatArray()));
+
+				if (l.type.equals(Light.Type.SPOT)) {
+					l.spotSize(settings.getFloat("spot_size"));
+				}
 			}
 
 			g.name = gobj.name;
@@ -417,6 +422,8 @@ public class Scene implements Named{
 			Light ll = (Light)gobj;
 			l.energy(ll.energy());
 			l.color(ll.color());
+			l.spotSize(ll.spotSize());
+			l.exponent(ll.exponent());
 			l.type = ll.type;
 			l.makeLightData();
 			l.updateLight();

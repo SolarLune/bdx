@@ -498,6 +498,8 @@ def srl_objects(objects):
                 "color": list([obj.data.color[0], obj.data.color[1], obj.data.color[2], 1]),
                 "distance": obj.data.distance
             }
+            if obj.data.type == "SPOT":
+                d["lamp"]["spot_size"] = obj.data.spot_size
     
     r3d = relevant_region_3d_data()
     if r3d:
