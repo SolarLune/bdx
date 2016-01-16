@@ -12,6 +12,8 @@
 
 attribute vec3 a_position;
 uniform mat4 u_projViewTrans;
+uniform mat4 u_viewWorldTrans;
+uniform mat4 u_viewTrans;
 
 #if defined(colorFlag)
 varying vec4 v_color;
@@ -184,6 +186,10 @@ varying vec3 v_ambientLight;
 
 #endif // lightingFlag
 
+varying vec3 v_position;
+
+varying vec3 view_vec;
+
 void main() {
 	#ifdef diffuseTextureFlag
 		v_diffuseUV = u_diffuseUVTransform.xy + a_texCoord0 * u_diffuseUVTransform.zw;
@@ -237,7 +243,9 @@ void main() {
 	#else
 		vec4 pos = u_worldTrans * vec4(a_position, 1.0);
 	#endif
-		
+
+	v_position = pos.xyz;
+
 	gl_Position = u_projViewTrans * pos;
 		
 	#ifdef shadowMapFlag
@@ -302,35 +310,8 @@ void main() {
 			
 		#ifdef specularFlag
 			v_lightSpecular = vec3(0.0);
-			vec3 viewVec = normalize(u_cameraPosition.xyz - pos.xyz);
+			view_vec = normalize(u_cameraPosition.xyz - pos.xyz);
 		#endif // specularFlag
-			
-		#if defined(numDirectionalLights) && (numDirectionalLights > 0) && defined(normalFlag)
-			for (int i = 0; i < numDirectionalLights; i++) {
-				vec3 lightDir = -u_dirLights[i].direction;
-				float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
-				vec3 value = u_dirLights[i].color * NdotL;
-				v_lightDiffuse += value;
-				#ifdef specularFlag
-					float halfDotView = max(0.0, dot(normal, normalize(lightDir + viewVec)));
-					v_lightSpecular += value * pow(halfDotView, u_shininess);
-				#endif // specularFlag
-			}
-		#endif // numDirectionalLights
 
-		#if defined(numPointLights) && (numPointLights > 0) && defined(normalFlag)
-			for (int i = 0; i < numPointLights; i++) {
-				vec3 lightDir = u_pointLights[i].position - pos.xyz;
-				float dist2 = dot(lightDir, lightDir);
-				lightDir *= inversesqrt(dist2);
-				float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
-				vec3 value = u_pointLights[i].color * (NdotL / (1.0 + dist2));
-				v_lightDiffuse += value;
-				#ifdef specularFlag
-					float halfDotView = max(0.0, dot(normal, normalize(lightDir + viewVec)));
-					v_lightSpecular += value * pow(halfDotView, u_shininess);
-				#endif // specularFlag
-			}
-		#endif // numPointLights
 	#endif // lightingFlag
 }

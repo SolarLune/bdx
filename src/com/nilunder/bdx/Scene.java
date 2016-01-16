@@ -184,7 +184,10 @@ public class Scene implements Named{
 			Material material = new Material(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
 
 			float[] s = mat.get("spec_color").asFloatArray();
+
 			material.set(ColorAttribute.createSpecular(s[0], s[1], s[2], 1));
+
+			material.set(FloatAttribute.createShininess(mat.get("shininess").asFloat()));
 
 			material.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
 
@@ -255,8 +258,6 @@ public class Scene implements Named{
 			else if (type.equals("LAMP")) {
 				JsonValue settings = gobj.get("lamp");
 				Light l = (Light)g;
-				l.energy(settings.getFloat("energy"));
-				l.color(new Vector4f(settings.get("color").asFloatArray()));
 
 				if (settings.getString("type").equals("POINT"))
 					l.type = Light.Type.POINT;
@@ -264,6 +265,13 @@ public class Scene implements Named{
 					l.type = Light.Type.SUN;
 				else if (settings.getString("type").equals("SPOT"))
 					l.type = Light.Type.SPOT;
+
+				l.energy(settings.getFloat("energy"));
+				l.color(new Vector4f(settings.get("color").asFloatArray()));
+
+				if (l.type.equals(Light.Type.SPOT)) {
+					l.spotSize(settings.getFloat("spot_size"));
+				}
 			}
 
 			g.name = gobj.name;
@@ -415,6 +423,8 @@ public class Scene implements Named{
 			Light ll = (Light)gobj;
 			l.energy(ll.energy());
 			l.color(ll.color());
+			l.spotSize(ll.spotSize());
+			l.exponent(ll.exponent());
 			l.type = ll.type;
 			l.makeLightData();
 			l.updateLight();

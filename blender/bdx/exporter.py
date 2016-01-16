@@ -255,6 +255,7 @@ def srl_materials_text(texts):
                 "alpha_blend": "ALPHA",
                 "color": list(m.diffuse_color) if m else [1, 1, 1],
                 "spec_color": list(m.specular_color) if m else [0, 0, 0],
+                "shininess": m.specular_hardness if m else 0.0,
                 "opacity": m.alpha if m else 1,
                 "shadeless": m.use_shadeless if m else True,
                 "emit": m.emit if m else 0.0,
@@ -497,6 +498,8 @@ def srl_objects(objects):
                 "color": list([obj.data.color[0], obj.data.color[1], obj.data.color[2], 1]),
                 "distance": obj.data.distance
             }
+            if obj.data.type == "SPOT":
+                d["lamp"]["spot_size"] = obj.data.spot_size
     
     r3d = relevant_region_3d_data()
     if r3d:
@@ -560,6 +563,7 @@ def srl_materials(materials):
                  "alpha_blend": "ALPHA" if m.use_transparency else "OPAQUE",
                  "color": list(m.diffuse_color),
                  "spec_color": list(m.specular_color),
+                 "shininess": m.specular_hardness,
                  "opacity": m.alpha,
                  "shadeless": m.use_shadeless,
                  "emit": m.emit,

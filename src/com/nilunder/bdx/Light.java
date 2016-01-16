@@ -16,9 +16,11 @@ import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 public class Light extends GameObject {
 
 	public Type type;
+	public BaseLight lightData;
 	private float energy;
 	private Vector4f color;
-	public BaseLight lightData;
+	private float spotSize;
+	private float exponent = 1;
 
 	public enum Type {
 		POINT,
@@ -31,7 +33,9 @@ public class Light extends GameObject {
 		if (type.equals(Type.POINT))
 			lightData = new PointLight();
 		else if (type.equals(Type.SUN))
-			lightData = new DirectionalLight();	
+			lightData = new DirectionalLight();
+		else if (type.equals(Type.SPOT))
+			lightData = new SpotLight();
 		
 		updateLight();
 	}
@@ -51,17 +55,38 @@ public class Light extends GameObject {
 	public float energy(){
 		return energy;
 	}
-	
+
+	public void spotSize(float angle){
+		spotSize = angle;
+	}
+
+	public float spotSize(){
+		return spotSize;
+	}
+
+	public void exponent(float exponentFactor){
+		exponent = exponentFactor;
+	}
+
+	public float exponent(){
+		return exponent;
+	}
+
 	public void updateLight(){
 		if (lightData != null) {
 			if (type.equals(Type.POINT)) {
 				PointLight p = (PointLight)lightData;
-				p.set(color.x, color.y, color.z, position().x, position().y, position().z, energy * 10);
+				p.set(color.x, color.y, color.z, position().x, position().y, position().z, energy);
 			}
 			else if (type.equals(Type.SUN)) {
 				DirectionalLight d = (DirectionalLight)lightData;
 				Vector3f dir = axis(2).negated();
 				d.set(color.x, color.y, color.z, dir.x, dir.y, dir.z);
+			}
+			else if (type.equals(Type.SPOT)) {
+				SpotLight s = (SpotLight) lightData;
+				Vector3f down = axis(2).negated();
+				s.set(color.x, color.y, color.z, position().x, position().y, position().z, down.x, down.y, down.z, energy, spotSize, exponent);
 			}
 		}
 	}
