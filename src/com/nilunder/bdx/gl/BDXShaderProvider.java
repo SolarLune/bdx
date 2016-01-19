@@ -106,7 +106,8 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 			if (Bdx.Display.advancedLighting())
 				shader = new BDXDefaultShader(renderable, config);
 			else {
-				DefaultShader.Config lowConfig = new DefaultShader.Config();
+				DefaultShader.Config lowConfig = new DefaultShader.Config(Gdx.files.internal("bdx/shaders/3d/vertexLighting.vert").readString(),
+						Gdx.files.internal("bdx/shaders/3d/vertexLighting.frag").readString());
 				lowConfig.numPointLights = config.numPointLights;
 				lowConfig.numSpotLights = config.numSpotLights;
 				lowConfig.numDirectionalLights = config.numDirectionalLights;
