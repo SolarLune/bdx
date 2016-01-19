@@ -112,28 +112,4 @@ public class Light extends GameObject {
 		updateLight();
 	}
 
-	public static void setMaxCount(Type lightType, int count){
-		DefaultShader.Config config = Bdx.shaderProvider.config;
-
-		if (lightType.equals(Type.POINT))
-			config.numPointLights = count;
-		else if (lightType.equals(Type.SUN))
-			config.numDirectionalLights = count;
-		else
-			config.numSpotLights = count;
-
-		Bdx.shaderProvider.deleteShaders();			// Get rid of the old shaders, as they need to be recreated for the new light count.
-	}
-
-	public static int getMaxCount(Type lightType){
-		DefaultShader.Config config = Bdx.shaderProvider.config;
-		if (lightType.equals(Type.POINT))
-			return config.numPointLights;
-		else if (lightType.equals(Type.SUN))
-			return config.numDirectionalLights;
-		else
-			return config.numSpotLights;
-
-	}
-	
 }

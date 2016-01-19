@@ -8,6 +8,7 @@ import com.badlogic.gdx.files.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.nilunder.bdx.gl.BDXShaderProvider;
 import com.nilunder.bdx.gl.RenderBuffer;
 import com.nilunder.bdx.gl.ShaderProgram;
@@ -20,6 +21,7 @@ import javax.vecmath.Vector2f;
 public class Bdx{
 
 	public static class Display{
+
 		public void size(int width, int height){
 			Gdx.graphics.setDisplayMode(width, height, fullscreen());
 		}
@@ -48,6 +50,26 @@ public class Bdx{
 		}
 		public static boolean advancedLighting(){
 			return advancedLightingOn;
+		}
+		public static void setMaxLightCount(Light.Type lightType, int count){
+			DefaultShader.Config config = shaderProvider.config;
+			if (lightType.equals(Light.Type.POINT))
+				config.numPointLights = count;
+			else if (lightType.equals(Light.Type.SUN))
+				config.numDirectionalLights = count;
+			else
+				config.numSpotLights = count;
+			shaderProvider.deleteShaders();			// Get rid of the old shaders, as they need to be recreated for the new light count.
+		}
+		public static int getMaxLightCount(Light.Type lightType){
+			DefaultShader.Config config = shaderProvider.config;
+			if (lightType.equals(Light.Type.POINT))
+				return config.numPointLights;
+			else if (lightType.equals(Light.Type.SUN))
+				return config.numDirectionalLights;
+			else
+				return config.numSpotLights;
+
 		}
 	}
 
