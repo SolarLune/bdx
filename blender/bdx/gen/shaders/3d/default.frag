@@ -162,9 +162,9 @@ vec3 applyLighting(vec3 inColor){
 		#if defined(specularColorFlag)
 		vec3 reflectVector = normalize(-reflect(lightVector, normal));
 		vec3 H = normalize(lightVector + view_vec);
-		float spec = pow(max(dot(normal, H), 0), u_shininess);
-		if (diffuse <= 0)
-			spec = 0;
+		float spec = pow(max(dot(normal, H), 0.0), u_shininess);
+		if (diffuse <= 0.0)
+			spec = 0.0;
 		specColor += u_specularColor.rgb * u_pointLights[i].color * spec * attenuation;
 		#endif
 	}
@@ -178,9 +178,9 @@ vec3 applyLighting(vec3 inColor){
 		#if defined(specularColorFlag)
 		vec3 reflectVector = normalize(-reflect(lightVector, normal));
 		vec3 H = normalize(lightVector + view_vec);
-		float spec = pow(max(dot(normal, H), 0), u_shininess);
-		if (diffuse <= 0)
-			spec = 0;
+		float spec = pow(max(dot(normal, H), 0.0), u_shininess);
+		if (diffuse <= 0.0)
+			spec = 0.0;
 		specColor += u_specularColor.rgb * u_dirLights[i].color * spec;
 		#endif
 
@@ -192,9 +192,9 @@ vec3 applyLighting(vec3 inColor){
 		vec3 lightVector = normalize(lP - v_position);
 		float diffuse = max(dot(normal, lightVector), 0.0);
 
-		float spotEffect = max(dot(normalize(u_spotLights[i].direction), -lightVector), 0);
+		float spotEffect = max(dot(normalize(u_spotLights[i].direction), -lightVector), 0.0);
 
-		if (acos(spotEffect) < u_spotLights[i].cutoffAngle / 2) {
+		if (acos(spotEffect) < u_spotLights[i].cutoffAngle / 2.0) {
 
 			spotEffect = pow(spotEffect, u_spotLights[i].exponent);
 			float attenuation = spotEffect / (1.0 * (0.25 * distance));
@@ -203,7 +203,7 @@ vec3 applyLighting(vec3 inColor){
 			#if defined(specularColorFlag)
 			vec3 reflectVector = normalize(-reflect(lightVector, normal));
 			vec3 H = normalize(lightVector + view_vec);
-			float spec = pow(max(dot(normal, H), 0), u_shininess);
+			float spec = pow(max(dot(normal, H), 0.0), u_shininess);
 			specColor += u_specularColor.rgb * u_spotLights[i].color * spec * attenuation;
 			#endif
 		}
