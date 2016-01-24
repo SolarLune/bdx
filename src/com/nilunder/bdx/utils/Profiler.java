@@ -32,66 +32,77 @@ public class Profiler extends LinkedHashMap<String, Long>{
 	private final String EXC_MSG = "User created subsystem names should not start with: \"__\"";
 	private final String ERR_MSG = "warning: \"Show Framerate and Profile\" is not enabled";
 	
-	private LinkedHashMap<String, Long> startTimes;
 	private long totalStartTime;
+	private long totalDeltaTime;
 	private long lastStopTime;
+	private LinkedHashMap<String, Long> startTimes;
 	private LinkedHashMap<String, Long> nanos;
 	private LinkedHashMap<String, Float> percents;
 	private ArrayList<String> names;
 	private ArrayList<Long> tickTimes;
+	
 	private GameObject display;
 	private GameObject background;
 	private Text tickInfo;
 	private LinkedHashMap<String, Text> texts;
 	private LinkedHashMap<String, GameObject> bars;
+	
 	private float scale;
+	private boolean visible;
 	private boolean initialized;
 	private Vector2f lastDisplaySize;
 	
-	public float avgTickRate;
-	public float avgTickTime;
-	public boolean visible;
 	public Scene scene;
 	
+	public float avgTickRate;
+	public float avgTickTime;
+	
 	{
+		totalStartTime = TimeUtils.nanoTime();
+		startTimes = new LinkedHashMap<String, Long>();
+		nanos = new LinkedHashMap<String, Long>();
+		percents = new LinkedHashMap<String, Float>();
+		tickTimes = new ArrayList<Long>();
+		for (int i=0; i < TICK_RATE; i++){
+			tickTimes.add(1000000000L / TICK_RATE);
+		}
+		
 		scale = 1f;
+		initialized = false;
+		avgTickRate = TICK_RATE;
+		avgTickTime = 1000 / TICK_RATE;
 	}
 	
 	public void init(boolean framerateProfile){
 		if (initialized){
 			return;
 		}
-		visible = framerateProfile;
-		startTimes = new LinkedHashMap<String, Long>();
-		totalStartTime = TimeUtils.nanoTime();
-		nanos = new LinkedHashMap<String, Long>();
-		percents = new LinkedHashMap<String, Float>();
-		avgTickRate = TICK_RATE;
-		avgTickTime = 1000 / TICK_RATE;
+		
 		initialized = true;
+		visible = framerateProfile;
 		if (visible){
-			show();
+			lastDisplaySize = Bdx.display.size();
+			
+			scene = new Scene("__Profiler");
+			scene.init();
+			
+			display = scene.add("__PDisplay");
+			background = display.children.get("__PBackground");
+			background.color(BG_COLOR);
+			background.parent(display);
+			
+			texts = new LinkedHashMap<String, Text>();
+			bars = new LinkedHashMap<String, GameObject>();
+			names = new ArrayList<String>();
+			
+			tickInfo = (Text)add("__PText", new Vector3f(SPACING, -SPACING * 1.5f, 0));
+			
+			updateScale();
 		}
 	}
-
-	private void show(){
-		lastDisplaySize = Bdx.display.size();
-		names = new ArrayList<String>();
-		tickTimes = new ArrayList<Long>();
-		for (int i=0; i < TICK_RATE; i++){
-			tickTimes.add(1000000000L / TICK_RATE);
-		}
-		texts = new LinkedHashMap<String, Text>();
-		bars = new LinkedHashMap<String, GameObject>();
-		scene = new Scene("__Profiler");
-		scene.init();
-		display = scene.add("__PDisplay");
-		background = display.children.get(0);
-		background.color(BG_COLOR);
-		tickInfo = (Text)scene.add("__PText");
-		tickInfo.position(SPACING, -SPACING * 1.5f, 0);
-		tickInfo.parent(display);
-		updateScale();
+	
+	public boolean visible(){
+		return visible;
 	}
 	
 	private void updateScale(){
@@ -145,9 +156,12 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		}
 	}
 	
-	private void updateVariables(long delta){
+	public void updateVariables(){
+		long totalEndTime = TimeUtils.nanoTime();
+		totalDeltaTime = totalEndTime - totalStartTime;
+		totalStartTime = totalEndTime;
 		tickTimes.remove(0);
-		tickTimes.add(delta);
+		tickTimes.add(totalDeltaTime);
 		long sumTickTimes = 0;
 		for (long l : tickTimes){
 			sumTickTimes += l;
@@ -156,28 +170,27 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		avgTickRate = TICK_RATE * 1000000000f / sumTickTimes;
 	}
 
-	private void updateDisplay(){
-		tickInfo.set(formatForDisplay("tick info", avgTickTime, "ms", avgTickRate, "fps"));
+	private GameObject add(String name, Vector3f position){
+		GameObject obj = scene.add(name);
+		Vector3f scale = display.scale();
+		obj.scale(scale);
+		obj.position(position.mul(scale));
+		obj.parent(display);
+		return obj;
+	}
+	
+	private void updateTextsAndBars(){
 		for (String name : nanos.keySet()){
 			if (!names.contains(name)){
 				names.add(name);
 				int i = names.indexOf(name);
 				float offset = (name.startsWith("__")) ? SPACING * 3 : SPACING * 3.5f;
 				Vector3f position = new Vector3f(SPACING, -(SPACING * i + offset), 0);
-				Vector3f displayScale = display.scale();
-				Text text = (Text)scene.add("__PText");
-				text.scale(displayScale);
-				text.position(position.mul(displayScale));
-				text.parent(display);
-				texts.put(name, text);
+				texts.put(name, (Text)add("__PText", position));
 				position.x = BAR_POSITION;
-				GameObject bar = scene.add("__PBar");
-				bar.scale(displayScale);
-				bar.position(position.mul(displayScale));
-				bar.parent(display);
-				bars.put(name, bar);
+				bars.put(name, add("__PBar", position));
 				Vector3f backgroundScale = new Vector3f(BG_WIDTH, SPACING * (i + 1) + offset, 1);
-				background.scale(backgroundScale.mul(displayScale));
+				background.scale(backgroundScale.mul(display.scale()));
 			}
 			String n = name.startsWith("__") ? name.split("__")[1] : name;
 			float m = nanos.get(name) * 0.000001f;
@@ -186,19 +199,11 @@ public class Profiler extends LinkedHashMap<String, Long>{
 			bars.get(name).scale(barScale.mul(display.scale()));
 			texts.get(name).set(formatForDisplay(n, m, "ms", p, "%"));
 		}
-		
-		Vector2f ds = Bdx.display.size();
-		if (!lastDisplaySize.equals(ds)){
-			lastDisplaySize = ds;
-			updateScale();
-		}
 	}
 	
-	public void update(){
-		long totalEndTime = TimeUtils.nanoTime();
-		long totalDeltaTime = totalEndTime - totalStartTime;
-		updateVariables(totalDeltaTime);
-		totalStartTime = totalEndTime;
+	public void updateVisible(){
+		tickInfo.set(formatForDisplay("tick info", avgTickTime, "ms", avgTickRate, "fps"));
+		
 		long deltaTimes = 0;
 		LinkedHashMap<String, Long> userNanos = new LinkedHashMap<String, Long>();
 		LinkedHashMap<String, Float> userPercents = new LinkedHashMap<String, Float>();
@@ -223,7 +228,13 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		percents.putAll(userPercents);
 		startTimes.clear();
 		clear();
-		updateDisplay();
+		updateTextsAndBars();
+		
+		Vector2f ds = Bdx.display.size();
+		if (!lastDisplaySize.equals(ds)){
+			lastDisplaySize = ds;
+			updateScale();
+		}
 	}
 	
 	private static String formatForDisplay(String name, float avgTickTime, String timeUnits, float avgTickRate, String valueUnits){

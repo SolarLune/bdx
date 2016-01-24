@@ -276,9 +276,10 @@ public class Bdx{
 		}
 		mouse.wheelMove = 0;
 		
-		if (profiler.visible){
-			profiler.update();
-
+		profiler.updateVariables();
+		if (profiler.visible()){
+			profiler.updateVisible();
+			
 			// ------- Render profiler scene --------
 			
 			Scene profilerScene = profiler.scene;
