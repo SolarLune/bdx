@@ -14,6 +14,7 @@ import com.nilunder.bdx.Scene;
 import com.nilunder.bdx.GameObject;
 import com.nilunder.bdx.Text;
 
+import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 
@@ -29,6 +30,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 	private final float BAR_POSITION = SPACING * 18;
 	private final float BG_WIDTH = SPACING * 23;
 	private final String EXC_MSG = "User created subsystem names should not start with: \"__\"";
+	private final String ERR_MSG = "warning: \"Show Framerate and Profile\" is not enabled";
 	
 	private LinkedHashMap<String, Long> startTimes;
 	private long totalStartTime;
@@ -42,13 +44,19 @@ public class Profiler extends LinkedHashMap<String, Long>{
 	private Text tickInfo;
 	private LinkedHashMap<String, Text> texts;
 	private LinkedHashMap<String, GameObject> bars;
+	private float scale;
 	private boolean initialized;
-
+	private Vector2f lastDisplaySize;
+	
 	public float avgTickRate;
 	public float avgTickTime;
 	public boolean visible;
 	public Scene scene;
-
+	
+	{
+		scale = 1f;
+	}
+	
 	public void init(boolean framerateProfile){
 		if (initialized){
 			return;
@@ -67,6 +75,7 @@ public class Profiler extends LinkedHashMap<String, Long>{
 	}
 
 	private void show(){
+		lastDisplaySize = Bdx.display.size();
 		names = new ArrayList<String>();
 		tickTimes = new ArrayList<Long>();
 		for (int i=0; i < TICK_RATE; i++){
@@ -82,6 +91,20 @@ public class Profiler extends LinkedHashMap<String, Long>{
 		tickInfo = (Text)scene.add("__PText");
 		tickInfo.position(SPACING, -SPACING * 1.5f, 0);
 		tickInfo.parent(display);
+		updateScale();
+	}
+	
+	private void updateScale(){
+		display.scale(SCREEN_SIZE.div(new Vector3f(lastDisplaySize.x, lastDisplaySize.y, 1)).mul(scale));
+	}
+	
+	public void scale(float f){
+		if (!visible){
+			System.err.println(ERR_MSG);
+			return;
+		}
+		scale = f;
+		updateScale();
 	}
 	
 	public void start(String name){
@@ -163,9 +186,11 @@ public class Profiler extends LinkedHashMap<String, Long>{
 			bars.get(name).scale(barScale.mul(display.scale()));
 			texts.get(name).set(formatForDisplay(n, m, "ms", p, "%"));
 		}
-		Vector3f currScreenSize = new Vector3f(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 1);
-		if (!SCREEN_SIZE.equals(currScreenSize)){
-			display.scale(SCREEN_SIZE.div(currScreenSize));
+		
+		Vector2f ds = Bdx.display.size();
+		if (!lastDisplaySize.equals(ds)){
+			lastDisplaySize = ds;
+			updateScale();
 		}
 	}
 	
