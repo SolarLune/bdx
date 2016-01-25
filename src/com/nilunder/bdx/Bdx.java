@@ -293,6 +293,9 @@ public class Bdx{
 			}
 			modelBatch.end();
 		}
+		if (profiler.gl.isEnabled()){
+			profiler.gl.updateFields();
+		}
 	}
 	
 	public static void dispose(){
