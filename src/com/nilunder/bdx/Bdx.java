@@ -119,8 +119,9 @@ public class Bdx{
 		}
 
 	}
-
-	public static final float TICK_TIME = 1f/60f;
+	
+	public static final int TICK_RATE = 60;
+	public static final float TICK_TIME = 1f/TICK_RATE;
 	public static final int VERT_STRIDE = 8;
 	public static float time;
 	public static String firstScene;
@@ -275,9 +276,10 @@ public class Bdx{
 		}
 		mouse.wheelMove = 0;
 		
-		if (profiler.visible){
-			profiler.update();
-
+		profiler.updateVariables();
+		if (profiler.visible()){
+			profiler.updateVisible();
+			
 			// ------- Render profiler scene --------
 			
 			Scene profilerScene = profiler.scene;
@@ -290,6 +292,9 @@ public class Bdx{
 				}
 			}
 			modelBatch.end();
+		}
+		if (profiler.gl.isEnabled()){
+			profiler.gl.updateFields();
 		}
 	}
 	
