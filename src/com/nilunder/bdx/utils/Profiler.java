@@ -2,7 +2,7 @@ package com.nilunder.bdx.utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map.Entry;
+import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -46,13 +46,13 @@ public class Profiler{
 		
 		protected void initTexts(){
 			texts = new HashMap<String, Text>();
-			Vector3f position = new Vector3f(SPACING, verticalOffset, 0);
+			Vector3f position = new Vector3f(SPACING, verticalOffset(0.5f), 0);
 			for (String name : names){
-				texts.put(name, (Text)add("__PText", position));
 				position.y = verticalOffset(1);
+				texts.put(name, (Text)add("__PText", position));
 			}
+			position.y = verticalOffset(1);
 			texts.put("triangleCount", (Text)add("__PText", position));
-			verticalOffset(1.5f);
 		}
 		
 		public int calls(){
@@ -117,6 +117,62 @@ public class Profiler{
 		
 	}
 	
+	public class Props extends HashMap<String, String>{
+		
+		protected HashMap<String, Text> texts = new HashMap<String, Text>();
+		
+		protected void initTexts(){
+			if (isEmpty()){
+				return;
+			}
+			Vector3f position = new Vector3f(SPACING, verticalOffset(0.5f), 0);
+			for (Map.Entry<String, String> e : entrySet()){
+				position.y = verticalOffset(1);
+				Text text = (Text)add("__PText", position);
+				text.set(formatForProps(e.getKey(), e.getValue()));
+				scaleBackground();
+			}
+		}
+		
+		@Override
+		public void putAll(Map<? extends String, ? extends String> map){
+			super.putAll(map);
+			for (Map.Entry<String, String> e : entrySet()){
+				String key = e.getKey();
+				if (!texts.containsKey(key)){
+					reinitialize();
+					return;
+				}
+				texts.get(key).set(formatForProps(key, e.getValue()));
+			}
+		}
+		
+		@Override
+		public String put(String key, String value){
+			super.put(key, value);
+			if (texts.containsKey(key)){
+				texts.get(key).set(formatForProps(key, value));
+			}else{
+				reinitialize();
+			}
+			return value;
+		}
+		
+		@Override
+		public String remove(Object key){
+			String value = super.remove(key);
+			reinitialize();
+			return value;
+		}
+		
+		@Override
+		public void clear(){
+			super.clear();
+			reinitialize();
+		}
+		
+	}
+	
 	private final int TICK_RATE = Bdx.TICK_RATE;
 	private final Vector3f SCREEN_SIZE = new Vector3f(448, 448, 1);
 	private final Vector4f BG_COLOR = new Vector4f(0.125f, 0.125f, 0.125f, 0.5f);
@@ -124,7 +180,6 @@ public class Profiler{
 	private final float BAR_HEIGHT = 0.4f;
 	private final float BAR_WIDTH = SPACING * 4;
 	private final float BAR_POSITION = SPACING * 18;
-	private final float BG_WIDTH = SPACING * 23;
 	private final String EXC_MSG = "User created subsystem names should not start with: \"__\"";
 	private final String ERR_MSG = "warning: \"Show Framerate and Profile\" is not enabled";
 	
@@ -144,17 +199,21 @@ public class Profiler{
 	
 	private float scale;
 	private boolean visible;
+	private boolean tickInfoVisible;
 	private boolean subsystemsVisible;
 	private boolean glVisible;
+	private boolean propsVisible;
 	private boolean initialized;
 	private Vector2f lastDisplaySize;
 	private float verticalOffset;
+	private float horizontalOffset;
 	
 	public Scene scene;
 	
 	public float avgTickRate;
 	public float avgTickTime;
 	public Gl gl;
+	public Props props;
 	
 	{
 		totalStartTime = TimeUtils.nanoTime();
@@ -172,6 +231,8 @@ public class Profiler{
 		avgTickRate = TICK_RATE;
 		avgTickTime = 1000 / TICK_RATE;
 		
+		tickInfoVisible = true;
+		propsVisible = true;
 		subsystemsVisible = true;
 		glVisible = false;
 		
@@ -179,6 +240,8 @@ public class Profiler{
 
 		gl = new Gl();
 		gl.listener = GLErrorListener.THROWING_LISTENER;
+		
+		props = new Props();
 	}
 	
 	private float verticalOffset(float factor){
@@ -194,8 +257,12 @@ public class Profiler{
 	}
 	
 	private void scaleBackground(){
-		Vector3f sc = new Vector3f(BG_WIDTH, verticalOffset + SPACING * 0.5f, 1);
+		Vector3f sc = new Vector3f(horizontalOffset, verticalOffset - SPACING, 1);
 		display.children.get("__PBackground").scale(sc.mul(display.scale()));
+	}
+	
+	private void initTickInfo(){
+		tickInfo = (Text)add("__PText", new Vector3f(SPACING, verticalOffset(1.5f), 0));
 	}
 	
 	private void initSubsystems(){
@@ -213,11 +280,12 @@ public class Profiler{
 		};
 		texts = new HashMap<String, Text>();
 		bars = new HashMap<String, GameObject>();
-		for (String name : names){
-			addTextAndBar(name);
-			verticalOffset(1);
-		}
+		horizontalOffset += BAR_WIDTH;
 		verticalOffset(0.5f);
+		for (String name : names){
+			verticalOffset(1);
+			addTextAndBar(name);
+		}
 	}
 	
 	public void init(boolean framerateProfile){
@@ -227,6 +295,7 @@ public class Profiler{
 		
 		initialized = true;
 		verticalOffset = 0;
+		horizontalOffset = BAR_POSITION + SPACING;
 		visible = framerateProfile;
 		if (visible){
 			lastDisplaySize = Bdx.display.size();
@@ -240,11 +309,15 @@ public class Profiler{
 				background.color(BG_COLOR);
 				background.parent(display);
 				
-				verticalOffset(1.5f);
-				tickInfo = (Text)add("__PText", new Vector3f(SPACING, verticalOffset, 0));
-				verticalOffset(1.5f);
-				
 				updateScale();
+			}
+			
+			if (tickInfoVisible){
+				initTickInfo();
+			}
+			
+			if (propsVisible){
+				props.initTexts();
 			}
 			
 			if (glVisible){
@@ -268,12 +341,25 @@ public class Profiler{
 		if (scene != null){
 			texts.clear();
 			bars.clear();
+			props.texts.clear();
 			scene.end();
 			scene = null;
 		}
 		initialized = false;
 	}
 		
+	public void tickInfoVisible(boolean visible){
+		if (!this.visible){
+			System.err.println(ERR_MSG);
+			return;
+		}
+		if (tickInfoVisible == visible){
+			return;
+		}
+		tickInfoVisible = visible;
+		reinitialize();
+	}
+	
 	public void subsystemsVisible(boolean visible){
 		if (!this.visible){
 			System.err.println(ERR_MSG);
@@ -298,6 +384,18 @@ public class Profiler{
 		reinitialize();
 	}
 	
+	public void propsVisible(boolean visible){
+		if (!this.visible){
+			System.err.println(ERR_MSG);
+			return;
+		}
+		if (propsVisible == visible){
+			return;
+		}
+		propsVisible = visible;
+		reinitialize();
+	}
+		
 	public void start(String name){
 		startTimes.put(name, TimeUtils.nanoTime());
 	}
@@ -377,11 +475,15 @@ public class Profiler{
 		return obj;
 	}
 	
+	private void updateTickInfo(){
+		tickInfo.set(formatForSubsystems("tick info", avgTickTime, "ms", avgTickRate, "fps"));
+	}
+	
 	private void updateSubsystems(){
 		long sumDeltaTimes = 0;
 		HashMap<String, Long> userNanos = new HashMap<String, Long>();
 		HashMap<String, Float> userPercents = new HashMap<String, Float>();
-		for (Entry<String, Long> e : deltaTimes.entrySet()){
+		for (Map.Entry<String, Long> e : deltaTimes.entrySet()){
 			long deltaTime = e.getValue();
 			String name = e.getKey();
 			float deltaTimePercent = 100f * deltaTime / totalDeltaTime;
@@ -405,8 +507,8 @@ public class Profiler{
 		
 		for (String name : nanos.keySet()){
 			if (!texts.containsKey(name)){
-				addTextAndBar(name);
 				verticalOffset(1);
+				addTextAndBar(name);
 				scaleBackground();
 			}
 			String n = name.startsWith("__") ? name.split("__")[1] : name;
@@ -423,7 +525,9 @@ public class Profiler{
 			init(true);
 		}
 		
-		tickInfo.set(formatForSubsystems("tick info", avgTickTime, "ms", avgTickRate, "fps"));
+		if (tickInfoVisible){
+			updateTickInfo();
+		}
 
 		if (subsystemsVisible){
 			updateSubsystems();
@@ -438,6 +542,14 @@ public class Profiler{
 			lastDisplaySize = ds;
 			updateScale();
 		}
+	}
+	
+	private static String formatForProps(String key, String value){
+		StringBuffer buffer = new StringBuffer();
+		addString(buffer, key, 21, false, ' ');
+		buffer.append(" ");
+		addString(buffer, value, 6, true, ' ');
+		return buffer.toString();
 	}
 	
 	private static String formatForGl(String name, int value){
