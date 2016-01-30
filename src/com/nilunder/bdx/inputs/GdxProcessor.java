@@ -21,7 +21,7 @@ public static class UpDownLog{
 	
 }
 
-private static class GamepadAdapter extends ControllerAdapter{
+public static class GamepadAdapter extends ControllerAdapter{
 
 	private Gamepad gamepad;
 	private Integer[] lastPressedHats;
@@ -158,12 +158,6 @@ private static class GamepadAdapter extends ControllerAdapter{
 		this.keyboard = keyboard;
 		this.mouse = mouse;
 		this.allocatedFingers = allocatedFingers;
-
-		for (Gamepad g : gamepads){
-			if (g.controller != null)
-				g.controller.addListener(new GamepadAdapter(g));
-		}
-
 	}
 
 	public boolean keyDown(int code){
