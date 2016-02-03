@@ -59,7 +59,7 @@ public class Scene implements Named{
 
 	public HashMap<String,Model> models;
 	private HashMap<String,Texture> textures;
-	private HashMap<String,Material> materials;
+	public HashMap<String,Material> materials;
 	public Material defaultMaterial;
 	private Model defaultModel;
 	public DiscreteDynamicsWorld world;
@@ -616,7 +616,6 @@ public class Scene implements Named{
 	public Model createModel(JsonValue model) {
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
-		int part_idx = 0;
 		short idx = 0;
 		for (JsonValue mat : model){
 			MeshPartBuilder mpb = builder.part(model.name, GL20.GL_TRIANGLES,
@@ -628,7 +627,6 @@ public class Scene implements Named{
 				mpb.index(idx);
 				idx += 1;
 			}
-			++part_idx;
 		}
 		return builder.end();
 	}
