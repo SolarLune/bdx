@@ -7,6 +7,7 @@ import pprint
 import shutil
 import bpy
 import mathutils as mt
+from collections import OrderedDict
 from bpy_extras.io_utils import ExportHelper
 from bpy.props import StringProperty, EnumProperty, BoolProperty
 from bpy.types import Operator
@@ -72,7 +73,6 @@ def instance(dupli_group):
     if dupli_group:
         return [o.name for o in dupli_group.objects if not o.parent][0]
 
-
 def mat_tris(mesh):
     """Returns dict: mat_name -> list_of_triangle_indices"""
 
@@ -94,11 +94,9 @@ def mat_tris(mesh):
 
     return m_ps
 
-
 def used_meshes(objects):
     return [o.data for o in objects 
             if o.type == "MESH"]
-
 
 def srl_models(meshes):
     name_model = {}
@@ -108,9 +106,19 @@ def srl_models(meshes):
     for mesh in meshes:
         m_tris = mat_tris(mesh)
         verts = vertices(mesh)
-        m_verts = {}
-        for m, tris in m_tris.items():
-            m_verts[m] = sum([verts[i * tfs : i * tfs + tfs] for i in tris], [])
+        m_verts = OrderedDict()
+
+        materials = []
+        for m in mesh.materials:
+            if m is not None:
+                materials.append(m.name)
+        if len(materials) == 0:
+            materials.append("__BDX_DEFAULT")
+
+        for mat in materials:
+            if mat in m_tris.keys():
+                m, tris = mat, m_tris[mat]
+                m_verts[m] = sum([verts[i * tfs : i * tfs + tfs] for i in tris], [])
         name_model[mesh.name] = m_verts
 
     return name_model

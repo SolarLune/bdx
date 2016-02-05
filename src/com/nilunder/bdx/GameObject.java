@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.Material;
@@ -1081,6 +1082,28 @@ public class GameObject implements Named{
 			center = min.plus(dimHalved).plus(orientation().mult(origin).mul(scale()));
 		
 		return scene.camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, dimHalved.x, dimHalved.y, dimHalved.z);
+	}
+
+	public void material(Material mat, int slot){
+		modelInstance.nodes.get(0).parts.get(slot).material = mat;
+	}
+
+	public void material(String newMat, int slot){
+		material(scene.materials.get(newMat), slot);
+	}
+
+	public void material(String newMat){
+		for (int i = 0; i < modelInstance.nodes.get(0).parts.size; i++){
+			material(newMat, i);
+		}
+	}
+
+	public ArrayList<String> materials() {
+		ArrayList<String> mats = new ArrayList<String>();
+		for (int i = 0; i < modelInstance.nodes.get(0).parts.size; i++) {
+			mats.add(modelInstance.nodes.get(0).parts.get(i).material.id);
+		}
+		return mats;
 	}
 
 }
