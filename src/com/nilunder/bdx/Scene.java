@@ -8,6 +8,7 @@ import javax.vecmath.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Texture;
@@ -23,6 +24,7 @@ import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
@@ -76,7 +78,8 @@ public class Scene implements Named{
 	public ArrayList<ShaderProgram> filters;
 	public RenderBuffer lastFrameBuffer;
 	public Environment environment;
-	
+	private ShapeRenderer shapeRenderer;
+
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
 	}
@@ -134,6 +137,7 @@ public class Scene implements Named{
 		requestedRestart = false;
 		paused = false;
 
+		shapeRenderer = new ShapeRenderer();
 		lastFrameBuffer = new RenderBuffer(null);
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0, 0, 0, 1));
@@ -337,6 +341,7 @@ public class Scene implements Named{
 	}
 
 	public void dispose(){
+		shapeRenderer.dispose();
 		lastFrameBuffer.dispose();
 		defaultModel.dispose();
 
@@ -853,6 +858,22 @@ public class Scene implements Named{
 
 		return name + " <" + getClass().getName() + "> @" + Integer.toHexString(hashCode());
 
+	}
+
+	public void drawLine(Vector3f start, Vector3f end, Vector4f color){
+		shapeRenderer.setProjectionMatrix(camera.data.combined);
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.setColor(color.x, color.y, color.z, color.w);
+		shapeRenderer.line(start.x, start.y, start.z, end.x, end.y, end.z);
+		shapeRenderer.end();
+	}
+
+	public void drawPoint(Vector3f point, Vector4f color){
+		shapeRenderer.setProjectionMatrix(camera.data.combined);
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Point);
+		shapeRenderer.setColor(color.x, color.y, color.z, color.w);
+		shapeRenderer.point(point.x, point.y, point.z);
+		shapeRenderer.end();
 	}
 
 }
