@@ -7,6 +7,7 @@ import pprint
 import shutil
 import bpy
 import mathutils as mt
+import numpy
 from collections import OrderedDict
 from bpy_extras.io_utils import ExportHelper
 from bpy.props import StringProperty, EnumProperty, BoolProperty
@@ -118,7 +119,7 @@ def srl_models(meshes):
         for mat in materials:
             if mat in m_tris.keys():
                 m, tris = mat, m_tris[mat]
-                m_verts[m] = sum([verts[i * tfs : i * tfs + tfs] for i in tris], [])
+                m_verts[m] = numpy.concatenate([verts[i * tfs : i * tfs + tfs] for i in tris]).tolist()
         name_model[mesh.name] = m_verts
 
     return name_model
