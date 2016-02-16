@@ -78,7 +78,7 @@ public class Scene implements Named{
 	public ArrayList<ShaderProgram> filters;
 	public RenderBuffer lastFrameBuffer;
 	public Environment environment;
-	private ShapeRenderer shapeRenderer;
+	static private ShapeRenderer shapeRenderer;
 
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
@@ -137,7 +137,8 @@ public class Scene implements Named{
 		requestedRestart = false;
 		paused = false;
 
-		shapeRenderer = new ShapeRenderer();
+		if (shapeRenderer == null)
+			shapeRenderer = new ShapeRenderer();
 		lastFrameBuffer = new RenderBuffer(null);
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0, 0, 0, 1));
@@ -341,7 +342,6 @@ public class Scene implements Named{
 	}
 
 	public void dispose(){
-		shapeRenderer.dispose();
 		lastFrameBuffer.dispose();
 		defaultModel.dispose();
 
