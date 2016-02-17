@@ -89,12 +89,12 @@ public class Profiler{
 		}
 		
 		protected void updateTexts(){
-			texts.get("calls").set(formatForGl("gl calls", calls()));
-			texts.get("drawCalls").set(formatForGl("gl draw calls", drawCalls()));
-			texts.get("shaderSwitches").set(formatForGl("gl shader switches", shaderSwitches()));
-			texts.get("textureBindings").set(formatForGl("gl texture bindings", textureBindings()));
-			texts.get("vertexCount").set(formatForGl("gl vertex count", vertexCount()));
-			texts.get("triangleCount").set(formatForGl("gl triangle count", triangleCount()));
+			texts.get("calls").text(formatForGl("gl calls", calls()));
+			texts.get("drawCalls").text(formatForGl("gl draw calls", drawCalls()));
+			texts.get("shaderSwitches").text(formatForGl("gl shader switches", shaderSwitches()));
+			texts.get("textureBindings").text(formatForGl("gl texture bindings", textureBindings()));
+			texts.get("vertexCount").text(formatForGl("gl vertex count", vertexCount()));
+			texts.get("triangleCount").text(formatForGl("gl triangle count", triangleCount()));
 		}
 		
 		protected void updateStats(){
@@ -128,7 +128,7 @@ public class Profiler{
 				position.y = verticalOffset(1);
 				String key = e.getKey();
 				Text text = (Text)add("__PText", position);
-				text.set(formatForProps(key, e.getValue()));
+				text.text(formatForProps(key, e.getValue()));
 				texts.put(key, text);
 				scaleBackground();
 			}
@@ -143,7 +143,7 @@ public class Profiler{
 					reinitialize();
 					return;
 				}
-				texts.get(key).set(formatForProps(key, e.getValue()));
+				texts.get(key).text(formatForProps(key, e.getValue()));
 			}
 		}
 		
@@ -151,7 +151,7 @@ public class Profiler{
 		public String put(String key, String value){
 			super.put(key, value);
 			if (texts.containsKey(key)){
-				texts.get(key).set(formatForProps(key, value));
+				texts.get(key).text(formatForProps(key, value));
 			}else{
 				reinitialize();
 			}
@@ -476,7 +476,7 @@ public class Profiler{
 	}
 	
 	private void updateTickInfo(){
-		tickInfo.set(formatForSubsystems("tick info", avgTickTime, "ms", avgTickRate, "fps"));
+		tickInfo.text(formatForSubsystems("tick info", avgTickTime, "ms", avgTickRate, "fps"));
 	}
 	
 	private void updateSubsystems(){
@@ -516,7 +516,7 @@ public class Profiler{
 			float p = percents.get(name);
 			Vector3f barScale = new Vector3f(BAR_WIDTH * p * 0.01f, BAR_HEIGHT, 1);
 			bars.get(name).scale(barScale.mul(display.scale()));
-			texts.get(name).set(formatForSubsystems(n, m, "ms", p, "%"));
+			texts.get(name).text(formatForSubsystems(n, m, "ms", p, "%"));
 		}
 	}
 	

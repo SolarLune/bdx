@@ -313,6 +313,12 @@ public class Scene implements Named{
 			g.scale(getGLMatrixScale(trans));
 
 			templates.put(g.name, g);
+
+			if (type.equals("FONT")) {
+				Text t = (Text) g;
+				t.text(gobj.get("text").asString());
+				t.capacity = t.text().length();
+			}
 			
 		}
 
@@ -421,6 +427,8 @@ public class Scene implements Named{
 			Text t = (Text)g;
 			Text tt = (Text)gobj;
 			t.font = tt.font;
+			t.text(tt.text());
+			t.capacity = tt.capacity;
 			t.useUniqueModel();
 		}
 		else if (g instanceof Light) {
