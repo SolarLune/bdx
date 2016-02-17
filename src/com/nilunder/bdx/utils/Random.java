@@ -50,4 +50,12 @@ public class Random{
 				Random.random() * Random.choice(ints),
 				Random.random() * Random.choice(ints));
 	}
+
+	public static Color color(){
+		return new Color(Random.random(0, 1),
+				Random.random(0, 1),
+				Random.random(0, 1),
+				Random.random(0, 1));
+	}
+
 }

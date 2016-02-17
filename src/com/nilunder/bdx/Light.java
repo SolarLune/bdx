@@ -2,7 +2,6 @@ package com.nilunder.bdx;
 
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
 
 import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute;
@@ -11,14 +10,14 @@ import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
-import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
+import com.nilunder.bdx.utils.Color;
 
 public class Light extends GameObject {
 
 	public Type type;
 	public BaseLight lightData;
 	private float energy;
-	private Vector4f color;
+	private Color color = new Color();
 	private float spotSize;
 	private float exponent = 1;
 
@@ -36,15 +35,15 @@ public class Light extends GameObject {
 			lightData = new DirectionalLight();
 		else if (type.equals(Type.SPOT))
 			lightData = new SpotLight();
-		
+
 		updateLight();
 	}
-			
-	public void color(float r, float g, float b, float a){
-		this.color = new Vector4f(r,g,b,a);
+
+	public void colorNoChildren(Color color){
+		this.color.set(color);
 	}
 	
-	public Vector4f color(){
+	public Color color(){
 		return color;
 	}
 		
@@ -76,17 +75,17 @@ public class Light extends GameObject {
 		if (lightData != null) {
 			if (type.equals(Type.POINT)) {
 				PointLight p = (PointLight)lightData;
-				p.set(color.x, color.y, color.z, position().x, position().y, position().z, energy);
+				p.set(color.r, color.g, color.b, position().x, position().y, position().z, energy);
 			}
 			else if (type.equals(Type.SUN)) {
 				DirectionalLight d = (DirectionalLight)lightData;
 				Vector3f dir = axis(2).negated();
-				d.set(color.x, color.y, color.z, dir.x, dir.y, dir.z);
+				d.set(color.r, color.g, color.b, dir.x, dir.y, dir.z);
 			}
 			else if (type.equals(Type.SPOT)) {
 				SpotLight s = (SpotLight) lightData;
 				Vector3f down = axis(2).negated();
-				s.set(color.x, color.y, color.z, position().x, position().y, position().z, down.x, down.y, down.z, energy, spotSize, exponent);
+				s.set(color.r, color.g, color.b, position().x, position().y, position().z, down.x, down.y, down.z, energy, spotSize, exponent);
 			}
 		}
 	}
