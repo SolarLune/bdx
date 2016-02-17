@@ -128,8 +128,10 @@ public class Profiler{
 			Vector3f position = new Vector3f(SPACING, verticalOffset(0.5f), 0);
 			for (Map.Entry<String, String> e : entrySet()){
 				position.y = verticalOffset(1);
+				String key = e.getKey();
 				Text text = (Text)add("__PText", position);
-				text.set(formatForProps(e.getKey(), e.getValue()));
+				text.set(formatForProps(key, e.getValue()));
+				texts.put(key, text);
 				scaleBackground();
 			}
 		}
