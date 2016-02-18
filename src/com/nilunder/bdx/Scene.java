@@ -8,7 +8,6 @@ import javax.vecmath.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Texture;
@@ -272,7 +271,8 @@ public class Scene implements Named{
 					l.type = Light.Type.SPOT;
 
 				l.energy(settings.getFloat("energy"));
-				l.color(new Vector4f(settings.get("color").asFloatArray()));
+				float[] c = settings.get("color").asFloatArray();
+				l.color(new Color(c[0], c[1], c[2], c[3]));
 
 				if (l.type.equals(Light.Type.SPOT)) {
 					l.spotSize(settings.getFloat("spot_size"));

@@ -678,65 +678,40 @@ public class GameObject implements Named{
 		alignAxisToVec(String.valueOf("XYZ".charAt(axis)), vec);
 	}
 
-	public Vector4f color(){
-
+	public Color color(){
 		ColorAttribute ca = (ColorAttribute) modelInstance.materials.get(0).get(ColorAttribute.Diffuse);
-
-		return new Vector4f(ca.color.r, ca.color.g, ca.color.b, ca.color.a);
-
+		return new Color(ca.color);
 	}
 
-	public void color(float r, float g, float b, float a){
-		colorNoChildren(r, g, b, a);
+	public void color(Color color){
+		colorNoChildren(color);
 		for (GameObject child : children)
-			child.color(r, g, b, a);
+			child.color(color);
 	}
 
-	public void color(Vector4f color){
-		color(color.x, color.y, color.z, color.w);
-	}
-	
-	public void colorNoChildren(float r, float g, float b, float a){
+	public void colorNoChildren(Color color){
 		for (Material mat : modelInstance.materials){
 			ColorAttribute ca = (ColorAttribute) mat.get(ColorAttribute.Diffuse);
-			ca.color.set(r, g, b, a);
+			ca.color.set(color);
 		}
 	}
 
-	public void colorNoChildren(Vector4f color){
-		colorNoChildren(color.x, color.y, color.z, color.w);
-	}
-
-	public Vector3f tint(){
-
+	public Color tint(){
 		ColorAttribute ta = (ColorAttribute) modelInstance.materials.get(0).get(Scene.BDXColorAttribute.Tint);
-		return new Vector3f(ta.color.r, ta.color.g, ta.color.b);
-
+		return new Color(ta.color);
 	}
 
-	public void tint(float r, float g, float b){
-
-		tintNoChildren(r, g, b);
+	public void tint(Color color){
+		tintNoChildren(color);
 		for (GameObject child : children)
-			child.tint(r, g, b);
-
+			child.tint(color);
 	}
 
-	public void tint(Vector3f color){
-		tint(color.x, color.y, color.z);
-	}
-
-	public void tintNoChildren(float r, float g, float b){
-
+	public void tintNoChildren(Color color){
 		for (Material mat : modelInstance.materials) {
 			ColorAttribute ta = (ColorAttribute) mat.get(Scene.BDXColorAttribute.Tint);
-			ta.color.set(r, g, b, 1);
+			ta.color.set(color);
 		}
-
-	}
-
-	public void tintNoChildren(Vector3f color) {
-		tintNoChildren(color.x, color.y, color.z);
 	}
 
 	public int[] blendMode(){

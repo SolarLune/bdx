@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.graphics.profiling.GLErrorListener;
 
@@ -15,7 +14,6 @@ import com.nilunder.bdx.Text;
 
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
 
 
 public class Profiler{
@@ -177,7 +175,7 @@ public class Profiler{
 	
 	private final int TICK_RATE = Bdx.TICK_RATE;
 	private final Vector3f SCREEN_SIZE = new Vector3f(448, 448, 1);
-	private final Vector4f BG_COLOR = new Vector4f(0.125f, 0.125f, 0.125f, 0.5f);
+	private final Color BG_COLOR = new Color(0.125f, 0.125f, 0.125f, 0.5f);
 	private final float SPACING = 0.6f;
 	private final float BAR_HEIGHT = 0.4f;
 	private final float BAR_WIDTH = SPACING * 4;
