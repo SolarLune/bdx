@@ -34,8 +34,6 @@ class BDXDefaultShader extends DefaultShader {
 	{
 		BlendingAttribute ba = (BlendingAttribute) renderable.material.get(BlendingAttribute.Type);
 
-		Gdx.gl.glBlendFuncSeparate(ba.sourceFunction, ba.destFunction, GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
 		IntAttribute shadeless = (IntAttribute) renderable.material.get(Scene.BDXIntAttribute.Shadeless);
 
 		if (shadeless == null)
