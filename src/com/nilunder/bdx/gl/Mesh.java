@@ -3,12 +3,16 @@ package com.nilunder.bdx.gl;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.JsonValue;
 import com.nilunder.bdx.Bdx;
+import com.nilunder.bdx.GameObject;
 import com.nilunder.bdx.Scene;
 import com.nilunder.bdx.utils.ArrayListNamed;
 import com.nilunder.bdx.utils.Color;
@@ -250,6 +254,58 @@ public class Mesh implements Named {
 
 	public String toString(){
 		return name + " <" + getClass().getName() + "> @" + Integer.toHexString(hashCode());
+	}
+
+	private Node constructBone(JsonValue b){
+
+		Node bone = new Node();
+		bone.id = b.get("id").asString();
+		bone.translation.set(b.get("translation").asFloatArray());
+		float[] rot = b.get("rotation").asFloatArray();
+		bone.rotation.set(rot[0], rot[1], rot[2], rot[3]);
+		bone.scale.set(b.get("scaling").asFloatArray());
+//		System.out.println(bone.translation);
+//		System.out.println(bone.rotation);
+//		System.out.println(bone.scale);
+		model.getNode("armature").addChild(bone);
+		return bone;
+
+	}
+
+	public void constructArmature(JsonValue bones){
+
+		if (model.getNode("armature") == null) {
+			Node n = new Node();
+			n.id = "armature";
+			model.nodes.add(n);
+		}
+
+		for (JsonValue b : bones)		// Construct armature first
+			constructBone(b);
+
+		for (JsonValue b : bones) {
+			Node bone = model.getNode("armature").getChild(b.get("id").asString(), true, false);
+			for (String childName : b.get("children").asStringArray())
+				bone.addChild(model.getNode("armature").getChild(childName, true, false));
+		}
+
+		for (NodePart part : model.nodes.first().parts) {
+			Matrix4 boneMatrices;
+			part.bones = new Matrix4[bones.size];
+		}
+
+		System.out.println(name());
+		System.out.println(model.nodes);
+
+	}
+
+	public ArrayList<Node> getRootBones(){
+		ArrayList<Node> boneList = new ArrayList<Node>();
+		for (Node b : model.getNode("armature").getChildren()) {
+			if (!b.hasParent())
+				boneList.add(b);
+		}
+		return boneList;
 	}
 
 	// Also UV, Normal, and Transforms (and possibly "do this to all" versions that don't use transforms?)

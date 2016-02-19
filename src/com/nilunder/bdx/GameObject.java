@@ -68,7 +68,7 @@ public class GameObject implements Named{
 	public float logicCounter;
 	private Vector3f scale;
 	private Mesh mesh;
-	
+
 	public enum BodyType {
 		NO_COLLISION,
 		STATIC,
@@ -1145,6 +1145,52 @@ public class GameObject implements Named{
 
 	public Vector3f vecTo(GameObject other){
 		return vecTo(other.position());
+	}
+
+	public void drawBones() {
+
+		ArrayList<Node> nodes = new ArrayList<Node>();
+
+		for (Node n : mesh().model.getNode("armature").getChildren())
+			nodes.add(n);
+
+		boolean looping = true;
+
+		while (looping) {
+
+			looping = false;
+
+			for (Node n : new ArrayList<Node>(nodes)) {
+
+				Color red = new Color(1, 0, 0, 1);
+				float w = 0.2f;
+
+				scene.drawLine(position().plus(new Vector3f(n.translation.x - w, n.translation.y - w, n.translation.z - w)), position().plus(new Vector3f(n.translation.x + w, n.translation.y + w, n.translation.z + w)), red);
+				scene.drawLine(position().plus(new Vector3f(n.translation.x + w, n.translation.y - w, n.translation.z - w)), position().plus(new Vector3f(n.translation.x - w, n.translation.y + w, n.translation.z + w)), red);
+
+				scene.drawLine(position().plus(new Vector3f(n.translation.x - w, n.translation.y + w, n.translation.z - w)), position().plus(new Vector3f(n.translation.x + w, n.translation.y - w, n.translation.z + w)), red);
+				scene.drawLine(position().plus(new Vector3f(n.translation.x + w, n.translation.y + w, n.translation.z - w)), position().plus(new Vector3f(n.translation.x - w, n.translation.y - w, n.translation.z + w)), red);
+
+				for (Node c : n.getChildren()) {
+
+					nodes.add(c);
+					looping = true;
+
+					Color green = new Color(0, 1, 0, 1);
+					scene.drawLine(new Vector3f(n.translation.x, n.translation.y, n.translation.z).plus(position()),
+							new Vector3f(c.translation.x, c.translation.y, c.translation.z).plus(position()),
+							green);
+
+				}
+
+				scene.drawPoint(new Vector3f(n.translation.x, n.translation.y, n.translation.z).plus(position()), new Color(1, 1, 1, 1));
+
+				nodes.remove(n);
+
+			}
+
+		}
+
 	}
 
 }

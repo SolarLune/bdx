@@ -17,6 +17,8 @@ import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
+import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -308,12 +310,15 @@ public class Scene implements Named{
 			g.origin = origin == null ? new Vector3f() : new Vector3f(origin.asFloatArray());
 			g.dimensionsNoScale = dimensions == null ? new Vector3f(1, 1, 1) : new Vector3f(dimensions.asFloatArray());
 			JsonValue physics = gobj.get("physics");
-			
+
 			g.currBodyType = GameObject.BodyType.valueOf(physics.get("body_type").asString());
 			g.currBoundsType = GameObject.BoundsType.valueOf(physics.get("bounds_type").asString());
 			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
 			g.scale(getGLMatrixScale(trans));
+
+			if (gobj.get("bones") != null)
+				g.mesh().constructArmature(gobj.get("bones"));
 
 			String type = gobj.get("type").asString();
 			if (type.equals("FONT")){
@@ -374,14 +379,14 @@ public class Scene implements Named{
 				vec.prj(pm);
 				c.far(-vec.z);
 			}
-			
+
 			templates.put(g.name, g);
 		}
 
 		hookParentChild();
 		
 		cameras = new ArrayListNamed<Camera>();
-		
+
 		addInstances();
 		
 		camera = (Camera) objects.get(json.get("cameras").asStringArray()[0]);
@@ -395,7 +400,7 @@ public class Scene implements Named{
 			viewportType = Viewport.Type.SCALE;
 		}
 		viewport = new Viewport(this, viewportType);
-		
+
 		for (GameObject g : sortByPriority(new ArrayList<GameObject>(objects))){
 			initGameObject(g);
 		}
@@ -475,9 +480,9 @@ public class Scene implements Named{
 		
 		g.name = gobj.name;
 		g.visibleNoChildren(gobj.visible());
-		
+
 		g.scene = this;
-		
+
 		g.mesh(gobj.mesh());
 
 		g.body = Bullet.cloneBody(gobj.body);

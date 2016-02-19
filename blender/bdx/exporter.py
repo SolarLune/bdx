@@ -286,6 +286,29 @@ def srl_materials_text(texts):
     return name_gmat
 
 
+def srl_bones(armature):
+
+    d = []
+
+    def write_bone(bone):
+        bp, br, bs = bone.matrix_local.decompose()
+        bone_info = {"id": bone.name,
+                     "translation": list(bp),
+                     "scaling": list(bs),
+                     "rotation": list(br),
+                     "children": []}
+        if bone.children:
+            for child in bone.children:
+                bone_info['children'].append(child.name)
+
+        return bone_info
+
+    for bone in armature.bones:
+        d.append(write_bone(bone))
+
+    return d
+
+
 def view_plane(camd, winx, winy, xasp, yasp):
     """
     "DEAR GOD WHY??!!"
@@ -474,13 +497,21 @@ def srl_objects(objects):
 
         transform = sum([list(v) for v in matrix.col], [])
 
+        parent = obj.parent
+
+        while parent is not None and parent.type == "ARMATURE":
+            parent = parent.parent
+
+        if parent is not None:
+            parent = parent.name
+
         name_object[obj.name] = {
             "class": get_cls_name(obj),
             "use_priority": obj.bdx.cls_use_priority,
             "type": obj.type,
             "properties": {n: p.value for n, p in obj.game.properties.items()},
             "transform": transform,
-            "parent": obj.parent.name if obj.parent else None,
+            "parent": parent,
             "mesh_name": mesh_name,
             "active": in_active_layer(obj),
             "visible": not obj.hide_render,
@@ -500,6 +531,9 @@ def srl_objects(objects):
         }
 
         d = name_object[obj.name]
+
+        if obj.type == "MESH" and obj.parent is not None and obj.parent.type == "ARMATURE":
+            d['bones'] = srl_bones(obj.parent.data)
 
         if obj.type == "CAMERA":
             d["camera"] = {
@@ -572,6 +606,7 @@ def srl_objects(objects):
 def used_materials(objects):
     return sum([[m for m in o.data.materials if m] for o in objects
                 if o.type == "MESH"], [])
+
 
 def srl_materials(materials):
     def texture_name(m):
