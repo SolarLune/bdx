@@ -4,10 +4,11 @@ import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.graphics.*;
 
 public class Text extends GameObject{
-	public String text;
+	private String text;
 	public JsonValue font;
+	public int capacity;
 
-	public void set(String txt){
+	public void text(String txt){
 		// Reform quads according to Angel Code font format
 		Mesh mesh = modelInstance.model.meshes.first();
 		int vertexSize = mesh.getVertexSize() / 4;
@@ -78,5 +79,7 @@ public class Text extends GameObject{
 		mesh.setVertices(verts, 0, verts.length);
 
 	}
-
+	public String text(){
+		return text;
+	}
 }
