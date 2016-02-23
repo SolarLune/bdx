@@ -78,6 +78,7 @@ public class Scene implements Named{
 	public RenderBuffer lastFrameBuffer;
 	public Environment environment;
 	static private ShapeRenderer shapeRenderer;
+	private ArrayList<ArrayList<Object>> drawCommands;
 
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
@@ -138,6 +139,7 @@ public class Scene implements Named{
 
 		if (shapeRenderer == null)
 			shapeRenderer = new ShapeRenderer();
+		drawCommands = new ArrayList<ArrayList<Object>>();
 		lastFrameBuffer = new RenderBuffer(null);
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0, 0, 0, 1));
@@ -868,20 +870,50 @@ public class Scene implements Named{
 
 	}
 
-	public void drawLine(Vector3f start, Vector3f end, Vector4f color){
-		shapeRenderer.setProjectionMatrix(camera.data.combined);
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-		shapeRenderer.setColor(color.x, color.y, color.z, color.w);
-		shapeRenderer.line(start.x, start.y, start.z, end.x, end.y, end.z);
-		shapeRenderer.end();
+	public void drawLine(Vector3f start, Vector3f end, Color color){
+		ArrayList<Object> commands = new ArrayList<Object>();
+		commands.add("drawLine");
+		commands.add(color);
+		commands.add(start);
+		commands.add(end);
+		drawCommands.add(commands);
 	}
 
-	public void drawPoint(Vector3f point, Vector4f color){
-		shapeRenderer.setProjectionMatrix(camera.data.combined);
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Point);
-		shapeRenderer.setColor(color.x, color.y, color.z, color.w);
-		shapeRenderer.point(point.x, point.y, point.z);
-		shapeRenderer.end();
+	public void drawPoint(Vector3f point, Color color){
+		ArrayList<Object> commands = new ArrayList<Object>();
+		commands.add("drawPoint");
+		commands.add(color);
+		commands.add(point);
+		drawCommands.add(commands);
+	}
+
+	public void executeDrawCommands(){
+
+		for (ArrayList<Object> commands : drawCommands) {
+
+			String func = (String) commands.get(0);
+			Color color = (Color) commands.get(1);
+			Vector3f start = (Vector3f) commands.get(2);
+
+			if (func.equals("drawLine")) {
+				Vector3f end = (Vector3f) commands.get(3);
+				shapeRenderer.setProjectionMatrix(camera.data.combined);
+				shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+				shapeRenderer.setColor(color);
+				shapeRenderer.line(start.x, start.y, start.z, end.x, end.y, end.z);
+				shapeRenderer.end();
+			}
+			else {
+				shapeRenderer.setProjectionMatrix(camera.data.combined);
+				shapeRenderer.begin(ShapeRenderer.ShapeType.Point);
+				shapeRenderer.setColor(color);
+				shapeRenderer.point(start.x, start.y, start.z);
+				shapeRenderer.end();
+			}
+		}
+
+		drawCommands.clear();
+
 	}
 
 }

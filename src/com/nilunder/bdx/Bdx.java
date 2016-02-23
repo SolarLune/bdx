@@ -242,6 +242,8 @@ public class Bdx{
 			}
 			modelBatch.end();
 
+			scene.executeDrawCommands();
+
 			if (scene.filters.size() > 0){
 				
 				frameBuffer.end();
@@ -306,6 +308,7 @@ public class Bdx{
 				}
 			}
 			modelBatch.end();
+			profilerScene.executeDrawCommands();
 		}
 		if (profiler.gl.isEnabled()){
 			profiler.gl.updateFields();
