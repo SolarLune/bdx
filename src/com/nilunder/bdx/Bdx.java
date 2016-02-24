@@ -9,12 +9,15 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
+import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
+import com.nilunder.bdx.gl.BDXDepthShaderProvider;
 import com.nilunder.bdx.gl.BDXShaderProvider;
 import com.nilunder.bdx.gl.RenderBuffer;
 import com.nilunder.bdx.gl.ShaderProgram;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.*;
+import com.nilunder.bdx.utils.Color;
 import com.nilunder.bdx.utils.Timer;
 
 import javax.vecmath.Vector2f;
@@ -46,8 +49,12 @@ public class Bdx{
 		public boolean fullscreen(){
 			return Gdx.graphics.isFullscreen();
 		}
-		public void clearColor(float r, float g, float b, float a){
-			Gdx.gl.glClearColor(r, g, b, a);
+		public void clearColor(Color color){
+			clearColor.set(color);
+			Gdx.gl.glClearColor(color.r, color.g, color.b, color.a);
+		}
+		public Color clearColor(){
+			return clearColor;
 		}
 		public static void advancedLighting(boolean on){
 			advancedLightingOn = on;
@@ -147,10 +154,14 @@ public class Bdx{
 	private static boolean advancedLightingOn;
 	private static ArrayList<Finger> allocatedFingers;
 	private static ModelBatch modelBatch;
+	private static ModelBatch depthBatch;
 	private static RenderBuffer frameBuffer;
 	private static RenderBuffer tempBuffer;
+	private static RenderBuffer depthBuffer;
 	private static SpriteBatch spriteBatch;
 	private static Timer refreshGamepadsTimer;
+	private static Color clearColor;
+	private static BDXDepthShaderProvider depthShaderProvider;
 	
 	public static void init(){
 		time = 0;
@@ -185,6 +196,12 @@ public class Bdx{
 		spriteBatch.setBlendFunction(Gdx.gl.GL_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
 		frameBuffer = new RenderBuffer(spriteBatch);
 		tempBuffer = new RenderBuffer(spriteBatch);
+		depthBuffer = new RenderBuffer(spriteBatch);
+		depthShaderProvider = new BDXDepthShaderProvider(Gdx.files.internal("bdx/shaders/2d/depthExtract.vert"), Gdx.files.internal("bdx/shaders/2d/depthExtract.frag"));
+
+		depthBatch = new ModelBatch(depthShaderProvider);
+		clearColor = new Color();
+
 		advancedLightingOn = true;
 
 		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers, gamepads));
@@ -222,6 +239,8 @@ public class Bdx{
 		profiler.stop("__input");
 
 		for (Scene scene : (ArrayListScenes)scenes.clone()){
+			depthShaderProvider.updateScene(scene);
+
 			scene.update();
 
 			profiler.start("__render");
@@ -245,9 +264,32 @@ public class Bdx{
 			scene.executeDrawCommands();
 
 			if (scene.filters.size() > 0){
-				
+
 				frameBuffer.end();
-				
+
+				boolean usingDepth = false;
+
+				for (ShaderProgram filter : scene.filters) {
+					if (filter.usingDepthTexture())
+						usingDepth = true;
+				}
+
+				if (usingDepth) {
+					Gdx.gl.glClearColor(1, 1, 1, 1);
+					depthBuffer.begin();
+					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
+					depthBatch.begin(scene.camera.data);
+					for (GameObject g : scene.objects) {
+						if (g.visible() && g.insideFrustum()) {
+							depthBatch.render(g.modelInstance);
+						}
+					}
+					depthBatch.end();
+					depthBuffer.end();
+					display.clearColor(display.clearColor());
+					depthBuffer.getColorBufferTexture().bind(2);
+				}
+
 				scene.lastFrameBuffer.getColorBufferTexture().bind(1);
 				Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
 
@@ -256,8 +298,11 @@ public class Bdx{
 					filter.begin();
 					filter.setUniformf("time", Bdx.time);
 					filter.setUniformi("lastFrame", 1);
+					filter.setUniformi("depthTexture", 2);
 					filter.setUniformf("screenWidth", Bdx.display.size().x);
 					filter.setUniformf("screenHeight", Bdx.display.size().y);
+					filter.setUniformf("near", scene.camera.near());
+					filter.setUniformf("far", scene.camera.far());
 					filter.end();
 											
 					tempBuffer.clear();
@@ -317,9 +362,11 @@ public class Bdx{
 	
 	public static void dispose(){
 		modelBatch.dispose();
+		depthBatch.dispose();
 		spriteBatch.dispose();
 		frameBuffer.dispose();
 		tempBuffer.dispose();
+		depthBuffer.dispose();
 		shaderProvider.dispose();
 		for (ShaderProgram s : Bdx.matShaders.values()) {
 			s.dispose();
@@ -337,9 +384,13 @@ public class Bdx{
 			frameBuffer.dispose();
 		if (tempBuffer != null)
 			tempBuffer.dispose();
+		if (depthBuffer != null)
+			depthBuffer.dispose();
 		
 		frameBuffer = new RenderBuffer(spriteBatch);		// Have to recreate all render buffers and adjust the projection matrix as the window size has changed
 		tempBuffer = new RenderBuffer(spriteBatch);
+		depthBuffer = new RenderBuffer(spriteBatch);
+
 		for (Scene scene : scenes) {
 
 			if (scene.lastFrameBuffer != null)

@@ -425,6 +425,10 @@ public class Scene implements Named{
 		if (g instanceof Camera){
 			Camera c = (Camera)g;
 			c.data.projection.set(c.json.get("camera").get("projection").asFloatArray());
+			if (c.json.get("camera").get("type").asString().equals("PERSP"))
+				c.type = Camera.Type.PERSPECTIVE;
+			else
+				c.type = Camera.Type.ORTHOGRAPHIC;
 		}else if (g instanceof Text){
 			Text t = (Text)g;
 			Text tt = (Text)gobj;
