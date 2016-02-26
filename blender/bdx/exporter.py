@@ -26,7 +26,7 @@ def triform(loop_indices):
 
     if len(indices) < 4:
         return indices
-    
+
     return [indices[i] for i in (0, 1, 2, 2, 3, 0)]
 
 class EmptyUV:
@@ -36,7 +36,7 @@ class EmptyUV:
 
 def flip_uv(uv):
     uv[1] = 1 - uv[1]
-    
+
 def vertices(mesh):
     uv_act = mesh.uv_layers.active
     uv_layer = uv_act.data if uv_act is not None else EmptyUV()
@@ -95,16 +95,15 @@ def mat_tris(mesh):
 
     return m_ps
 
-def used_meshes(objects):
-    return [o.data for o in objects 
-            if o.type == "MESH"]
-
-def srl_models(meshes):
+def srl_models(objects, use_mesh_modifiers):
     name_model = {}
 
     tfs = 3 * 8 # triangle float size: 3 verts at 8 floats each
 
-    for mesh in meshes:
+    for o in objects:
+        if o.type != "MESH":
+            continue
+        mesh = o.to_mesh(bpy.context.scene, use_mesh_modifiers, "PREVIEW")
         m_tris = mat_tris(mesh)
         verts = vertices(mesh)
         m_verts = OrderedDict()
@@ -120,37 +119,37 @@ def srl_models(meshes):
             if mat in m_tris.keys():
                 m, tris = mat, m_tris[mat]
                 m_verts[m] = numpy.concatenate([verts[i * tfs : i * tfs + tfs] for i in tris]).tolist()
-        name_model[mesh.name] = m_verts
+        name_model[o.data.name] = m_verts
 
     return name_model
 
 def srl_origins(objects):
     name_origin = {}
-    
+
     for o in objects:
         if o.type == "MESH":
             mesh_name = o.data.name
             if mesh_name not in name_origin:
                 origin = sum([mt.Vector(fv) for fv in o.bound_box], mt.Vector()) / len(o.bound_box)
                 name_origin[mesh_name] = list(origin)
-    
+
     return name_origin
 
 def srl_dimensions(objects):
     name_dimensions = {}
-    
+
     for o in objects:
         if o.type in ("MESH", "FONT"):
             data_name = "__FNT_" + o.data.name if o.type == "FONT" else o.data.name
             if data_name not in name_dimensions:
                 name_dimensions[data_name] = [d / s for d, s in zip(o.dimensions, o.scale)]
-    
+
     return name_dimensions
 
 def char_uvs(char, angel_code):
     """
     Return a list of uv coordinates (for a quad)
-    which encompass the relevant character on the font 
+    which encompass the relevant character on the font
     texture, as specified by the angel code format.
 
     """
@@ -242,8 +241,8 @@ def srl_models_text(texts, fntx_dir):
                 return m.name
         return ""
 
-    return {"__FNT_"+t.name: 
-                {"__FNT_"+mat_name(t)+t.font.name: vertices_text(t, fntx(t))} 
+    return {"__FNT_"+t.name:
+                {"__FNT_"+mat_name(t)+t.font.name: vertices_text(t, fntx(t))}
             for t in texts}
 
 def srl_materials_text(texts):
@@ -406,10 +405,10 @@ def get_cls_name(obj):
 
 
 def relevant_region_3d_data():
-    
+
     def get_areas_3d_data(areas):
         return [[a, a.height * a.width] for a in areas if a.type == "VIEW_3D"]
-    
+
     if scene != bpy.context.scene:
         return
     r3d = bpy.context.region_data
@@ -495,11 +494,11 @@ def srl_objects(objects):
                 "projection": projection_matrix(obj.data),
                 "type": obj.data.type
             }
-            
+
         elif obj.type == "FONT":
             d["font"] = obj.data.font.name
             d["text"] = obj.data.body
-            
+
         elif obj.type == "LAMP":
             d['lamp'] = {
                 "type": obj.data.type,
@@ -509,15 +508,15 @@ def srl_objects(objects):
             }
             if obj.data.type == "SPOT":
                 d["lamp"]["spot_size"] = obj.data.spot_size
-    
+
     r3d = relevant_region_3d_data()
     if r3d:
-        
+
         view_type = r3d.view_perspective
         view_matrix = sum([list(v) for v in r3d.view_matrix.inverted().col], [])
         view_projection = sum([list(v) for v in r3d.window_matrix.col], [])
         r = bpy.context.scene.render.resolution_x / bpy.context.scene.render.resolution_y
-        
+
         if view_type == "PERSP":
             view_projection[0] = 1
             view_projection[5] = r
@@ -553,12 +552,12 @@ def srl_objects(objects):
                 "type": view_type
             }
         }
-    
+
     return name_object
 
 
 def used_materials(objects):
-    return sum([[m for m in o.data.materials if m] for o in objects 
+    return sum([[m for m in o.data.materials if m] for o in objects
                 if o.type == "MESH"], [])
 
 def srl_materials(materials):
@@ -667,10 +666,10 @@ def srl_actions(actions):
 
     index = lambda c: relevant[c.data_path] + c.array_index
 
-    srl_keyframe = lambda kf: [list(p) 
+    srl_keyframe = lambda kf: [list(p)
                                for p in (kf.handle_left, kf.co, kf.handle_right)]
-    return {a.name: 
-                {index(c): 
+    return {a.name:
+                {index(c):
                     [srl_keyframe(kf)
                      for kf in c.keyframe_points]
                  for c in a.fcurves if c.data_path in relevant}
@@ -748,7 +747,7 @@ def generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir):
 
 scene = None;
 
-def export(context, filepath, scene_name, exprun):
+def export(context, filepath, scene_name, exprun, apply_modifier):
     global scene;
     scene = bpy.data.scenes[scene_name] if scene_name else context.scene
 
@@ -778,7 +777,7 @@ def export(context, filepath, scene_name, exprun):
         "physviz": scene.game_settings.show_physics_visualization,
         "framerateProfile": scene.game_settings.show_framerate_profile,
         "ambientColor": ambient_color,
-        "models": srl_models(used_meshes(objects)),
+        "models": srl_models(objects, apply_modifier),
         "origins": srl_origins(objects),
         "dimensions": srl_dimensions(objects),
         "objects": srl_objects(objects),
@@ -839,8 +838,14 @@ class ExportBdx(Operator, ExportHelper):
             default=False,
             )
 
+    apply_modifier = BoolProperty(
+            name="Apply Modifiers",
+            description="Apply the modifiers before saving",
+            default=True,
+            )
+
     def execute(self, context):
-        return export(context, self.filepath, self.scene_name, self.exprun)
+        return export(context, self.filepath, self.scene_name, self.exprun, self.apply_modifier)
 
 
 def menu_func_export(self, context):
