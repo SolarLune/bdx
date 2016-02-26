@@ -10,6 +10,8 @@ public class ShaderProgram extends com.badlogic.gdx.graphics.glutils.ShaderProgr
 	public Vector2f renderScale;
 	public boolean overlay;
 	static public boolean nearestFiltering = false;
+	private boolean usingDepthTexture = false;
+	private boolean checkedShaderProgram = false;
 	
 	public ShaderProgram(String vertexShader, String fragmentShader) {
 
@@ -28,6 +30,21 @@ public class ShaderProgram extends com.badlogic.gdx.graphics.glutils.ShaderProgr
 	
 	public static ShaderProgram load(String vertexPath, String fragmentPath) {
 		return new ShaderProgram(Gdx.files.internal(vertexPath), Gdx.files.internal(fragmentPath));
+	}
+
+	public boolean usingDepthTexture(){
+		checkBuffers();
+		return usingDepthTexture;
+	}
+
+	public void checkBuffers(){
+		if (!checkedShaderProgram) {
+
+			if (getFragmentShaderSource().contains("depthTexture"))
+				usingDepthTexture = true;
+
+			checkedShaderProgram = true;
+		}
 	}
 	
 }

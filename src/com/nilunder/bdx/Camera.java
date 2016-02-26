@@ -11,6 +11,12 @@ import javax.vecmath.*;
 public class Camera extends GameObject{
 
 	PerspectiveCamera data;
+	public Type type;
+
+	public enum Type {
+		PERSPECTIVE,
+		ORTHOGRAPHIC
+	}
 
 	public Camera(){
 		data = new PerspectiveCamera();
@@ -35,8 +41,7 @@ public class Camera extends GameObject{
 	public float fov(){
 		Matrix4f p = projection();
 		float fov;
-		String type = json.get("camera").get("type").asString();
-		if (type.equals("ORTHO")){
+		if (type == Type.ORTHOGRAPHIC){
 			fov = 2/p.m11;
 		}else{
 			fov = (float)(Math.atan(1/p.m11) * 2);
@@ -49,8 +54,8 @@ public class Camera extends GameObject{
 		Matrix4f p = projection();
 		float w = Gdx.app.getGraphics().getWidth();
 		float h = Gdx.app.getGraphics().getHeight();
-		String type = json.get("camera").get("type").asString();
-		if (type.equals("ORTHO")){
+
+		if (type == Type.ORTHOGRAPHIC){
 			p.m00 = 2/fov/(w/h);
 			p.m11 = 2/fov;
 		}else{
@@ -61,6 +66,22 @@ public class Camera extends GameObject{
 			p.m11 = atan;
 		}
 		projection(p);
+	}
+
+	public float near(){
+		Matrix4f proj = projection();
+		if (type == Type.PERSPECTIVE)
+			return (proj.m23 / (proj.m22 - 1));
+		else
+			return (1 + proj.m23) / proj.m22;
+	}
+
+	public float far(){
+		Matrix4f proj = projection();
+		if (type == Type.PERSPECTIVE)
+			return (proj.m23 / (proj.m22 + 1));
+		else
+			return -(1 - proj.m23) / proj.m22;
 	}
 
 	public Vector2f screenPosition(Vector3f worldPosition){
