@@ -690,9 +690,13 @@ public class GameObject implements Named{
 	}
 
 	public void colorNoChildren(Color color){
-		for (Material mat : modelInstance.materials){
+		for (Material mat : modelInstance.materials) {
 			ColorAttribute ca = (ColorAttribute) mat.get(ColorAttribute.Diffuse);
 			ca.color.set(color);
+			if (mat.get(BlendingAttribute.Type) != null) {
+				BlendingAttribute ba = (BlendingAttribute) mat.get(BlendingAttribute.Type);
+				ba.opacity = color.a;
+			}
 		}
 	}
 
