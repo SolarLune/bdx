@@ -24,6 +24,7 @@ import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
@@ -255,34 +256,14 @@ public class Scene implements Named{
 
 		for (JsonValue gobj: json.get("objects")){
 			GameObject g = instantiator.newObject(gobj);
-
-			String type = gobj.get("type").asString();
-			if (type.equals("FONT")){
-				Text t = (Text)g;
-				t.font = fonts.get(gobj.get("font").asString());
-			}
-			else if (type.equals("LAMP")) {
-				JsonValue settings = gobj.get("lamp");
-				Light l = (Light)g;
-
-				if (settings.getString("type").equals("POINT"))
-					l.type = Light.Type.POINT;
-				else if (settings.getString("type").equals("SUN"))
-					l.type = Light.Type.SUN;
-				else if (settings.getString("type").equals("SPOT"))
-					l.type = Light.Type.SPOT;
-
-				l.energy(settings.getFloat("energy"));
-				float[] c = settings.get("color").asFloatArray();
-				l.color(new Color(c[0], c[1], c[2], c[3]));
-
-				if (l.type.equals(Light.Type.SPOT)) {
-					l.spotSize(settings.getFloat("spot_size"));
-				}
-			}
-
+			g.json = gobj;
 			g.name = gobj.name;
-
+			g.scene = this;
+			g.props = new HashMap<String, JsonValue>();
+			for (JsonValue prop : gobj.get("properties")){
+				g.props.put(prop.name, prop);
+			}
+						
 			String modelName = gobj.get("mesh_name").asString();
 			if (modelName != null){
 				g.visibleNoChildren(gobj.get("visible").asBoolean());
@@ -302,26 +283,57 @@ public class Scene implements Named{
 			g.currBoundsType = physics.get("bounds_type").asString();
 			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
-			
-			g.props = new HashMap<String, JsonValue>();
-			for (JsonValue prop : gobj.get("properties")){
-				g.props.put(prop.name, prop);
-			}
-			
-			g.json = gobj;
-
-			g.scene = this;
-
 			g.scale(getGLMatrixScale(trans));
-
-			templates.put(g.name, g);
-
-			if (type.equals("FONT")) {
-				Text t = (Text) g;
+			
+			String type = gobj.get("type").asString();
+			if (type.equals("FONT")){
+				Text t = (Text)g;
+				t.font = fonts.get(gobj.get("font").asString());
 				t.text(gobj.get("text").asString());
 				t.capacity = t.text().length();
+			}else if (type.equals("LAMP")){
+				JsonValue settings = gobj.get("lamp");
+				Light l = (Light)g;
+
+				if (settings.getString("type").equals("POINT"))
+					l.type = Light.Type.POINT;
+				else if (settings.getString("type").equals("SUN"))
+					l.type = Light.Type.SUN;
+				else if (settings.getString("type").equals("SPOT"))
+					l.type = Light.Type.SPOT;
+
+				l.energy(settings.getFloat("energy"));
+				float[] c = settings.get("color").asFloatArray();
+				l.color(new Color(c[0], c[1], c[2], c[3]));
+
+				if (l.type.equals(Light.Type.SPOT)) {
+					l.spotSize(settings.getFloat("spot_size"));
+				}
+			}else if (type.equals("CAMERA")){
+				Camera c = (Camera)g;
+				Vector2f ds = Bdx.display.size();
+				float[] projection = gobj.get("camera").get("projection").asFloatArray();
+				if (gobj.get("camera").get("type").asString().equals("PERSP")){
+					c.initData(Camera.Type.PERSPECTIVE);
+					c.projection(new Matrix4f(projection));
+					c.fov(c.fov());
+				}else{
+					c.initData(Camera.Type.ORTHOGRAPHIC);
+					c.zoom(2 / (projection[0] * ds.x));
+				}
+				Matrix4 pm = new Matrix4(projection);
+				pm.inv();
+				Vector3 vec = new Vector3(0, 0, -1);
+				vec.prj(pm);
+				c.near(-vec.z);
+				vec.set(0, 0, 1);
+				vec.prj(pm);
+				c.far(-vec.z);
+				c.width(ds.x);
+				c.height(ds.y);
 			}
 			
+			templates.put(g.name, g);
 		}
 
 		hookParentChild();
@@ -424,11 +436,18 @@ public class Scene implements Named{
 
 		if (g instanceof Camera){
 			Camera c = (Camera)g;
-			c.data.projection.set(c.json.get("camera").get("projection").asFloatArray());
-			if (c.json.get("camera").get("type").asString().equals("PERSP"))
-				c.type = Camera.Type.PERSPECTIVE;
-			else
-				c.type = Camera.Type.ORTHOGRAPHIC;
+			Camera cobj = (Camera)gobj;
+			c.initData(cobj.type);
+			if (c.type == Camera.Type.PERSPECTIVE){
+				c.fov(cobj.fov());
+			}else{
+				c.zoom(cobj.zoom());
+			}
+			c.near(cobj.near());
+			c.far(cobj.far());
+			c.width(cobj.width());
+			c.height(cobj.height());
+			c.update();
 		}else if (g instanceof Text){
 			Text t = (Text)g;
 			Text tt = (Text)gobj;
@@ -436,8 +455,7 @@ public class Scene implements Named{
 			t.text(tt.text());
 			t.capacity = tt.capacity;
 			t.useUniqueModel();
-		}
-		else if (g instanceof Light) {
+		}else if (g instanceof Light){
 			Light l = (Light)g;
 			Light ll = (Light)gobj;
 			l.energy(ll.energy());
@@ -786,25 +804,6 @@ public class Scene implements Named{
 		}
 	}
 	
-	private void updateCamera(){
-		// MVP
-		Transform t = new Transform();
-		float[] m = new float[16];
-		camera.body.getWorldTransform(t);
-		camera.data.position.set(t.origin.x, t.origin.y, t.origin.z);
-		t.inverse();
-		t.getOpenGLMatrix(m);
-		camera.data.view.set(m);
-		camera.data.combined.set(camera.data.projection);
-		Matrix4.mul(camera.data.combined.val, camera.data.view.val);
-
-		// Frustum 
-		camera.data.invProjectionView.set(camera.data.combined);
-		Matrix4.inv(camera.data.invProjectionView.val);
-		camera.data.frustum.update(camera.data.invProjectionView);
-
-	}
-	
 	public void ambientLight(Vector3f color){
 		ambientLight(color.x, color.y, color.z);
 	}
@@ -830,7 +829,7 @@ public class Scene implements Named{
 			updateVisuals();
 			Bdx.profiler.stop("__visuals");
 			
-			updateCamera();
+			camera.update();
 			Bdx.profiler.stop("__camera");
 			
 			try{
