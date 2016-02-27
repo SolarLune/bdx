@@ -22,7 +22,7 @@ varying HIGH float v_depth;
 
 void main() {
 	#ifdef blendedTextureFlag
-		if (texture2D(u_diffuseTexture, v_texCoords0).a < u_alphaTest)
+		if (texture2D(u_diffuseTexture, v_texCoords0).a <= u_alphaTest)
 			discard;
 	#endif // blendedTextureFlag
 

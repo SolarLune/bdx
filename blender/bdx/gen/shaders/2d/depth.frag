@@ -5,7 +5,6 @@
 #endif
 
 varying vec2 v_texCoords;
-uniform sampler2D u_texture;
 uniform sampler2D depthTexture;
 uniform float far;
 uniform float near;
@@ -19,6 +18,6 @@ float getDepth(vec4 rgba)
 
 void main() {
 
-    gl_FragColor = getDepth(texture2D(depthTexture, v_texCoords));
+    gl_FragColor = vec4(vec3(getDepth(texture2D(depthTexture, v_texCoords))), 1.0);
 
 }
