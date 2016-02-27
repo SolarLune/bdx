@@ -174,7 +174,7 @@ public class Profiler{
 	}
 	
 	private final int TICK_RATE = Bdx.TICK_RATE;
-	private final Vector3f SCREEN_SIZE = new Vector3f(448, 448, 1);
+	private final float SCREEN_SIZE = 512;
 	private final Color BG_COLOR = new Color(0.125f, 0.125f, 0.125f, 0.5f);
 	private final float SPACING = 0.6f;
 	private final float BAR_HEIGHT = 0.4f;
@@ -198,6 +198,7 @@ public class Profiler{
 	private HashMap<String, GameObject> bars;
 	
 	private float scale;
+	private float ratio;
 	private boolean visible;
 	private boolean tickInfoVisible;
 	private boolean subsystemsVisible;
@@ -298,7 +299,6 @@ public class Profiler{
 		horizontalOffset = BAR_POSITION + SPACING;
 		visible = framerateProfile;
 		if (visible){
-			lastDisplaySize = Bdx.display.size();
 			
 			if (scene == null){
 				scene = new Scene("__Profiler");
@@ -309,7 +309,13 @@ public class Profiler{
 				background.color(BG_COLOR);
 				background.parent(display);
 				
-				updateScale();
+				lastDisplaySize = Bdx.display.size();
+				ratio = lastDisplaySize.y / lastDisplaySize.x;
+				Vector3f p = scene.camera.position();
+				p.y *= ratio;
+				scene.camera.position(p);
+				
+				updateDisplay();
 			}
 			
 			if (tickInfoVisible){
@@ -435,8 +441,8 @@ public class Profiler{
 		}
 	}
 	
-	private void updateScale(){
-		display.scale(SCREEN_SIZE.div(new Vector3f(lastDisplaySize.x, lastDisplaySize.y, 1)).mul(scale));
+	private void updateDisplay(){
+		display.scale(new Vector3f(SCREEN_SIZE / lastDisplaySize.x, ratio * SCREEN_SIZE / lastDisplaySize.y, 1).mul(scale));
 	}
 	
 	public void scale(float f){
@@ -445,7 +451,7 @@ public class Profiler{
 			return;
 		}
 		scale = f;
-		updateScale();
+		updateDisplay();
 	}
 	
 	public void updateVariables(){
@@ -540,7 +546,7 @@ public class Profiler{
 		Vector2f ds = Bdx.display.size();
 		if (!lastDisplaySize.equals(ds)){
 			lastDisplaySize = ds;
-			updateScale();
+			updateDisplay();
 		}
 	}
 	
