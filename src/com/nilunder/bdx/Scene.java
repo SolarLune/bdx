@@ -80,6 +80,7 @@ public class Scene implements Named{
 	public Environment environment;
 	static private ShapeRenderer shapeRenderer;
 	private ArrayList<ArrayList<Object>> drawCommands;
+	static private boolean clearColorDefaultSet;
 
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
@@ -180,9 +181,18 @@ public class Scene implements Named{
 		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 		world.setDebugDrawer(new Bullet.DebugDrawer(json.get("physviz").asBoolean()));
 		gravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
-		ambientLight(new Vector3f(json.get("ambientColor").asFloatArray()));
+
+		float[] ac = json.get("ambientColor").asFloatArray();
+		ambientLight(new Color(ac[0], ac[1], ac[2], 1));
+
+		if (!clearColorDefaultSet) {
+			float[] cc = json.get("clearColor").asFloatArray();
+			Bdx.display.clearColor(new Color(cc[0], cc[1], cc[2], 0));
+			clearColorDefaultSet = true;
+		}
 
 		Bdx.profiler.init(json.get("framerateProfile").asBoolean());
+
 
 		for (JsonValue mat : json.get("materials")){
 			String texName = mat.get("texture").asString();
@@ -803,21 +813,17 @@ public class Scene implements Named{
 			}
 		}
 	}
-	
-	public void ambientLight(Vector3f color){
-		ambientLight(color.x, color.y, color.z);
-	}
-	
-	public void ambientLight(float r, float g, float b) {
+
+	public void ambientLight(Color color) {
 		ColorAttribute ca = (ColorAttribute) environment.get(ColorAttribute.AmbientLight);
-		ca.color.set(r, g, b, 1);
+		ca.color.set(color);
 	}
 	
-	public Vector3f ambientLight(){
+	public Color ambientLight(){
 		ColorAttribute ca = (ColorAttribute) environment.get(ColorAttribute.AmbientLight);
-		return new Vector3f(ca.color.r, ca.color.g, ca.color.b);
+		return new Color(ca.color);
 	}
-	
+
 	public void update(){
 		
 		if (!paused){

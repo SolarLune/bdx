@@ -745,10 +745,11 @@ def generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir):
         os.remove(f)
 
 
-scene = None;
+scene = None
+
 
 def export(context, filepath, scene_name, exprun, apply_modifier):
-    global scene;
+    global scene
     scene = bpy.data.scenes[scene_name] if scene_name else context.scene
 
     objects = list(scene.objects)
@@ -766,10 +767,12 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
     ts = texts(objects)
     fonts = used_fonts(ts)
 
-    if scene.world != None:
+    if scene.world is not None:
         ambient_color = list(scene.world.ambient_color)
+        clear_color = list(scene.world.horizon_color)
     else:
         ambient_color = [0.0, 0.0, 0.0]
+        clear_color = [0.051, 0.051, 0.051]
 
     bdx = {
         "name": scene.name,
@@ -784,7 +787,8 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         "materials": srl_materials(used_materials(objects)),
         "cameras": camera_names(scene),
         "actions": srl_actions(bpy.data.actions),
-        "fonts": [f.name for f in fonts]
+        "fonts": [f.name for f in fonts],
+        "clearColor": clear_color
     }
 
     if exprun:
