@@ -464,8 +464,8 @@ public class Profiler{
 		for (long l : tickTimes){
 			sumTickTimes += l;
 		}
-		avgTickTime = 1000000000000f / (TICK_RATE * sumTickTimes);
 		avgTickRate = TICK_RATE * 1000000000f / sumTickTimes;
+		avgTickTime = 1000 / avgTickRate;
 		
 		if (gl.isEnabled()){
 			gl.updateStats();
