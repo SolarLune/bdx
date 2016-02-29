@@ -199,6 +199,8 @@ public class Vector2f extends Tuple2f implements java.io.Serializable {
    }
 
    public final void length(float n){
+	   if (length() == 0)
+		   return;
 	   normalize();
 	   scale(n);
    }
@@ -214,6 +216,20 @@ public class Vector2f extends Tuple2f implements java.io.Serializable {
 	   v.x *= n;
 	   v.y *= n;
 	   return v;
+   }
+   
+   public final Vector2f mul(Vector2f b){
+	   Vector2f a = new Vector2f(this);
+	   a.x *= b.x;
+	   a.y *= b.y;
+	   return a;
+   }
+
+   public final Vector2f div(Vector2f b){
+	   Vector2f a = new Vector2f(this);
+	   a.x /= b.x;
+	   a.y /= b.y;
+	   return a;
    }
    
    public final Vector2f reflected(Vector2f normal){
