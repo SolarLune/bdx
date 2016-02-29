@@ -83,6 +83,11 @@ abstract class Pointer {
 		
 	}
 	
+	public ArrayList<RayHit> xray(short group, short mask) {
+		return xray(false, group, mask);
+		
+	}
+	
 	public ArrayList<RayHit> xray(){
 		return xray(false, (short)~0, (short)~0);
 	}
