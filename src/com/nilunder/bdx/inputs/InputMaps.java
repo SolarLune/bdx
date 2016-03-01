@@ -86,23 +86,32 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 
 				hdu[0] = new FnBool(){
 					public boolean eval(){
-						boolean r = Bdx.gamepads.get(gpIndex).btnHit(d[1]) || forceHit;
-						forceHit = false;
-						return r;
+						if (Bdx.gamepads.size() > gpIndex) {
+							boolean r = Bdx.gamepads.get(gpIndex).btnHit(d[1]) || forceHit;
+							forceHit = false;
+							return r;
+						}
+						return false;
 					}
 				};
 				hdu[1] = new FnBool(){
 					public boolean eval(){
-						boolean r = Bdx.gamepads.get(gpIndex).btnDown(d[1]) || forceDown;
-						forceDown = false;
-						return r;
+						if (Bdx.gamepads.size() > gpIndex) {
+							boolean r = Bdx.gamepads.get(gpIndex).btnDown(d[1]) || forceDown;
+							forceDown = false;
+							return r;
+						}
+						return false;
 					}
 				};
 				hdu[2] = new FnBool(){
 					public boolean eval(){
-						boolean r = Bdx.gamepads.get(gpIndex).btnUp(d[1]) || forceUp;
-						forceUp = false;
-						return r;
+						if (Bdx.gamepads.size() > gpIndex) {
+							boolean r = Bdx.gamepads.get(gpIndex).btnUp(d[1]) || forceUp;
+							forceUp = false;
+							return r;
+						}
+						return false;
 					}
 				};
 			}else{
