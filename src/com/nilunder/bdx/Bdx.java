@@ -429,7 +429,9 @@ public class Bdx{
 
 			if (oldPads.size() > i) {
 				gp.profiles.putAll(oldPads.get(i).profiles);
-				gp.profile(oldPads.get(i).profile.name);
+				if (oldPads.get(i).profile != null)
+					gp.profile(oldPads.get(i).profile.name);
+
 			}
 		}
 
