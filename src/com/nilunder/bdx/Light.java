@@ -39,7 +39,7 @@ public class Light extends GameObject {
 		updateLight();
 	}
 
-	public void colorNoChildren(Color color){
+	public void color(Color color){
 		this.color.set(color);
 	}
 	

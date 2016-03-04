@@ -6,22 +6,19 @@ import java.util.HashMap;
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
-import javax.vecmath.Vector4f;
 
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonValue;
+
 import com.bulletphysics.collision.narrowphase.PersistentManifold;
 import com.bulletphysics.collision.narrowphase.ManifoldPoint;
 import com.bulletphysics.collision.dispatch.CollisionFlags;
@@ -31,6 +28,7 @@ import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.MatrixUtil;
 import com.bulletphysics.linearmath.Transform;
 
+import com.nilunder.bdx.gl.Material;
 import com.nilunder.bdx.utils.*;
 
 public class GameObject implements Named{
@@ -63,6 +61,7 @@ public class GameObject implements Named{
 	private boolean visible;
 	private boolean valid;
 	private Model uniqueModel;
+	public ArrayListMaterials materials;
 
 	public class ArrayListGameObject extends ArrayListNamed<GameObject> {
 
@@ -86,7 +85,56 @@ public class GameObject implements Named{
 		}
 		
 	}
-	
+
+	public class ArrayListMaterials extends ArrayListNamed<Material> {
+
+		public Material set(int index, Material material) {
+			modelInstance.nodes.get(0).parts.get(index).material = material;
+			return super.set(index, material);
+		}
+
+		public Material set(int index, String matName) {
+			return set(index, scene.materials.get(matName));
+		}
+
+		public void set(Material material){
+			for (int i = 0; i < size(); i++) {
+				set(i, material);
+			}
+		}
+
+		public void set(String matName){
+			set(scene.materials.get(matName));
+		}
+
+		public void color(Color color){
+			for (Material mat : this)
+				mat.color(color);
+		}
+
+		public void tint(Color color){
+			for (Material mat : this)
+				mat.tint(color);
+		}
+
+		public void blendMode(int src, int dest){
+			for (Material mat : this)
+				mat.blendMode(src, dest);
+		}
+
+		public void shadeless(boolean shadelessness){
+			for (Material mat : this)
+				mat.shadeless(shadelessness);
+		}
+
+		public void unique(){
+			for (int i = 0; i < size(); i++) {
+				set(i, new Material(get(i)));
+			}
+		}
+
+	}
+
 	public GameObject() {
 		joinedMeshObjects = new ArrayList<GameObject>();
 		touchingObjects = new ArrayListGameObject();
@@ -94,22 +142,19 @@ public class GameObject implements Named{
 		contactManifolds = new ArrayList<PersistentManifold>();
 		components = new ArrayListNamed<Component>();
 		children = new ArrayListGameObject();
+		materials = new ArrayListMaterials();
 		valid = true;
 	}
-
 
 	public String name(){
 		return name;
 	}
 	
-	public void init(){
-	}
+	public void init(){}
 	
-	public void main(){
-	}
+	public void main(){}
 
-	public void onEnd(){
-	}
+	public void onEnd(){}
 	
 	public GameObject parent(){
 		return parent;
@@ -489,8 +534,7 @@ public class GameObject implements Named{
 		return totalContacts != 0 ? force / totalContacts : 0;
 	}
 
-	public void collisionGroup(short group)
-	{
+	public void collisionGroup(short group)	{
 		short mask = body.getBroadphaseProxy().collisionFilterMask;
 
 		scene.world.removeRigidBody(body);
@@ -502,8 +546,7 @@ public class GameObject implements Named{
 		return body.getBroadphaseProxy().collisionFilterGroup;
 	}
 
-	public void collisionMask(short mask)
-	{
+	public void collisionMask(short mask) {
 		short group = body.getBroadphaseProxy().collisionFilterGroup;
 
 		scene.world.removeRigidBody(body);
@@ -678,76 +721,6 @@ public class GameObject implements Named{
 		alignAxisToVec(String.valueOf("XYZ".charAt(axis)), vec);
 	}
 
-	public Color color(){
-		ColorAttribute ca = (ColorAttribute) modelInstance.materials.get(0).get(ColorAttribute.Diffuse);
-		return new Color(ca.color);
-	}
-
-	public void color(Color color){
-		colorNoChildren(color);
-		for (GameObject child : children)
-			child.color(color);
-	}
-
-	public void colorNoChildren(Color color){
-		for (Material mat : modelInstance.materials) {
-			ColorAttribute ca = (ColorAttribute) mat.get(ColorAttribute.Diffuse);
-			ca.color.set(color);
-			if (mat.get(BlendingAttribute.Type) != null) {
-				BlendingAttribute ba = (BlendingAttribute) mat.get(BlendingAttribute.Type);
-				ba.opacity = color.a;
-			}
-		}
-	}
-
-	public Color tint(){
-		ColorAttribute ta = (ColorAttribute) modelInstance.materials.get(0).get(Scene.BDXColorAttribute.Tint);
-		return new Color(ta.color);
-	}
-
-	public void tint(Color color){
-		tintNoChildren(color);
-		for (GameObject child : children)
-			child.tint(color);
-	}
-
-	public void tintNoChildren(Color color){
-		for (Material mat : modelInstance.materials) {
-			ColorAttribute ta = (ColorAttribute) mat.get(Scene.BDXColorAttribute.Tint);
-			ta.color.set(color);
-		}
-	}
-
-	public int[] blendMode(){
-
-		BlendingAttribute ba = (BlendingAttribute) modelInstance.materials.first().get(BlendingAttribute.Type);
-		int[] a = {ba.sourceFunction, ba.destFunction};
-		return a;
-
-	}
-
-	public void blendMode(int src, int dest){
-
-		for (Material mat : modelInstance.materials){
-
-			BlendingAttribute ba = (BlendingAttribute) mat.get(BlendingAttribute.Type);
-			ba.sourceFunction = src;
-			ba.destFunction = dest;
-
-		}
-
-	}
-
-	public boolean shadeless(){
-		IntAttribute sa = (IntAttribute) modelInstance.materials.first().get(Scene.BDXIntAttribute.Shadeless);
-		return sa.value == 1;
-	}
-
-	public void shadeless(boolean shadeless){
-		IntAttribute sa = (IntAttribute) modelInstance.materials.first().get(Scene.BDXIntAttribute.Shadeless);
-		sa.value = shadeless ? 1 : 0;
-	}
-
 	public String modelName(){
 		return modelInstance.model.meshParts.first().id;
 	}
@@ -758,6 +731,7 @@ public class GameObject implements Named{
 		ModelInstance mi = new ModelInstance(uniqueModel);
 		mi.transform.set(modelInstance.transform);
 		modelInstance = mi;
+		updateMaterials();
 	}
 
 	public void replaceModel(String modelName, boolean updateVisual, boolean updatePhysics){
@@ -937,6 +911,13 @@ public class GameObject implements Named{
 		if (currBodyType.equals("NO_COLLISION")){
 			scene.world.removeRigidBody(body);
 		}
+
+		updateMaterials();
+	}
+
+	private void updateMaterials(){
+		for (int i = 0; i < modelInstance.nodes.get(0).parts.size; i++)
+			modelInstance.nodes.get(0).parts.get(i).material = materials.get(i);
 	}
 	
 	public String toString(){
@@ -1061,28 +1042,6 @@ public class GameObject implements Named{
 			center = min.plus(dimHalved).plus(orientation().mult(origin).mul(scale()));
 		
 		return scene.camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, dimHalved.x, dimHalved.y, dimHalved.z);
-	}
-
-	public void material(Material mat, int slot){
-		modelInstance.nodes.get(0).parts.get(slot).material = mat;
-	}
-
-	public void material(String newMat, int slot){
-		material(scene.materials.get(newMat), slot);
-	}
-
-	public void material(String newMat){
-		for (int i = 0; i < modelInstance.nodes.get(0).parts.size; i++){
-			material(newMat, i);
-		}
-	}
-
-	public ArrayList<String> materials() {
-		ArrayList<String> mats = new ArrayList<String>();
-		for (int i = 0; i < modelInstance.nodes.get(0).parts.size; i++) {
-			mats.add(modelInstance.nodes.get(0).parts.get(i).material.id);
-		}
-		return mats;
 	}
 
 }

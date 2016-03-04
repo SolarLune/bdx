@@ -51,7 +51,6 @@ public class Color extends com.badlogic.gdx.graphics.Color {
 		return clamp();
 	}
 
-
 	public Color HSV(float hue, float sat, float val){
 		float i = (float) Math.floor(hue * 6.0f);
 		float f = hue * 6 - i;
