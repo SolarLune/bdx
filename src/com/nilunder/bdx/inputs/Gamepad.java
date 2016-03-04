@@ -261,4 +261,45 @@ public static class Profile{
 		return name();
 	}
 
+	public ArrayList<Integer> hitButtons(int maxButtonCount){
+		ArrayList<Integer> buttons = new ArrayList<Integer>();
+		for (int i = 0; i < maxButtonCount; i++) {
+			if (controller.getButton(i))
+				buttons.add(i);
+		}
+		return buttons;
+	}
+
+	public ArrayList<Integer> hitButtons(){
+		return hitButtons(16);
+	}
+
+	public ArrayList<ArrayList<Integer>> hitAxes(int maxAxisCount, float deadZone){
+		ArrayList<ArrayList<Integer>> axes = new ArrayList<ArrayList<Integer>>();
+		for (int i = 0; i < maxAxisCount; i++) {
+			if (Math.abs(controller.getAxis(i)) > deadZone) {
+				ArrayList<Integer> ar = new ArrayList<Integer>();
+				ar.add(i);
+				ar.add((int) Math.signum(controller.getAxis(i)));
+				axes.add(ar);
+			}
+		}
+		return axes;
+	}
+
+	public ArrayList<ArrayList<Integer>> hitAxes() {
+		return hitAxes(8, 0.2f);
+	}
+
+	public ArrayList<String> hitInputs(){
+		ArrayList<String> inputs = new ArrayList<String>();
+		if (profile != null) {
+			for (String s : profile.btnToCode.keySet()) {
+				if (btnDown(s))
+					inputs.add(s);
+			}
+		}
+		return inputs;
+	}
+
 }
