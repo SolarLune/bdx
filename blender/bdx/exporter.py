@@ -565,7 +565,7 @@ def srl_materials(materials):
         if m.active_texture and hasattr(m.active_texture, "image"):
             filepath = m.active_texture.image.filepath
             textures_dir = "textures"
-            return filepath[filepath.find(textures_dir)+len(textures_dir):]
+            return filepath[filepath.find(textures_dir)+len(textures_dir)+1:]
         return None
 
     return {m.name:
