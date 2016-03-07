@@ -100,8 +100,8 @@ varying vec3 v_ambientLight;
 #if defined(numPointLights) && (numPointLights > 0)
 struct PointLight
 {
-	vec3 color;
-	vec3 position;
+	HIGH vec3 color;
+	HIGH vec3 position;
 };
 uniform PointLight u_pointLights[numPointLights];
 #endif // numPointLights
@@ -109,8 +109,8 @@ uniform PointLight u_pointLights[numPointLights];
 #if defined(numDirectionalLights) && (numDirectionalLights > 0)
 struct DirectionalLight
 {
-	vec3 color;
-	vec3 direction;
+	HIGH vec3 color;
+	HIGH vec3 direction;
 };
 uniform DirectionalLight u_dirLights[numDirectionalLights];
 #endif // numDirectionalLights
@@ -137,7 +137,7 @@ varying float v_fog;
 varying vec3 v_position;
 varying vec3 view_vec;
 
-uniform float u_shininess;
+uniform HIGH float u_shininess;
 uniform int u_shadeless;
 uniform vec4 u_tintColor;
 uniform vec4 u_emitColor;
