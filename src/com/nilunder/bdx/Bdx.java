@@ -286,12 +286,13 @@ public class Bdx{
 					}
 					depthBatch.end();
 					depthBuffer.end();
-					display.clearColor(display.clearColor());
 					depthBuffer.getColorBufferTexture().bind(2);
 				}
 
 				scene.lastFrameBuffer.getColorBufferTexture().bind(1);
 				Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+
+				Gdx.gl.glClearColor(0, 0, 0, 1);
 
 				for (ShaderProgram filter : scene.filters) {
 					
@@ -324,9 +325,10 @@ public class Bdx{
 				
 				frameBuffer.drawTo(null); //  Draw to screen
 				scene.lastFrameBuffer.clear();
-				frameBuffer.drawTo(scene.lastFrameBuffer);		
-				
+				frameBuffer.drawTo(scene.lastFrameBuffer);
 			}
+
+			display.clearColor(display.clearColor());
 
 			// ------- Render physics debug view --------
 
