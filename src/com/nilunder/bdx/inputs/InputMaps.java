@@ -80,7 +80,8 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 			}else if (d[0].contains("g")){
 				final int gpIndex;
 				if (descriptor.charAt(1) != ':')
-					gpIndex = Character.getNumericValue(descriptor.charAt(1));
+					// GWT doesn't implement Character.getNumericValue(), so do this instead
+					gpIndex = Integer.parseInt("" + descriptor.charAt(1), 36);
 				else
 					gpIndex = 0;
 
