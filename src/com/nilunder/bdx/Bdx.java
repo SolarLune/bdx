@@ -130,6 +130,15 @@ public class Bdx{
 			return scenes;
 		}
 
+		@Override
+		public Object clone() {
+			// GWT (2.6.0) doesn't provide a default implementation of Object.clone()
+			ArrayListScenes cloned = new ArrayListScenes();
+			for(Scene scene : this) {
+				cloned.add(scene);
+			}
+			return cloned;
+		}
 	}
 
 	public static final int TICK_RATE = 60;
