@@ -268,15 +268,10 @@ public class Profiler{
 	
 	private void initSubsystems(){
 		String[] names = {
-			"__graphics",
-			"__input",
-			"__logic",
-			"__visuals",
-			"__camera",
-			"__worldstep",
-			"__children",
-			"__collisions",
 			"__render",
+			"__logic",
+			"__scene",
+			"__physics",
 			"__outside",
 		};
 		texts = new HashMap<String, Text>();

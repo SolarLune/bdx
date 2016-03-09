@@ -1,9 +1,5 @@
 package com.nilunder.bdx.inputs;
 
-import com.badlogic.gdx.Gdx;
-
-import com.nilunder.bdx.*;
-
 public class Finger extends Pointer {
 
 	public int hit;

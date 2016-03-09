@@ -219,18 +219,19 @@ public class Bdx{
 
 	public static void main(){
 
-		if (refreshGamepadsTimer.done()) {
+		profiler.start("__render");
+		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		profiler.stop("__render");
+
+		// -------- Update Input --------
+		profiler.start("__scene");
+		if (refreshGamepadsTimer.done()) {	// Recreate gamepad objects as necessary
 			refreshGamepadsTimer.restart();
 			refreshGamepadsTimer.pause();
 			refreshGamepads();
 		}
 
-		profiler.start("__graphics");
-		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		profiler.stop("__graphics");
-
-		// -------- Update Input --------
 		time += TICK_TIME;
 		++GdxProcessor.currentTick;
 		fingers.clear();
@@ -238,14 +239,15 @@ public class Bdx{
 			if (f.down() || f.up())
 				fingers.add(f);
 		}
+		profiler.stop("__scene");
 		// ------------------------------
-		
+
+		profiler.start("__logic");
 		for (Component c : components){
 			if (c.state != null)
 				c.state.main();
 		}
-		
-		profiler.stop("__input");
+		profiler.stop("__logic");
 
 		for (Scene scene : (ArrayListScenes)scenes.clone()){
 			depthShaderProvider.updateScene(scene);
@@ -336,7 +338,7 @@ public class Bdx{
 				scene.lastFrameBuffer.clear();
 				frameBuffer.drawTo(scene.lastFrameBuffer);
 			}
-
+			
 			display.clearColor(display.clearColor());
 
 			// ------- Render physics debug view --------

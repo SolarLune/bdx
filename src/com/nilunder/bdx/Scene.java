@@ -846,25 +846,27 @@ public class Scene implements Named{
 			Bdx.profiler.start("__logic");
 			runObjectLogic();			
 			Bdx.profiler.stop("__logic");
-			
+
+			Bdx.profiler.start("__scene");
 			updateVisuals();
-			Bdx.profiler.stop("__visuals");
-			
 			camera.update();
-			Bdx.profiler.stop("__camera");
-			
+			Bdx.profiler.stop("__scene");
+
+			Bdx.profiler.start("__physics");
 			try{
 				world.stepSimulation(Bdx.TICK_TIME, 0);
 			}catch (NullPointerException e){
 				throw new RuntimeException("PHYSICS ERROR: Detected collision between Static objects set to Ghost, with Triangle Mesh bounds: Keep them seperated, or use different bounds.");
 			}
-			Bdx.profiler.stop("__worldstep");
-			
+			Bdx.profiler.stop("__physics");
+
+			Bdx.profiler.start("__scene");
 			updateChildBodies();
-			Bdx.profiler.stop("__children");
-			
+			Bdx.profiler.stop("__scene");
+
+			Bdx.profiler.start("__physics");
 			detectCollisions();
-			Bdx.profiler.stop("__collisions");
+			Bdx.profiler.stop("__physics");
 			
 		}
 
