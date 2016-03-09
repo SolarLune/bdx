@@ -14,13 +14,13 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Environment;
-import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -38,6 +38,7 @@ import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 import com.bulletphysics.linearmath.Transform;
+import com.nilunder.bdx.gl.Material;
 import com.nilunder.bdx.gl.RenderBuffer;
 import com.nilunder.bdx.gl.ShaderProgram;
 import com.nilunder.bdx.utils.*;
@@ -150,7 +151,7 @@ public class Scene implements Named{
 		environment.set(new DirectionalLightsAttribute());
 				
 		filters = new ArrayList<ShaderProgram>();
-		defaultMaterial = new Material();
+		defaultMaterial = new Material("__BDX_DEFAULT");
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.Diffuse, 1, 1, 1, 1));
 		defaultMaterial.set(new BlendingAttribute());
@@ -162,7 +163,7 @@ public class Scene implements Named{
 		materials = new HashMap<String,Material>();
 		modelToFrame = new HashMap<>();
 
-		materials.put("__BDX_DEFAULT", defaultMaterial);
+		materials.put(defaultMaterial.id, defaultMaterial);
 		
 		BroadphaseInterface broadphase = new DbvtBroadphase();
 		DefaultCollisionConfiguration collisionConfiguration = new DefaultCollisionConfiguration();
@@ -197,8 +198,10 @@ public class Scene implements Named{
 		for (JsonValue mat : json.get("materials")){
 			String texName = mat.get("texture").asString();
 
+			Material material = new Material(mat.name);
+
 			float[] c = mat.get("color").asFloatArray();
-			Material material = new Material(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
+			material.set(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
 
 			float[] s = mat.get("spec_color").asFloatArray();
 
@@ -214,8 +217,6 @@ public class Scene implements Named{
 				shadeless.value = 1;
 
 			material.set(shadeless);
-
-			material.id = mat.name;
 
 			float emitStrength = mat.get("emit").asFloat();
 			material.set(new BDXColorAttribute(BDXColorAttribute.Emit, emitStrength, emitStrength, emitStrength));
@@ -282,6 +283,13 @@ public class Scene implements Named{
 				g.visibleNoChildren(false);
 				g.modelInstance = new ModelInstance(defaultModel);
 			}
+
+			for (NodePart part : g.modelInstance.nodes.get(0).parts) {
+				Material mat = materials.get(part.material.id);
+				part.material = mat;
+				g.materials.add(mat);
+			}
+
 			Mesh mesh = g.modelInstance.model.meshes.first();
 			float[] trans = gobj.get("transform").asFloatArray();
 			JsonValue origin = json.get("origins").get(modelName);
@@ -431,7 +439,13 @@ public class Scene implements Named{
 		g.name = gobj.name;
 		g.visibleNoChildren(gobj.visible());
 		g.modelInstance = new ModelInstance(gobj.modelInstance);
-		
+
+		for (NodePart part : g.modelInstance.nodes.get(0).parts){
+			Material mat = gobj.materials.get(part.material.id);
+			g.materials.add(mat);
+			part.material = mat;
+		}
+
 		g.body = Bullet.cloneBody(gobj.body);
 		g.currBodyType = gobj.currBodyType;
 		g.currBoundsType = gobj.currBoundsType;
@@ -675,6 +689,7 @@ public class Scene implements Named{
 				idx += 1;
 			}
 		}
+
 		return builder.end();
 	}
 	
