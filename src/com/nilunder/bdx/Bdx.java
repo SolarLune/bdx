@@ -225,7 +225,6 @@ public class Bdx{
 		profiler.stop("__render");
 
 		// -------- Update Input --------
-		profiler.start("__scene");
 		if (refreshGamepadsTimer.done()) {	// Recreate gamepad objects as necessary
 			refreshGamepadsTimer.restart();
 			refreshGamepadsTimer.pause();
@@ -242,7 +241,6 @@ public class Bdx{
 		profiler.stop("__scene");
 		// ------------------------------
 
-		profiler.start("__logic");
 		for (Component c : components){
 			if (c.state != null)
 				c.state.main();

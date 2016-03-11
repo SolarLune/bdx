@@ -301,6 +301,7 @@ public class Profiler{
 				
 				display = scene.add("__PDisplay");
 				GameObject background = display.children.get("__PBackground");
+				background.materials.unique();
 				background.materials.color(BG_COLOR);
 				background.parent(display);
 				
@@ -403,7 +404,13 @@ public class Profiler{
 	
 	public float stop(String name){
 		long stopTime = TimeUtils.nanoTime();
-		long startTime = startTimes.containsKey(name) ? startTimes.get(name) : lastStopTime;
+		long startTime;
+		if (startTimes.containsKey(name)){
+			startTime = startTimes.get(name);
+			startTimes.remove(name);
+		}else{
+			startTime = lastStopTime;
+		}
 		long deltaTime = stopTime - startTime;
 		
 		if (subsystemsVisible){

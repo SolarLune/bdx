@@ -847,12 +847,10 @@ public class Scene implements Named{
 			runObjectLogic();			
 			Bdx.profiler.stop("__logic");
 
-			Bdx.profiler.start("__scene");
 			updateVisuals();
 			camera.update();
 			Bdx.profiler.stop("__scene");
 
-			Bdx.profiler.start("__physics");
 			try{
 				world.stepSimulation(Bdx.TICK_TIME, 0);
 			}catch (NullPointerException e){
@@ -860,11 +858,9 @@ public class Scene implements Named{
 			}
 			Bdx.profiler.stop("__physics");
 
-			Bdx.profiler.start("__scene");
 			updateChildBodies();
 			Bdx.profiler.stop("__scene");
 
-			Bdx.profiler.start("__physics");
 			detectCollisions();
 			Bdx.profiler.stop("__physics");
 			
