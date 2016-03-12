@@ -301,7 +301,6 @@ public class Profiler{
 				
 				display = scene.add("__PDisplay");
 				GameObject background = display.children.get("__PBackground");
-				background.materials.unique();
 				background.materials.color(BG_COLOR);
 				background.parent(display);
 				

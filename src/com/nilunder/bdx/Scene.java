@@ -441,7 +441,7 @@ public class Scene implements Named{
 		g.modelInstance = new ModelInstance(gobj.modelInstance);
 
 		for (NodePart part : g.modelInstance.nodes.get(0).parts){
-			Material mat = gobj.materials.get(part.material.id);
+			Material mat = new Material(gobj.materials.get(part.material.id));
 			g.materials.add(mat);
 			part.material = mat;
 		}

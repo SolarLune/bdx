@@ -127,12 +127,6 @@ public class GameObject implements Named{
 				mat.shadeless(shadelessness);
 		}
 
-		public void unique(){
-			for (int i = 0; i < size(); i++) {
-				set(i, new Material(get(i)));
-			}
-		}
-
 	}
 
 	public GameObject() {
