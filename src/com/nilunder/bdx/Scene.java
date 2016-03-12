@@ -40,7 +40,7 @@ import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSo
 import com.bulletphysics.linearmath.Transform;
 import com.nilunder.bdx.gl.Material;
 import com.nilunder.bdx.gl.RenderBuffer;
-import com.nilunder.bdx.gl.ShaderProgram;
+import com.nilunder.bdx.gl.ScreenShader;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
@@ -76,7 +76,7 @@ public class Scene implements Named{
 	private Instantiator instantiator;
 	
 	public HashMap<String, GameObject> templates;
-	public ArrayList<ShaderProgram> filters;
+	public ArrayList<ScreenShader> screenShaders;
 	public RenderBuffer lastFrameBuffer;
 	public Environment environment;
 	static private ShapeRenderer shapeRenderer;
@@ -150,7 +150,7 @@ public class Scene implements Named{
 		environment.set(new SpotLightsAttribute());
 		environment.set(new DirectionalLightsAttribute());
 				
-		filters = new ArrayList<ShaderProgram>();
+		screenShaders = new ArrayList<ScreenShader>();
 		defaultMaterial = new Material("__BDX_DEFAULT");
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.Diffuse, 1, 1, 1, 1));
@@ -389,7 +389,7 @@ public class Scene implements Named{
 		for (Texture t : textures.values()){
 			t.dispose();
 		}
-		for (ShaderProgram s : filters) {
+		for (ScreenShader s : screenShaders) {
 			s.dispose();
 		}
 	}
