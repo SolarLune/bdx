@@ -9,11 +9,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
-import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
-import com.nilunder.bdx.gl.BDXDepthShaderProvider;
-import com.nilunder.bdx.gl.BDXShaderProvider;
-import com.nilunder.bdx.gl.RenderBuffer;
-import com.nilunder.bdx.gl.ShaderProgram;
+import com.nilunder.bdx.gl.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.*;
@@ -157,7 +153,7 @@ public class Bdx{
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
 	public static ArrayList<Component> components;
-	public static HashMap<String, ShaderProgram> matShaders;
+	public static HashMap<String, MaterialShader> matShaders;
 	public static BDXShaderProvider shaderProvider;
 
 	private static boolean advancedLightingOn;
@@ -185,7 +181,7 @@ public class Bdx{
 		keyboard = new Keyboard();
 		fingers = new ArrayList<Finger>(); 
 		components = new ArrayList<Component>();
-		matShaders = new HashMap<String, ShaderProgram>();
+		matShaders = new HashMap<String, MaterialShader>();
 
 		allocatedFingers = new ArrayList<Finger>();
 		for (int i = 0; i < 10; ++i){
@@ -256,7 +252,7 @@ public class Bdx{
 
 			// ------- Render Scene --------
 
-			if (scene.filters.size() > 0){
+			if (scene.screenShaders.size() > 0){
 				frameBuffer.begin();
 				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 			}
@@ -272,13 +268,13 @@ public class Bdx{
 
 			scene.executeDrawCommands();
 
-			if (scene.filters.size() > 0){
+			if (scene.screenShaders.size() > 0){
 
 				frameBuffer.end();
 
 				boolean usingDepth = false;
 
-				for (ShaderProgram filter : scene.filters) {
+				for (ScreenShader filter : scene.screenShaders) {
 					if (filter.usingDepthTexture())
 						usingDepth = true;
 				}
@@ -303,7 +299,7 @@ public class Bdx{
 
 				Gdx.gl.glClearColor(0, 0, 0, 1);
 
-				for (ShaderProgram filter : scene.filters) {
+				for (ScreenShader filter : scene.screenShaders) {
 					
 					filter.begin();
 					filter.setUniformf("time", Bdx.time);
@@ -379,7 +375,7 @@ public class Bdx{
 		tempBuffer.dispose();
 		depthBuffer.dispose();
 		shaderProvider.dispose();
-		for (ShaderProgram s : Bdx.matShaders.values()) {
+		for (MaterialShader s : Bdx.matShaders.values()) {
 			s.dispose();
 		}
 	}

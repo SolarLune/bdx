@@ -24,9 +24,9 @@ public class RenderBuffer extends FrameBuffer{
 		this(batch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());		
 	}
 	
-	public void drawTo(RenderBuffer dest,ShaderProgram filter){
+	public void drawTo(RenderBuffer dest,ScreenShader filter){
 
-		if (ShaderProgram.nearestFiltering) {
+		if (ScreenShader.nearestFiltering) {
 			if (dest != null)
 				dest.getColorBufferTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 		}

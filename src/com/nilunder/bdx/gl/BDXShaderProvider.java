@@ -26,8 +26,11 @@ class BDXDefaultShader extends DefaultShader {
 		super(renderable, config);
 	}
 
-	public BDXDefaultShader(Renderable renderable, DefaultShader.Config config, ShaderProgram shaderProgram) {
-		super(renderable, config, shaderProgram);
+	public BDXDefaultShader(Renderable renderable, DefaultShader.Config config, MaterialShader shaderProgram) {
+		super(renderable,
+				config,
+				shaderProgram.set(createPrefix(renderable, config) + shaderProgram.vertexShader,
+						createPrefix(renderable, config) + shaderProgram.fragmentShader).compile().programData);
 	}
 
 	public void render(Renderable renderable, Attributes combinedAttributes)
@@ -72,7 +75,7 @@ class BDXDefaultShader extends DefaultShader {
 
 		if (hasCustomShader) {
 
-			if (Bdx.matShaders.get(matName) == program)					// Is this shader for that rendered material?
+			if (Bdx.matShaders.get(matName).programData == program)					// Is this shader for that rendered material?
 				return true;											// If so, it can be used to render
 			else
 				return false;
@@ -106,7 +109,7 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 		BDXDefaultShader shader;
 
 		if (Bdx.matShaders.containsKey(renderable.material.id)) {
-			ShaderProgram sp = Bdx.matShaders.get(renderable.material.id);
+			MaterialShader sp = Bdx.matShaders.get(renderable.material.id);
 			shader = new BDXDefaultShader(renderable, config, sp);
 			shader.materialName = renderable.material.id;
 		}
