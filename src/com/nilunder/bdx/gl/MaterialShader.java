@@ -47,7 +47,10 @@ public class MaterialShader implements Disposable{
 	}
 
 	public void dispose(){
-		programData.dispose();
+		if (programData != null) {
+			programData.dispose();
+			programData = null;
+		}
 	}
 
 }
