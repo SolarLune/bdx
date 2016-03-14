@@ -297,7 +297,7 @@ public class Bdx{
 				scene.lastFrameBuffer.getColorBufferTexture().bind(1);
 				Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
 
-				Gdx.gl.glClearColor(0, 0, 0, 1);
+				Gdx.gl.glClearColor(0, 0, 0, 0);
 
 				for (ScreenShader filter : scene.screenShaders) {
 					
