@@ -148,7 +148,7 @@ public class Profiler{
 		}
 		
 		@Override
-		public String put(String key, String value){
+		public String put(String key, String value) {
 			super.put(key, value);
 			if (texts.containsKey(key)){
 				texts.get(key).text(formatForProps(key, value));
@@ -156,6 +156,30 @@ public class Profiler{
 				reinitialize();
 			}
 			return value;
+		}
+
+		public String put(String key, int value) {
+			return put(key, String.valueOf(value));
+		}
+
+		public String put(String key, float value) {
+			return put(key, String.valueOf(value));
+		}
+
+		public String put(String key, double value) {
+			return put(key, String.valueOf(value));
+		}
+
+		public String put(String key, char value) {
+			return put(key, String.valueOf(value));
+		}
+
+		public String put(String key, long value) {
+			return put(key, String.valueOf(value));
+		}
+
+		public String put(String key, Object value) {
+			return put(key, String.valueOf(value));
 		}
 		
 		@Override
