@@ -81,7 +81,7 @@ public class Scene implements Named{
 	public Environment environment;
 	static private ShapeRenderer shapeRenderer;
 	private ArrayList<ArrayList<Object>> drawCommands;
-	static private boolean clearColorDefaultSet;
+	static public boolean clearColorDefaultSet;
 
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));

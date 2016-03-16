@@ -408,6 +408,7 @@ public class Bdx{
 	}
 
 	public static void restart(){
+		Scene.clearColorDefaultSet = false;
 		dispose();
 		for (Scene scene : new ArrayList<Scene>(scenes)) {
 			scenes.remove(scene);
