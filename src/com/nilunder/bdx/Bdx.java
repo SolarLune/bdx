@@ -243,108 +243,115 @@ public class Bdx{
 		}
 		profiler.stop("__logic");
 
-		for (Scene scene : (ArrayListScenes)scenes.clone()){
-			depthShaderProvider.updateScene(scene);
+		for (Scene scene : (ArrayListScenes)scenes.clone()) {
 
-			scene.update();
+			for (Viewport viewport : scene.viewports) {
 
-			profiler.start("__render");
+				viewport.viewportData.apply();
 
-			// ------- Render Scene --------
+				depthShaderProvider.updateScene(scene);
 
-			if (scene.screenShaders.size() > 0){
-				frameBuffer.begin();
-				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-			}
+				scene.update();
 
-			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-			modelBatch.begin(scene.camera.data);
-			for (GameObject g : scene.objects){
-				if (g.visible() && g.insideFrustum()){
-					modelBatch.render(g.modelInstance, scene.environment);
-				}
-			}
-			modelBatch.end();
+				profiler.start("__render");
 
-			scene.executeDrawCommands();
+				// ------- Render Scene --------
 
-			if (scene.screenShaders.size() > 0){
-
-				frameBuffer.end();
-
-				boolean usingDepth = false;
-
-				for (ScreenShader filter : scene.screenShaders) {
-					if (filter.usingDepthTexture())
-						usingDepth = true;
+				if (scene.screenShaders.size() > 0) {
+					frameBuffer.begin();
+					Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 				}
 
-				if (usingDepth) {
-					Gdx.gl.glClearColor(1, 1, 1, 1);
-					depthBuffer.begin();
-					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
-					depthBatch.begin(scene.camera.data);
-					for (GameObject g : scene.objects) {
-						if (g.visible() && g.insideFrustum()) {
-							depthBatch.render(g.modelInstance);
-						}
+				Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+				modelBatch.begin(scene.camera.data);
+				for (GameObject g : scene.objects) {
+					if (g.visible() && g.insideFrustum()) {
+						modelBatch.render(g.modelInstance, scene.environment);
 					}
-					depthBatch.end();
-					depthBuffer.end();
-					depthBuffer.getColorBufferTexture().bind(2);
+				}
+				modelBatch.end();
+
+				scene.executeDrawCommands();
+
+				if (scene.screenShaders.size() > 0) {
+
+					frameBuffer.end();
+
+					boolean usingDepth = false;
+
+					for (ScreenShader filter : scene.screenShaders) {
+						if (filter.usingDepthTexture())
+							usingDepth = true;
+					}
+
+					if (usingDepth) {
+						Gdx.gl.glClearColor(1, 1, 1, 1);
+						depthBuffer.begin();
+						Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
+						depthBatch.begin(scene.camera.data);
+						for (GameObject g : scene.objects) {
+							if (g.visible() && g.insideFrustum()) {
+								depthBatch.render(g.modelInstance);
+							}
+						}
+						depthBatch.end();
+						depthBuffer.end();
+						depthBuffer.getColorBufferTexture().bind(2);
+					}
+
+					scene.lastFrameBuffer.getColorBufferTexture().bind(1);
+					Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+
+					Gdx.gl.glClearColor(0, 0, 0, 0);
+
+					for (ScreenShader filter : scene.screenShaders) {
+
+						if (!filter.active)
+							continue;
+
+						filter.begin();
+						filter.setUniformf("time", Bdx.time);
+						filter.setUniformi("lastFrame", 1);
+						filter.setUniformi("depthTexture", 2);
+						filter.setUniformf("screenWidth", Bdx.display.size().x);
+						filter.setUniformf("screenHeight", Bdx.display.size().y);
+						filter.setUniformf("near", scene.camera.near());
+						filter.setUniformf("far", scene.camera.far());
+						filter.end();
+
+						tempBuffer.clear();
+
+						int width = (int) (Gdx.graphics.getWidth() * filter.renderScale.x);
+						int height = (int) (Gdx.graphics.getHeight() * filter.renderScale.y);
+
+						if (tempBuffer.getWidth() != width || tempBuffer.getHeight() != height)
+							tempBuffer = new RenderBuffer(spriteBatch, width, height);
+
+						frameBuffer.drawTo(tempBuffer, filter);
+
+						if (!filter.overlay)
+							frameBuffer.clear();
+
+						tempBuffer.drawTo(frameBuffer);
+
+					}
+
+					frameBuffer.drawTo(null); //  Draw to screen
+					scene.lastFrameBuffer.clear();
+					frameBuffer.drawTo(scene.lastFrameBuffer);
 				}
 
-				scene.lastFrameBuffer.getColorBufferTexture().bind(1);
-				Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+				display.clearColor(display.clearColor());
 
-				Gdx.gl.glClearColor(0, 0, 0, 0);
+				// ------- Render physics debug view --------
 
-				for (ScreenShader filter : scene.screenShaders) {
+				Bullet.DebugDrawer debugDrawer = (Bullet.DebugDrawer) scene.world.getDebugDrawer();
+				debugDrawer.drawWorld(scene.world, scene.camera.data);
 
-					if (!filter.active)
-						continue;
-					
-					filter.begin();
-					filter.setUniformf("time", Bdx.time);
-					filter.setUniformi("lastFrame", 1);
-					filter.setUniformi("depthTexture", 2);
-					filter.setUniformf("screenWidth", Bdx.display.size().x);
-					filter.setUniformf("screenHeight", Bdx.display.size().y);
-					filter.setUniformf("near", scene.camera.near());
-					filter.setUniformf("far", scene.camera.far());
-					filter.end();
-											
-					tempBuffer.clear();
-					
-					int width = (int) (Gdx.graphics.getWidth() * filter.renderScale.x);
-					int height = (int) (Gdx.graphics.getHeight() * filter.renderScale.y);
-					
-					if (tempBuffer.getWidth() != width || tempBuffer.getHeight() != height)
-						tempBuffer = new RenderBuffer(spriteBatch, width, height);
-					
-					frameBuffer.drawTo(tempBuffer, filter);
-					
-					if (!filter.overlay)
-						frameBuffer.clear();	
-					
-					tempBuffer.drawTo(frameBuffer);
-					
-				}
-				
-				frameBuffer.drawTo(null); //  Draw to screen
-				scene.lastFrameBuffer.clear();
-				frameBuffer.drawTo(scene.lastFrameBuffer);
+				profiler.stop("__render");
 			}
-			
-			display.clearColor(display.clearColor());
-
-			// ------- Render physics debug view --------
-
-			Bullet.DebugDrawer debugDrawer = (Bullet.DebugDrawer)scene.world.getDebugDrawer();
-			debugDrawer.drawWorld(scene.world, scene.camera.data);
-			
-			profiler.stop("__render");
 		}
+
 		mouse.wheelMove = 0;
 		
 		profiler.updateVariables();
@@ -407,6 +414,12 @@ public class Bdx{
 				scene.lastFrameBuffer.dispose();
 
 			scene.lastFrameBuffer = new RenderBuffer(null);
+
+			for (Viewport viewport : scene.viewports){
+				viewport.viewportData.update(width, height);
+				viewport.position(viewport.position());
+				viewport.size(viewport.size());
+			}
 		}
 	}
 

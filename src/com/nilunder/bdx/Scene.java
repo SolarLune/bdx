@@ -41,6 +41,7 @@ import com.bulletphysics.linearmath.Transform;
 import com.nilunder.bdx.gl.Material;
 import com.nilunder.bdx.gl.RenderBuffer;
 import com.nilunder.bdx.gl.ScreenShader;
+import com.nilunder.bdx.gl.Viewport;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
@@ -74,7 +75,8 @@ public class Scene implements Named{
 	public boolean paused;
 	
 	private Instantiator instantiator;
-	
+
+	public ArrayList<Viewport> viewports;
 	public HashMap<String, GameObject> templates;
 	public ArrayList<ScreenShader> screenShaders;
 	public RenderBuffer lastFrameBuffer;
@@ -142,6 +144,7 @@ public class Scene implements Named{
 
 		if (shapeRenderer == null)
 			shapeRenderer = new ShapeRenderer();
+		viewports = new ArrayList<Viewport>();
 		drawCommands = new ArrayList<ArrayList<Object>>();
 		lastFrameBuffer = new RenderBuffer(null);
 		environment = new Environment();
@@ -366,6 +369,8 @@ public class Scene implements Named{
 			cameras.add((Camera) objects.get(cn));
 		
 		camera = cameras.get(0);
+
+		viewports.add(new Viewport(camera));
 
 		ArrayList<GameObject> rootParents = new ArrayList<GameObject>();
 
@@ -857,7 +862,6 @@ public class Scene implements Named{
 			Bdx.profiler.stop("__logic");
 
 			updateVisuals();
-			camera.update();
 			Bdx.profiler.stop("__scene");
 
 			try{
