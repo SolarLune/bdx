@@ -202,7 +202,7 @@ public class Bdx{
 		frameBuffer = new RenderBuffer(spriteBatch);
 		tempBuffer = new RenderBuffer(spriteBatch);
 		depthBuffer = new RenderBuffer(spriteBatch);
-		depthShaderProvider = new BDXDepthShaderProvider(Gdx.files.internal("bdx/shaders/2d/depthExtract.vert"), Gdx.files.internal("bdx/shaders/2d/depthExtract.frag"));
+		depthShaderProvider = new BDXDepthShaderProvider(Gdx.files.internal("bdx/shaders/3d/depthExtract.vert"), Gdx.files.internal("bdx/shaders/3d/depthExtract.frag"));
 
 		depthBatch = new ModelBatch(depthShaderProvider);
 		clearColor = new Color();
@@ -300,6 +300,9 @@ public class Bdx{
 				Gdx.gl.glClearColor(0, 0, 0, 0);
 
 				for (ScreenShader filter : scene.screenShaders) {
+
+					if (!filter.active)
+						continue;
 					
 					filter.begin();
 					filter.setUniformf("time", Bdx.time);

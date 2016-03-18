@@ -12,6 +12,7 @@ public class ScreenShader extends com.badlogic.gdx.graphics.glutils.ShaderProgra
 	static public boolean nearestFiltering = false;
 	private boolean usingDepthTexture = false;
 	private boolean checkedShaderProgram = false;
+	public boolean active = true;
 	
 	public ScreenShader(String vertexShader, String fragmentShader) {
 
