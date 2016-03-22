@@ -119,19 +119,45 @@ public class Profiler{
 		
 		protected HashMap<String, Text> texts = new HashMap<String, Text>();
 		
+		protected boolean updateHorizontalOffset(){
+			int maxLen = 0;
+			int len;
+			for (Text text : texts.values()){
+				len = text.text().length();
+				if (maxLen < len){
+					maxLen = len;
+				}
+			}
+			float maxOffset = maxLen * FONT_SIZE + 1;
+			if (maxOffset == horizontalOffset){
+				return false;
+			}else if (maxOffset <= HORIZONTAL_OFFSET_DEFAULT){
+				if (horizontalOffset == HORIZONTAL_OFFSET_DEFAULT){
+					return false;
+				}else{
+					horizontalOffset = HORIZONTAL_OFFSET_DEFAULT;
+				}
+			}else{
+				horizontalOffset = maxOffset;
+			}
+			return true;
+		}
+		
 		protected void initTexts(){
 			if (isEmpty()){
 				return;
 			}
 			Vector3f position = new Vector3f(SPACING, verticalOffset(0.5f), 0);
+			Text text;
+			String key;
 			for (Map.Entry<String, String> e : entrySet()){
 				position.y = verticalOffset(1);
-				String key = e.getKey();
-				Text text = (Text)add("__PText", position);
+				text = (Text)add("__PText", position);
+				key = e.getKey();
 				text.text(formatForProps(key, e.getValue()));
 				texts.put(key, text);
-				scaleBackground();
 			}
+			updateHorizontalOffset();
 		}
 		
 		@Override
@@ -145,6 +171,9 @@ public class Profiler{
 				}
 				texts.get(key).text(formatForProps(key, e.getValue()));
 			}
+			if (updateHorizontalOffset()){
+				scaleBackground();
+			}
 		}
 		
 		@Override
@@ -152,6 +181,9 @@ public class Profiler{
 			super.put(key, value);
 			if (texts.containsKey(key)){
 				texts.get(key).text(formatForProps(key, value));
+				if (updateHorizontalOffset()){
+					scaleBackground();
+				}
 			}else{
 				reinitialize();
 			}
@@ -204,6 +236,8 @@ public class Profiler{
 	private final float BAR_HEIGHT = 0.4f;
 	private final float BAR_WIDTH = SPACING * 4;
 	private final float BAR_POSITION = SPACING * 18;
+	private final float HORIZONTAL_OFFSET_DEFAULT = BAR_POSITION + SPACING + BAR_WIDTH;
+	private final float FONT_SIZE = 0.315f;
 	private final String EXC_MSG = "User created subsystem names should not start with: \"__\"";
 	private final String ERR_MSG = "warning: \"Show Framerate and Profile\" is not enabled";
 	
@@ -300,7 +334,6 @@ public class Profiler{
 		};
 		texts = new HashMap<String, Text>();
 		bars = new HashMap<String, GameObject>();
-		horizontalOffset += BAR_WIDTH;
 		verticalOffset(0.5f);
 		for (String name : names){
 			verticalOffset(1);
@@ -315,7 +348,7 @@ public class Profiler{
 		
 		initialized = true;
 		verticalOffset = 0;
-		horizontalOffset = BAR_POSITION + SPACING;
+		horizontalOffset = HORIZONTAL_OFFSET_DEFAULT;
 		visible = framerateProfile;
 		if (visible){
 			
@@ -577,9 +610,11 @@ public class Profiler{
 	
 	private static String formatForProps(String key, String value){
 		StringBuffer buffer = new StringBuffer();
-		addString(buffer, key, 21, false, ' ');
+		addString(buffer, key, 14, false, ' ');
 		buffer.append(" ");
-		addString(buffer, value, 6, true, ' ');
+		int len = value.length();
+		len = len < 150 ? len : 150;
+		addString(buffer, value, len, false, ' ');
 		return buffer.toString();
 	}
 	
