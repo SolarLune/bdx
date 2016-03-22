@@ -54,13 +54,10 @@ abstract class Pointer {
 	}
 
 	public Vector3f rayDirection(){
-		String type = scene.camera.json.get("camera").get("type").asString();
-		if (type.equals("ORTHO")){
-			return scene.camera.axis(2).negated();
+		if (scene.camera.type.equals(Camera.Type.ORTHOGRAPHIC)){
+			return scene.camera.axis("-Z");
 		}
-
-		Vector3f dir = raySource().minus(scene.camera.position());
-		return dir;
+		return raySource().minus(scene.camera.position());
 	}
 	
 	public RayHit ray(short group, short mask){
