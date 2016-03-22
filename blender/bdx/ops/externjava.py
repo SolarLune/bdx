@@ -16,6 +16,13 @@ class ExternJava(bpy.types.Operator):
             if t.name.endswith(".java"):
                 bpy.data.texts.remove(t)
 
+        # Refresh text editor(s) hack
+        for area in bpy.context.screen.areas:
+            for space in area.spaces:
+                if space.type == "TEXT_EDITOR":
+                    space.show_margin = not space.show_margin
+                    space.show_margin = not space.show_margin
+
         return {'FINISHED'}
 
 
