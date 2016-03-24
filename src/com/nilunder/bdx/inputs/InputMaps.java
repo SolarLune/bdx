@@ -15,6 +15,12 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 		public boolean forceHit;
 		public boolean forceDown;
 		public boolean forceUp;
+		
+		public static class FnHDU{
+			public FnBool[] eval(String d1){
+				return null;
+			}
+		}
 
 		public static class FnBool{
 			public boolean eval(){
@@ -115,6 +121,8 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 						return false;
 					}
 				};
+			}else if (customDescriptorsHDU.containsKey(d[0])){
+				hdu = customDescriptorsHDU.get(d[0]).eval(d[1]);
 			}else{
 				throw new RuntimeException("Invalid descriptor \"" + descriptor + "\".");
 			}
@@ -256,9 +264,11 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 	}
 
 	public static Logger logger;
+	public static HashMap<String, Input.FnHDU> customDescriptorsHDU;
 
 	public InputMaps(){
 		logger = new Logger();
+		customDescriptorsHDU = new HashMap<String, Input.FnHDU>();
 	}
 
 	public void put(String name, String... descriptors){
