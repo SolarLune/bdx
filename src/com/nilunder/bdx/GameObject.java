@@ -725,7 +725,9 @@ public class GameObject implements Named{
 		ModelInstance mi = new ModelInstance(uniqueModel);
 		mi.transform.set(modelInstance.transform);
 		modelInstance = mi;
-		updateMaterials();
+		for (int i = 0; i < modelInstance.nodes.get(0).parts.size; i++){
+			modelInstance.nodes.get(0).parts.get(i).material = materials.get(i);
+		}
 	}
 
 	public void replaceModel(String modelName, boolean updateVisual, boolean updatePhysics){
@@ -801,7 +803,7 @@ public class GameObject implements Named{
 		replaceModel(modelName, true, false);
 	}
 	
-	public void updateJoinedMesh(){
+	public void updateJoinedMesh(boolean endJoinedMeshObjects){
 		
 		// Set invisible and remove body if not joining anything
 		
@@ -868,7 +870,7 @@ public class GameObject implements Named{
 		
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
-		MeshPartBuilder mpb = builder.part(name, GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, g.modelInstance.model.materials.first());
+		MeshPartBuilder mpb = builder.part(name, GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, g.materials.get(0));
 		mpb.vertex(tvaListJoined);
 		int numIndices = tvaListJoinedLength / VERT_STRIDE;
 		if (numIndices > 32767){
@@ -905,13 +907,19 @@ public class GameObject implements Named{
 		if (currBodyType.equals("NO_COLLISION")){
 			scene.world.removeRigidBody(body);
 		}
-
-		updateMaterials();
+		
+		// Update joined mesh objects
+		
+		if (endJoinedMeshObjects){
+			for (GameObject jmo : joinedMeshObjects){
+				jmo.end();
+			}
+			joinedMeshObjects.clear();
+		}
 	}
-
-	private void updateMaterials(){
-		for (int i = 0; i < modelInstance.nodes.get(0).parts.size; i++)
-			modelInstance.nodes.get(0).parts.get(i).material = materials.get(i);
+	
+	public void updateJoinedMesh(){
+		updateJoinedMesh(false);
 	}
 	
 	public String toString(){
