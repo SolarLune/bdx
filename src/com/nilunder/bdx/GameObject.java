@@ -477,36 +477,32 @@ public class GameObject implements Named{
 	}
 	
 	public boolean hit(){
-		for (GameObject g: touchingObjects){
-			if (!touchingObjectsLast.contains(g)){
-				return true;
-			}
-		}
-		return false;
+		return hitObjects().size() > 0;
 	}
 	
 	public boolean hit(String name){
-		for (GameObject g : touchingObjects){
-			if (g.name().equals(name) && !touchingObjectsLast.contains(g))
-				return true;
-		}
+		if (hitObjects().get(name) != null)
+			return true;
 		return false;
 	}
 	
 	public boolean hitProperty(String propName){
-		for (GameObject g : touchingObjects){
-			if (g.props.containsKey(propName) && !touchingObjectsLast.contains(g))
-				return true;
-		}
+		if (hitObjects().getByProperty(propName) != null)
+			return true;
 		return false;
 	}
 	
 	public boolean hitComponent(String compName){
-		for (GameObject g : touchingObjects){
-			if (g.components.get(compName) != null && !touchingObjectsLast.contains(g))
-				return true;
-		}
+		if (hitObjects().getByComponent(compName) != null)
+			return true;
 		return false;
+	}
+
+	public ArrayListGameObject hitObjects(){
+		ArrayListGameObject g = new ArrayListGameObject();
+		g.addAll(touchingObjects);
+		g.removeAll(touchingObjectsLast);
+		return g;
 	}
 
 	public float reactionForce(){
