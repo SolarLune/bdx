@@ -684,9 +684,13 @@ public class Scene implements Named{
 			float verts[] = mat.asFloatArray();
 			mpb.vertex(verts);
 			int len = verts.length / Bdx.VERT_STRIDE;
-			for (short i = 0; i < len; ++i){
-				mpb.index(idx);
-				idx += 1;
+			try{
+				for (short i = 0; i < len; ++i){
+					mpb.index(idx);
+					idx += 1;
+				}
+			}catch (OutOfMemoryError e){
+				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. " + model.name + " has " + Integer.toString(len) + " vertices.");
 			}
 		}
 
