@@ -92,11 +92,11 @@ public class Camera extends GameObject{
 	}	
 	
 	public void zoom(float zoom){
-		((OrthographicCamera)data).zoom = zoom;
+		((OrthographicCamera)data).zoom = zoom / width();
 	}
 	
 	public float zoom(){
-		return ((OrthographicCamera)data).zoom;
+		return ((OrthographicCamera)data).zoom * width();
 	}
 	
 	public Vector2f screenPosition(Vector3f worldPosition){

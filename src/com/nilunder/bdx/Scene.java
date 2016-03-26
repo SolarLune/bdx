@@ -333,11 +333,15 @@ public class Scene implements Named{
 				float[] projection = gobj.get("camera").get("projection").asFloatArray();
 				if (gobj.get("camera").get("type").asString().equals("PERSP")){
 					c.initData(Camera.Type.PERSPECTIVE);
+					c.width(ds.x);
+					c.height(ds.y);
 					c.projection(new Matrix4f(projection));
 					c.fov(c.fov());
 				}else{
 					c.initData(Camera.Type.ORTHOGRAPHIC);
-					c.zoom(2 / (projection[0] * ds.x));
+					c.width(ds.x);
+					c.height(ds.y);
+					c.zoom(2 / projection[0]);
 				}
 				Matrix4 pm = new Matrix4(projection);
 				pm.inv();
@@ -347,8 +351,6 @@ public class Scene implements Named{
 				vec.set(0, 0, 1);
 				vec.prj(pm);
 				c.far(-vec.z);
-				c.width(ds.x);
-				c.height(ds.y);
 			}
 			
 			templates.put(g.name, g);
@@ -462,6 +464,8 @@ public class Scene implements Named{
 			Camera c = (Camera)g;
 			Camera cobj = (Camera)gobj;
 			c.initData(cobj.type);
+			c.width(cobj.width());
+			c.height(cobj.height());
 			if (c.type == Camera.Type.PERSPECTIVE){
 				c.fov(cobj.fov());
 			}else{
@@ -469,8 +473,6 @@ public class Scene implements Named{
 			}
 			c.near(cobj.near());
 			c.far(cobj.far());
-			c.width(cobj.width());
-			c.height(cobj.height());
 			c.update();
 		}else if (g instanceof Text){
 			Text t = (Text)g;
