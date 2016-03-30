@@ -543,7 +543,10 @@ public class Scene implements Named{
 	}
 	
 	private void initGameObject(GameObject gobj){
-		gobj.init();
+		if (!gobj.initialized) {
+			gobj.init();
+			gobj.initialized = true;
+		}
 
 		ArrayList<GameObject> children = new ArrayList<GameObject>(gobj.children);
 
