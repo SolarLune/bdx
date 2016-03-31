@@ -60,6 +60,7 @@ public class MeshAnim extends Component<GameObject> {
 	public Animation active;
 	public String currentMesh;
 
+	private int prevFrame;
 	private Timer ticker;
 
 	public MeshAnim(GameObject g){
@@ -122,15 +123,20 @@ public class MeshAnim extends Component<GameObject> {
 		return active.playHead;
 	}
 
+	public boolean frameChanged() {
+		return prevFrame != frame();
+	}
+
 	private State play = new State(){
 		private float nz(float n){
 			return n <= 0 ? 0.000001f : n;
 		}
 
 		public void main(){
-
 			if (active == null)
 				return;
+
+			prevFrame = frame();
 
 			ticker.interval = 1f / nz(Math.abs(active.fps) * Math.abs(speed));
 

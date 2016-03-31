@@ -63,12 +63,12 @@ public class SpriteAnim extends Component<GameObject> {
 	public HashMap<String, Animation> animations;
 	public Animation active;
 
+	private int prevFrame;
 	private Timer ticker;
 	private Matrix3 uvScale;
 	private boolean rowBased;
 	private Vector2f baseFrame;
 	private Vector2f frameDim;
-
 	
 	public SpriteAnim(GameObject g, int frameWidth, int frameHeight, boolean rowBased, boolean uniqueModel){
 		super(g);
@@ -175,6 +175,10 @@ public class SpriteAnim extends Component<GameObject> {
 		return active.playHead;
 	}
 
+	public boolean frameChanged(){
+		return prevFrame != frame();
+	}
+
 	private State play = new State(){
 		private float nz(float n){
 			return n <= 0 ? 0.000001f : n;
@@ -184,11 +188,14 @@ public class SpriteAnim extends Component<GameObject> {
 			if (active == null)
 				return;
 
+			prevFrame = frame();
+
 			ticker.interval = 1f / nz(Math.abs(active.fps) * Math.abs(speed));
 
 			if (ticker.tick()){
 				showNextFrame();
 			}
+
 		}
 	};
 
