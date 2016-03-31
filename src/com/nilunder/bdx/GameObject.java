@@ -62,6 +62,7 @@ public class GameObject implements Named{
 	private boolean valid;
 	private Model uniqueModel;
 	public ArrayListMaterials materials;
+	public boolean initialized;
 
 	public class ArrayListGameObject extends ArrayListNamed<GameObject> {
 
