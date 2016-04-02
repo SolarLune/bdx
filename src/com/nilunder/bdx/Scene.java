@@ -456,7 +456,7 @@ public class Scene implements Named{
 		g.body.setUserPointer(g);
 		g.scale(gobj.scale());
 		
-		g.props = gobj.props;
+		g.props = new HashMap<String, JsonValue>(gobj.props);
 		
 		g.scene = this;
 
@@ -530,8 +530,6 @@ public class Scene implements Named{
 			ori.mul(g.orientation());
 			g.orientation(ori);
 			g.scale(inst.scale());
-
-			g.props = new HashMap<String, JsonValue>(g.props);
 			g.props.putAll(inst.props);
 
 			for (GameObject c : inst.children){
