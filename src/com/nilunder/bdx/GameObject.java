@@ -63,6 +63,7 @@ public class GameObject implements Named{
 	private Model uniqueModel;
 	public ArrayListMaterials materials;
 	public boolean initialized;
+	private Vector3f scale;
 
 	public class ArrayListGameObject extends ArrayListNamed<GameObject> {
 
@@ -139,6 +140,7 @@ public class GameObject implements Named{
 		children = new ArrayListGameObject();
 		materials = new ArrayListMaterials();
 		valid = true;
+		scale = new Vector3f();
 	}
 
 	public String name(){
@@ -622,6 +624,7 @@ public class GameObject implements Named{
 		t.getScale(s);
 		mat_scale.scl(1/s.x, 1/s.y, 1/s.z);
 		t.mul(mat_scale);
+		scale.set(x, y, z);
 
 		// Set target scale
 		mat_scale.idt(); mat_scale.scl(x, y, z);
@@ -650,6 +653,7 @@ public class GameObject implements Named{
 		if (parent != null && updateLocal){
 			updateLocalScale();
 		}
+
 	}
 
 	private void updateLocalScale(){
@@ -673,10 +677,7 @@ public class GameObject implements Named{
 	}
 
 	public Vector3f scale(){
-		Vector3f s = new Vector3f();
-		CollisionShape cs = body.getCollisionShape();
-		cs.getLocalScaling(s);
-		return s;
+		return scale;
 	}
 
 	public Vector3f dimensions(){
