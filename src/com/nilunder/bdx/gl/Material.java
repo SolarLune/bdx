@@ -40,6 +40,10 @@ public class Material extends com.badlogic.gdx.graphics.g3d.Material implements 
 		super(copyFrom);
 	}
 
+	public Material(com.badlogic.gdx.graphics.g3d.Material copyFrom){
+		super(copyFrom);
+	}
+
 	public Material(String id, Material copyFrom) {
 		super(id, copyFrom);
 	}

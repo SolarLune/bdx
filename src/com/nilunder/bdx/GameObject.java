@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -753,6 +754,12 @@ public class GameObject implements Named{
 			ModelInstance mi = new ModelInstance(model);
 			mi.transform.set(trans);
 			modelInstance = mi;
+			materials.clear();
+			for (NodePart part : modelInstance.nodes.get(0).parts) {
+				Material newMat = new Material(part.material);
+				materials.add(newMat);
+				part.material = newMat;
+			}
 		}
 		
 		if (updatePhysics){
@@ -799,7 +806,7 @@ public class GameObject implements Named{
 	public void replaceModel(String modelName){
 		replaceModel(modelName, true, false);
 	}
-	
+
 	public void updateJoinedMesh(boolean endJoinedMeshObjects){
 		
 		// Set invisible and remove body if not joining anything
