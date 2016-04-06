@@ -770,15 +770,13 @@ public class Scene implements Named{
 	
 	private void updateVisuals(){
 		Transform trans = new Transform();
-		Vector3f scale = new Vector3f();
 		float[] mt = new float[16];
 		
 		for (GameObject g : objects){
 			if (g.visible()){
 				g.body.getWorldTransform(trans);
 				trans.getOpenGLMatrix(mt);
-				g.body.getCollisionShape().getLocalScaling(scale);
-				setGLMatrixScale(mt, scale);
+				setGLMatrixScale(mt, g.scale());
 				g.modelInstance.transform.set(mt);
 			}
 		}
