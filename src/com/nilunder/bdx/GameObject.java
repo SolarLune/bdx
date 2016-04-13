@@ -40,6 +40,7 @@ public class GameObject implements Named{
 	public ArrayListGameObject touchingObjectsLast;
 	public ArrayList<PersistentManifold> contactManifolds;
 	public ModelInstance modelInstance;
+	public com.nilunder.bdx.gl.Mesh mesh;
 	public RigidBody body;
 	public String currBodyType;
 	public String currBoundsType;
@@ -724,6 +725,7 @@ public class GameObject implements Named{
 		ModelInstance mi = new ModelInstance(uniqueModel);
 		mi.transform.set(modelInstance.transform);
 		modelInstance = mi;
+		mesh = new com.nilunder.bdx.gl.Mesh(modelInstance.model);
 		for (int i = 0; i < modelInstance.nodes.get(0).parts.size; i++){
 			modelInstance.nodes.get(0).parts.get(i).material = materials.get(i);
 		}
@@ -755,6 +757,7 @@ public class GameObject implements Named{
 			ModelInstance mi = new ModelInstance(model);
 			mi.transform.set(trans);
 			modelInstance = mi;
+			mesh = new com.nilunder.bdx.gl.Mesh(modelInstance.model);
 			materials.clear();
 			for (NodePart part : modelInstance.nodes.get(0).parts) {
 				Material newMat = new Material(part.material);
@@ -802,6 +805,7 @@ public class GameObject implements Named{
 				parent(compParent);
 			}
 		}
+
 	}
 
 	public void replaceModel(String modelName){
@@ -886,6 +890,7 @@ public class GameObject implements Named{
 		}
 		uniqueModel = builder.end();
 		modelInstance = new ModelInstance(uniqueModel);
+		mesh = new com.nilunder.bdx.gl.Mesh(modelInstance.model);
 		
 		// Update visual
 		
