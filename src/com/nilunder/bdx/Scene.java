@@ -279,9 +279,11 @@ public class Scene implements Named{
 			if (modelName != null){
 				g.visibleNoChildren(gobj.get("visible").asBoolean());
 				g.modelInstance = new ModelInstance(models.get(modelName));
+				g.mesh = new com.nilunder.bdx.gl.Mesh(g.modelInstance.model);
 			}else{
 				g.visibleNoChildren(false);
 				g.modelInstance = new ModelInstance(defaultModel);
+				g.mesh = new com.nilunder.bdx.gl.Mesh(g.modelInstance.model);
 			}
 
 			for (NodePart part : g.modelInstance.nodes.get(0).parts) {
@@ -441,6 +443,7 @@ public class Scene implements Named{
 		g.name = gobj.name;
 		g.visibleNoChildren(gobj.visible());
 		g.modelInstance = new ModelInstance(gobj.modelInstance);
+		g.mesh = new com.nilunder.bdx.gl.Mesh(gobj.modelInstance.model);
 
 		for (NodePart part : g.modelInstance.nodes.get(0).parts){
 			Material mat = new Material(gobj.materials.get(part.material.id));
