@@ -111,9 +111,13 @@ class CreateBdxProject(bpy.types.Operator):
             ut.replace_line_containing(android_build_gradle_dir, pattern, new_line)
             
         def build_tools_sort_key(strv):
-            h, t, o = strv.split('.')
-            return int(h) * 100 + int(t) * 10 + int(o)
-            
+            n = 0
+            hto = strv.split('.')
+            hto.reverse()
+            for i in range(len(hto)):
+                n += int(''.join(c for c in hto[i] if c.isdigit())) * 10 ** i
+            return n
+        
         def compile_sdk_sort_key(strv):
             return int(strv.split('-')[-1])
             
