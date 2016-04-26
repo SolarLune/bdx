@@ -369,18 +369,9 @@ public class Scene implements Named{
 		
 		camera = cameras.get(0);
 
-		ArrayList<GameObject> rootParents = new ArrayList<GameObject>();
-
-		for (GameObject g : objects){
-			if (g.parent() == null){
-				rootParents.add(g);
-			}
-		}
-
-		for (GameObject g : rootParents){
+		for (GameObject g : sortByPriority(new ArrayList<GameObject>(objects))){
 			initGameObject(g);
 		}
-
 	}
 
 	public void dispose(){
@@ -406,32 +397,29 @@ public class Scene implements Named{
 			}
 		}
 	}
-
-	private void addInstances(){
-
-		ArrayList<GameObject> temps = new ArrayList<GameObject>(templates.values());
-
-		for (GameObject t : temps){
-			if (t.json.get("use_priority").asBoolean()){
-				Collections.swap(temps, 0, temps.indexOf(t));
+	
+	private ArrayList<GameObject> sortByPriority(ArrayList<GameObject> objects){
+		for (GameObject g : objects){
+			if (g.json.get("use_priority").asBoolean()){
+				Collections.swap(objects, 0, objects.indexOf(g));
 				break;
 			}
 		}
+		return objects;
+	}
 
-		for (GameObject gobj : temps){
-			boolean onActiveLayer = gobj.json.get("active").asBoolean();
-			if (onActiveLayer && gobj.parent() == null){
+	private void addInstances(){
+		for (GameObject gobj : new ArrayList<GameObject>(templates.values())){
+			if (gobj.json.get("active").asBoolean() && gobj.parent() == null){
 				GameObject g = clone(gobj);
 				addToWorld(g);
 			}
 		}
-
-		for (GameObject g : toBeAdded) {
+		for (GameObject g : toBeAdded){
 			objects.add(g);
 			if (g instanceof Light)
 				lights.add((Light) g);
 		}
-
 		toBeAdded.clear();
 	}
 
@@ -550,12 +538,6 @@ public class Scene implements Named{
 			gobj.init();
 			gobj.initialized = true;
 		}
-
-		ArrayList<GameObject> children = new ArrayList<GameObject>(gobj.children);
-
-		for (GameObject c : children){
-			initGameObject(c);
-		}
 	}
 
 	private void addToWorld(GameObject gobj){
@@ -575,11 +557,20 @@ public class Scene implements Named{
 	}
 	
 	public GameObject add(GameObject gobj){		
-		GameObject g = clone(gobj);
-		addToWorld(g);
-		initGameObject(g);
-		
-		return g;
+		GameObject p = clone(gobj);
+		addToWorld(p);
+		if (gobj.children.isEmpty()){
+			initGameObject(p);
+		}else{
+			ArrayList<GameObject> parentAndChildren = new ArrayList<GameObject>();
+			parentAndChildren.add(p);
+			parentAndChildren.addAll(p.childrenRecursive());
+			parentAndChildren = sortByPriority(parentAndChildren);
+			for (GameObject g : parentAndChildren){
+				initGameObject(g);
+			}
+		}
+		return p;
 	}
 	
 	public GameObject addNoChildren(GameObject gobj){
