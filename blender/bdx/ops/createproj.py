@@ -38,7 +38,8 @@ class CreateBdxProject(bpy.types.Operator):
                "--name", fmt["name"],
                "--package", fmt["package"],
                "--mainClass", fmt["mainClass"],
-               "--sdkLocation", fmt["sdkLocation"]]
+               "--sdkLocation", fmt["sdkLocation"],
+               "--extensions", "controllers"]
 
         subprocess.check_call(cmd)
 
@@ -85,14 +86,36 @@ class CreateBdxProject(bpy.types.Operator):
         
         shutil.copy(j(ut.gen_root(), "game.blend"), blender)
 
-    def replace_build_gradle(self):
-        """Replaces the build.gradle file with a version that includes BDX dependencies"""
-        bdx_build_gradle = j(ut.gen_root(), "build.gradle")
+    def modify_build_gradle(self):
+        """Modifies build.gradle file to contain BDX deps, and app name."""
         gdx_build_gradle = j(ut.project_root(), "build.gradle")
-        shutil.copy(bdx_build_gradle, gdx_build_gradle)
 
         sc_bdx = bpy.context.scene.bdx
         ut.set_file_var(gdx_build_gradle, "appName", "'{}'".format(sc_bdx.proj_name))
+
+        def add_line_to_deps(file_path, project_type, new_line):
+            with open(file_path, 'r') as f:
+                lines = f.readlines()
+
+            type_pattern = 'project(":'+project_type
+            plock = False
+            dlock = False
+
+            for i, line in enumerate(lines):
+                if type_pattern == line[:len(type_pattern)]:
+                    plock = True
+                if plock and "dependencies" in line:
+                    dlock = True
+                if dlock and '}' in line:
+                    break
+
+            lines = lines[:i] + [new_line+'\n'] + lines[i:]
+
+            with open(file_path, 'w') as f:
+                f.writelines(lines)
+
+        add_line_to_deps(gdx_build_gradle, "core", '        compile fileTree(dir: "libs", include: "*.jar" )')
+        add_line_to_deps(gdx_build_gradle, "android", '        compile fileTree(dir: "../core/libs", include: "*.jar" )')
 
     def set_android_sdk_version(self):
         """
@@ -239,7 +262,7 @@ class CreateBdxProject(bpy.types.Operator):
         self.create_libgdx_project()
         self.create_android_assets_bdx()
         self.create_blender_assets()
-        self.replace_build_gradle()
+        self.modify_build_gradle()
         self.set_android_sdk_version()
         self.replace_app_class()
         self.replace_desktop_launcher()
