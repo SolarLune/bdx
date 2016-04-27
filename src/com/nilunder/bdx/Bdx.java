@@ -23,7 +23,7 @@ public class Bdx{
 	public static class Display{
 
 		public void size(int width, int height){
-			Gdx.graphics.setDisplayMode(width, height, fullscreen());
+			Gdx.graphics.setWindowedMode(width, height);
 			refreshGamepadsTimer.restart();
 			refreshGamepadsTimer.resume();
 		}
@@ -37,8 +37,11 @@ public class Bdx{
 			return new Vector2f(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
 		}
 		public void fullscreen(boolean full){
-			Graphics.DisplayMode dm = Gdx.graphics.getDesktopDisplayMode();
-			Gdx.graphics.setDisplayMode(dm.width, dm.height, full);
+			Graphics.DisplayMode dm = Gdx.graphics.getDisplayMode();
+			if (full)
+				Gdx.graphics.setFullscreenMode(dm);
+			else
+				Gdx.graphics.setWindowedMode((int) size().x, (int) size().y);
 			refreshGamepadsTimer.restart();
 			refreshGamepadsTimer.resume();
 		}
