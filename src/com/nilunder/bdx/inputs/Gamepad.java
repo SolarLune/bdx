@@ -94,6 +94,8 @@ public static class Profile{
 		else
 			throw new IndexOutOfBoundsException("ERROR: There is no gamepad connected at index " + index);
 
+		controller.addListener(new GdxProcessor.GamepadAdapter(this));
+
 		profiles = new HashMap<String,Profile>();
 
 		Profile p = new Profile("XBOX");

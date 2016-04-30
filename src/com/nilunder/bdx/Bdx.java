@@ -24,8 +24,6 @@ public class Bdx{
 
 		public void size(int width, int height){
 			Gdx.graphics.setWindowedMode(width, height);
-			refreshGamepadsTimer.restart();
-			refreshGamepadsTimer.resume();
 		}
 		public void size(Vector2f vec){
 			size((int)vec.x, (int)vec.y);
@@ -42,8 +40,6 @@ public class Bdx{
 				Gdx.graphics.setFullscreenMode(dm);
 			else
 				Gdx.graphics.setWindowedMode((int) size().x, (int) size().y);
-			refreshGamepadsTimer.restart();
-			refreshGamepadsTimer.resume();
 		}
 		public boolean fullscreen(){
 			return Gdx.graphics.isFullscreen();
@@ -167,10 +163,9 @@ public class Bdx{
 	private static RenderBuffer tempBuffer;
 	private static RenderBuffer depthBuffer;
 	private static SpriteBatch spriteBatch;
-	private static Timer refreshGamepadsTimer;
 	private static Color clearColor;
 	private static BDXDepthShaderProvider depthShaderProvider;
-	
+
 	public static void init(){
 		time = 0;
 		profiler = new Profiler();
@@ -182,7 +177,7 @@ public class Bdx{
 
 		imaps = new InputMaps();
 		keyboard = new Keyboard();
-		fingers = new ArrayList<Finger>(); 
+		fingers = new ArrayList<Finger>();
 		components = new ArrayList<Component>();
 		matShaders = new HashMap<String, MaterialShader>();
 
@@ -191,10 +186,9 @@ public class Bdx{
 			allocatedFingers.add(new Finger(i));
 		}
 
-		refreshGamepadsTimer = new Timer();
-		refreshGamepadsTimer.pause();
-
-		refreshGamepads();
+		gamepads = new ArrayListNamed<Gamepad>();
+		for (int i = 0; i < Controllers.getControllers().size; i++)
+			gamepads.add(new Gamepad(i));
 
 		com.badlogic.gdx.graphics.glutils.ShaderProgram.pedantic = false;
 
@@ -224,11 +218,6 @@ public class Bdx{
 		profiler.stop("__render");
 
 		// -------- Update Input --------
-		if (refreshGamepadsTimer.done()) {	// Recreate gamepad objects as necessary
-			refreshGamepadsTimer.restart();
-			refreshGamepadsTimer.pause();
-			refreshGamepads();
-		}
 
 		time += TICK_TIME;
 		++GdxProcessor.currentTick;
@@ -306,7 +295,7 @@ public class Bdx{
 
 					if (!filter.active)
 						continue;
-					
+
 					filter.begin();
 					filter.setUniformf("time", Bdx.time);
 					filter.setUniformi("lastFrame", 1);
@@ -316,46 +305,46 @@ public class Bdx{
 					filter.setUniformf("near", scene.camera.near());
 					filter.setUniformf("far", scene.camera.far());
 					filter.end();
-											
+
 					tempBuffer.clear();
-					
+
 					int width = (int) (Gdx.graphics.getWidth() * filter.renderScale.x);
 					int height = (int) (Gdx.graphics.getHeight() * filter.renderScale.y);
-					
+
 					if (tempBuffer.getWidth() != width || tempBuffer.getHeight() != height)
 						tempBuffer = new RenderBuffer(spriteBatch, width, height);
-					
+
 					frameBuffer.drawTo(tempBuffer, filter);
-					
+
 					if (!filter.overlay)
-						frameBuffer.clear();	
-					
+						frameBuffer.clear();
+
 					tempBuffer.drawTo(frameBuffer);
-					
+
 				}
-				
+
 				frameBuffer.drawTo(null); //  Draw to screen
 				scene.lastFrameBuffer.clear();
 				frameBuffer.drawTo(scene.lastFrameBuffer);
 			}
-			
+
 			display.clearColor(display.clearColor());
 
 			// ------- Render physics debug view --------
 
 			Bullet.DebugDrawer debugDrawer = (Bullet.DebugDrawer)scene.world.getDebugDrawer();
 			debugDrawer.drawWorld(scene.world, scene.camera.data);
-			
+
 			profiler.stop("__render");
 		}
 		mouse.wheelMove = 0;
-		
+
 		profiler.updateVariables();
 		if (profiler.visible()){
 			profiler.updateVisible();
-			
+
 			// ------- Render profiler scene --------
-			
+
 			Scene profilerScene = profiler.scene;
 			profilerScene.update();
 			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
@@ -372,7 +361,7 @@ public class Bdx{
 			profiler.gl.updateFields();
 		}
 	}
-	
+
 	public static void dispose(){
 		modelBatch.dispose();
 		depthBatch.dispose();
@@ -385,21 +374,21 @@ public class Bdx{
 			s.dispose();
 		}
 	}
-	
+
 	public static void end(){
 		Gdx.app.exit();
 	}
-	
+
 	public static void resize(int width, int height) {
 		spriteBatch.getProjectionMatrix().setToOrtho2D(0, 0, width, height);
-		
+
 		if (frameBuffer != null)
 			frameBuffer.dispose();
 		if (tempBuffer != null)
 			tempBuffer.dispose();
 		if (depthBuffer != null)
 			depthBuffer.dispose();
-		
+
 		frameBuffer = new RenderBuffer(spriteBatch);		// Have to recreate all render buffers and adjust the projection matrix as the window size has changed
 		tempBuffer = new RenderBuffer(spriteBatch);
 		depthBuffer = new RenderBuffer(spriteBatch);
@@ -424,31 +413,6 @@ public class Bdx{
 			profiler.scene.end();
 		init();
 		scenes.add(firstScene);
-	}
-
-	public static void refreshGamepads(){
-
-		ArrayListNamed<Gamepad> oldPads = new ArrayListNamed<Gamepad>();
-		if (gamepads != null && gamepads.size() > 0)
-			oldPads.addAll(gamepads);
-
-		gamepads = new ArrayListNamed<Gamepad>();
-		for (int i = 0; i < Controllers.getControllers().size; i++) {
-
-			Gamepad gp = new Gamepad(i);
-			gamepads.add(gp);
-
-			if (gp.controller != null)
-				gp.controller.addListener(new GdxProcessor.GamepadAdapter(gp));
-
-			if (oldPads.size() > i) {
-				gp.profiles.putAll(oldPads.get(i).profiles);
-				if (oldPads.get(i).profile != null)
-					gp.profile(oldPads.get(i).profile.name);
-
-			}
-		}
-
 	}
 
 }
