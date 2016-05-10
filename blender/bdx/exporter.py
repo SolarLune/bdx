@@ -770,9 +770,15 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
     if scene.world is not None:
         ambient_color = list(scene.world.ambient_color)
         clear_color = list(scene.world.horizon_color)
+        mist_on = scene.world.mist_settings.use_mist
+        mist_start = scene.world.mist_settings.start
+        mist_depth = scene.world.mist_settings.depth
     else:
         ambient_color = [0.0, 0.0, 0.0]
         clear_color = [0.051, 0.051, 0.051]
+        mist_on = False
+        mist_start = 0.0
+        mist_depth = 100.0
 
     bdx = {
         "name": scene.name,
@@ -780,6 +786,9 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         "physviz": scene.game_settings.show_physics_visualization,
         "framerateProfile": scene.game_settings.show_framerate_profile,
         "ambientColor": ambient_color,
+        "mistOn": mist_on,
+        "mistStart": mist_start,
+        "mistDepth": mist_depth,
         "models": srl_models(objects, apply_modifier),
         "origins": srl_origins(objects),
         "dimensions": srl_dimensions(objects),

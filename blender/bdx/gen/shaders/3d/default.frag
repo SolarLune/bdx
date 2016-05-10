@@ -132,6 +132,20 @@ uniform SpotLight u_spotLights[numSpotLights];
 #ifdef fogFlag
 uniform vec4 u_fogColor;
 varying float v_fog;
+uniform vec2 u_fogRange;
+uniform vec2 u_camRange;
+
+vec4 mix_fog(vec4 fragColour) {
+  float perspective_far = u_camRange.y;
+  //float start = 20.0;
+  //float depth = 34.0;
+  float start = u_fogRange.x;
+  float depth = u_fogRange.y;
+  float fog_coord = ((gl_FragCoord.z / gl_FragCoord.w) - start) / perspective_far;
+  float fog = fog_coord * (perspective_far / depth);
+  return mix(u_fogColor, fragColour, clamp(1.0 - fog, 0., 1.) );
+}
+
 #endif // fogFlag
 
 varying vec3 v_position;
@@ -248,7 +262,7 @@ void main() {
 		gl_FragColor.rgb = applyLighting(diffuse.rgb);
 
 	#ifdef fogFlag
-		gl_FragColor.rgb = mix(gl_FragColor.rgb, u_fogColor.rgb, v_fog);
+		gl_FragColor = mix_fog(gl_FragColor);
 	#endif // end fogFlag
 
 	#ifdef blendedFlag

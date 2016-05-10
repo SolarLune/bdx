@@ -19,6 +19,10 @@ class BDXDefaultShader extends DefaultShader {
 	public final int u_shadeless = register("u_shadeless");
 	public final int u_tintColor = register("u_tintColor");
 	public final int u_emitColor = register("u_emitColor");
+	public final int u_fogRange = register("u_fogRange");
+	public final int u_camRange = register("u_camRange");
+
+	BDXShaderProvider shaderProvider;
 
 	public String materialName = null;
 
@@ -64,6 +68,18 @@ class BDXDefaultShader extends DefaultShader {
 		else
 			set(u_emitColor, emit.color);
 
+		if (shaderProvider.scene != null) {
+
+			ColorAttribute fog = (ColorAttribute) renderable.environment.get(ColorAttribute.Fog);
+			if (fog == null)
+				set(u_fogRange, 0f, 0f);
+			else
+				set(u_fogRange, shaderProvider.scene.fogRange().x, shaderProvider.scene.fogRange().y);
+
+			set(u_camRange, shaderProvider.scene.camera.near(), shaderProvider.scene.camera.far());
+
+		}
+
 		super.render(renderable, combinedAttributes);
 	}
 
@@ -93,6 +109,8 @@ class BDXDefaultShader extends DefaultShader {
 }
 
 public class BDXShaderProvider extends DefaultShaderProvider {
+
+	Scene scene;
 
 	public BDXShaderProvider(){
 
@@ -126,7 +144,13 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 			}
 		}
 
+		shader.shaderProvider = this;
+
 		return shader;
+	}
+
+	public void update(Scene scene){
+		this.scene = scene;
 	}
 
 	public void deleteShaders(){
