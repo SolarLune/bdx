@@ -159,11 +159,11 @@ public class Bdx{
 	private static ModelBatch modelBatch;
 	private static ModelBatch depthBatch;
 	private static RenderBuffer frameBuffer;
-	private static RenderBuffer tempBuffer;
 	private static RenderBuffer depthBuffer;
 	private static SpriteBatch spriteBatch;
 	private static Color clearColor;
 	private static BDXDepthShaderProvider depthShaderProvider;
+	private static HashMap<Float, RenderBuffer> availableTempBuffers;
 
 	public static void init(){
 		time = 0;
@@ -196,7 +196,6 @@ public class Bdx{
 		spriteBatch = new SpriteBatch();
 		spriteBatch.setBlendFunction(Gdx.gl.GL_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
 		frameBuffer = new RenderBuffer(spriteBatch);
-		tempBuffer = new RenderBuffer(spriteBatch);
 		depthBuffer = new RenderBuffer(spriteBatch);
 		depthShaderProvider = new BDXDepthShaderProvider(Gdx.files.internal("bdx/shaders/3d/depthExtract.vert"), Gdx.files.internal("bdx/shaders/3d/depthExtract.frag"));
 
@@ -206,6 +205,8 @@ public class Bdx{
 		advancedLightingOn = true;
 
 		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers, gamepads));
+
+		availableTempBuffers = new HashMap<Float, RenderBuffer>();
 
 	}
 
@@ -305,13 +306,15 @@ public class Bdx{
 					filter.setUniformf("far", scene.camera.far());
 					filter.end();
 
-					tempBuffer.clear();
-
 					int width = (int) (Gdx.graphics.getWidth() * filter.renderScale.x);
 					int height = (int) (Gdx.graphics.getHeight() * filter.renderScale.y);
 
-					if (tempBuffer.getWidth() != width || tempBuffer.getHeight() != height)
-						tempBuffer = new RenderBuffer(spriteBatch, width, height);
+					if (!availableTempBuffers.containsKey(filter.renderScale.x))
+						availableTempBuffers.put(filter.renderScale.x, new RenderBuffer(spriteBatch, width, height));
+
+					RenderBuffer tempBuffer = availableTempBuffers.get(filter.renderScale.x);
+
+					tempBuffer.clear();
 
 					frameBuffer.drawTo(tempBuffer, filter);
 
@@ -369,11 +372,14 @@ public class Bdx{
 		depthBatch.dispose();
 		spriteBatch.dispose();
 		frameBuffer.dispose();
-		tempBuffer.dispose();
 		depthBuffer.dispose();
 		shaderProvider.dispose();
+
 		for (MaterialShader s : Bdx.matShaders.values())
 			s.dispose();
+		for (RenderBuffer b : availableTempBuffers.values())
+			b.dispose();
+
 	}
 
 	public static void end(){
@@ -385,14 +391,16 @@ public class Bdx{
 
 		if (frameBuffer != null)
 			frameBuffer.dispose();
-		if (tempBuffer != null)
-			tempBuffer.dispose();
 		if (depthBuffer != null)
 			depthBuffer.dispose();
 
 		frameBuffer = new RenderBuffer(spriteBatch);		// Have to recreate all render buffers and adjust the projection matrix as the window size has changed
-		tempBuffer = new RenderBuffer(spriteBatch);
 		depthBuffer = new RenderBuffer(spriteBatch);
+
+		for (RenderBuffer b : availableTempBuffers.values())
+			b.dispose();
+
+		availableTempBuffers.clear();
 
 		for (Scene scene : scenes) {
 
