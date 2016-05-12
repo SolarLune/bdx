@@ -14,7 +14,6 @@ import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.utils.Color;
-import com.nilunder.bdx.utils.Timer;
 
 import javax.vecmath.Vector2f;
 
@@ -236,7 +235,8 @@ public class Bdx{
 		profiler.stop("__logic");
 
 		for (Scene scene : (ArrayListScenes)scenes.clone()){
-			depthShaderProvider.updateScene(scene);
+			depthShaderProvider.update(scene);
+			shaderProvider.update(scene);
 
 			scene.update();
 

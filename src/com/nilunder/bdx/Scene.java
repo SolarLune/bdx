@@ -83,6 +83,11 @@ public class Scene implements Named{
 	private ArrayList<ArrayList<Object>> drawCommands;
 	static public boolean clearColorDefaultSet;
 
+	private Color fogColor;
+	private float fogStart;
+	private float fogDepth;
+	private boolean fogOn;
+
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
 	}
@@ -194,6 +199,10 @@ public class Scene implements Named{
 
 		Bdx.profiler.init(json.get("framerateProfile").asBoolean());
 
+		float[] fc = json.get("clearColor").asFloatArray();
+		fogColor = new Color(fc[0], fc[1], fc[2], 1);
+		fog(json.get("mistOn").asBoolean());
+		fogRange(json.get("mistStart").asFloat(), json.get("mistDepth").asFloat());
 
 		for (JsonValue mat : json.get("materials")){
 			String texName = mat.get("texture").asString();
@@ -935,6 +944,47 @@ public class Scene implements Named{
 
 		drawCommands.clear();
 
+	}
+
+	public void fog(boolean fogOn){
+		this.fogOn = fogOn;
+		if (fogOn) {
+			if (environment.get(ColorAttribute.Fog) == null)
+				environment.set(new ColorAttribute(ColorAttribute.Fog, fogColor));
+		}
+		else {
+			if (environment.get(ColorAttribute.Fog) != null)
+				environment.remove(ColorAttribute.Fog);
+		}
+	}
+
+	public boolean fog(){
+		return fogOn;
+	}
+
+	public void fogColor(Color fogColor) {
+		this.fogColor.set(fogColor);
+		if (environment.get(ColorAttribute.Fog) != null) {
+			ColorAttribute ca = (ColorAttribute) environment.get(ColorAttribute.Fog);
+			ca.color.set(fogColor);
+		}
+	}
+
+	public Color fogColor(){
+		return new Color(fogColor);
+	}
+
+	public void fogRange(float fogStart, float fogDepth){
+		this.fogStart = fogStart;
+		this.fogDepth = fogDepth;
+	}
+
+	public void fogRange(Vector2f range) {
+		fogRange(range.x, range.y);
+	}
+
+	public Vector2f fogRange(){
+		return new Vector2f(fogStart, fogDepth);
 	}
 
 }

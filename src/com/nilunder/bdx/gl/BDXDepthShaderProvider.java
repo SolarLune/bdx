@@ -37,7 +37,8 @@ public class BDXDepthShaderProvider extends DepthShaderProvider {
 	protected Shader createShader(Renderable renderable) {
 		return new BDXDepthShader(renderable, this.config);
 	}
-	public void updateScene(Scene scene){
+
+	public void update(Scene scene){
 		for (Shader s : shaders) {
 			((BDXDepthShader) s).scene = scene;
 		}
