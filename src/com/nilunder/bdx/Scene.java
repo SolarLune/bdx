@@ -61,7 +61,7 @@ public class Scene implements Named{
 	private FileHandle scene;
 
 	public HashMap<String,Model> models;
-	private HashMap<String,Texture> textures;
+	public HashMap<String,Texture> textures;
 	public HashMap<String,Material> materials;
 	public Material defaultMaterial;
 	private Model defaultModel;
@@ -241,8 +241,8 @@ public class Scene implements Named{
 					texture = new Texture(Gdx.files.internal("bdx/textures/" + texName));
 					textures.put(texName, texture);
 				}
-				material.set(TextureAttribute.createDiffuse(texture));
 				texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+				material.texture(texture);
 			}
 			
 			BlendingAttribute ba;
@@ -387,14 +387,21 @@ public class Scene implements Named{
 		lastFrameBuffer.dispose();
 		defaultModel.dispose();
 
-		for (Model m : models.values()){
+		for (Model m : models.values())
 			m.dispose();
-		}
-		for (Texture t : textures.values()){
+
+		for (Texture t : textures.values())
 			t.dispose();
-		}
-		for (ScreenShader s : screenShaders) {
+
+		for (ScreenShader s : screenShaders)
 			s.dispose();
+
+		for (Camera c : cameras)
+			c.renderBuffer.dispose();
+
+		for (Material m : materials.values()) {
+			if (m.currentTexture != null)
+				m.currentTexture.dispose();
 		}
 	}
 	

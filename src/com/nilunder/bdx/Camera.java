@@ -3,9 +3,11 @@ package com.nilunder.bdx;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
 
 import com.bulletphysics.linearmath.Transform;
+import com.nilunder.bdx.gl.RenderBuffer;
 
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
@@ -20,7 +22,9 @@ public class Camera extends GameObject{
 	
 	public Type type;
 	public com.badlogic.gdx.graphics.Camera data;
-	
+	boolean renderingToTexture;
+	RenderBuffer renderBuffer;
+
 	public void initData(Type type){
 		this.type = type;
 		if (type == Type.PERSPECTIVE){
@@ -79,7 +83,7 @@ public class Camera extends GameObject{
 	public void fov(float fov){
 		((PerspectiveCamera)data).fieldOfView = (float)Math.toDegrees(fov);
 	}
-	
+
 	public float fov(){
 		Matrix4f p = projection();
 		float fov;
@@ -113,6 +117,13 @@ public class Camera extends GameObject{
 		axis = axis("Y");
 		data.up.set(axis.x, axis.y, axis.z);
 		data.update();
+	}
+
+	public TextureRegion texture(){
+		renderingToTexture = true;
+		if (renderBuffer == null)
+			renderBuffer = new RenderBuffer(null);
+		return renderBuffer.region;
 	}
 
 }

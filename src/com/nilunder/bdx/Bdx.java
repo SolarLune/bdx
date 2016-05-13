@@ -250,13 +250,18 @@ public class Bdx{
 			}
 
 			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-			modelBatch.begin(scene.camera.data);
-			for (GameObject g : scene.objects){
-				if (g.visible() && g.insideFrustum()){
-					modelBatch.render(g.modelInstance, scene.environment);
+
+			renderWorld(modelBatch, scene, scene.camera);			// Render main view
+
+			for (Camera cam : scene.cameras){
+				if (cam.renderingToTexture) {
+					cam.renderBuffer.begin();
+					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+					Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+					renderWorld(modelBatch, scene, cam);
+					cam.renderBuffer.end();
 				}
 			}
-			modelBatch.end();
 
 			scene.executeDrawCommands();
 
@@ -275,13 +280,7 @@ public class Bdx{
 					Gdx.gl.glClearColor(1, 1, 1, 1);
 					depthBuffer.begin();
 					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
-					depthBatch.begin(scene.camera.data);
-					for (GameObject g : scene.objects) {
-						if (g.visible() && g.insideFrustum()) {
-							depthBatch.render(g.modelInstance);
-						}
-					}
-					depthBatch.end();
+					renderWorld(depthBatch, scene, scene.camera);
 					depthBuffer.end();
 					depthBuffer.getColorBufferTexture().bind(2);
 				}
@@ -348,18 +347,21 @@ public class Bdx{
 			Scene profilerScene = profiler.scene;
 			profilerScene.update();
 			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-			modelBatch.begin(profilerScene.camera.data);
-			for (GameObject g : profilerScene.objects){
-				if (g.visible()){
-					modelBatch.render(g.modelInstance, profilerScene.environment);
-				}
-			}
-			modelBatch.end();
+			renderWorld(modelBatch, profilerScene, profilerScene.camera);
 			profilerScene.executeDrawCommands();
 		}
 		if (profiler.gl.isEnabled()){
 			profiler.gl.updateFields();
 		}
+	}
+
+	private static void renderWorld(ModelBatch batch, Scene scene, Camera camera){
+		batch.begin(camera.data);
+		for (GameObject g : scene.objects){
+			if (g.visible() && g.insideFrustum())
+				batch.render(g.modelInstance, scene.environment);
+		}
+		batch.end();
 	}
 
 	public static void dispose(){
@@ -370,9 +372,8 @@ public class Bdx{
 		tempBuffer.dispose();
 		depthBuffer.dispose();
 		shaderProvider.dispose();
-		for (MaterialShader s : Bdx.matShaders.values()) {
+		for (MaterialShader s : Bdx.matShaders.values())
 			s.dispose();
-		}
 	}
 
 	public static void end(){
@@ -395,9 +396,14 @@ public class Bdx{
 
 		for (Scene scene : scenes) {
 
+			for (Camera cam : scene.cameras) {                // Have to do this, as the RenderBuffers need to be resized for the new window size
+				if (cam.renderBuffer != null)
+					cam.renderBuffer.dispose();
+				cam.renderBuffer = new RenderBuffer(null);
+			}
+
 			if (scene.lastFrameBuffer != null)
 				scene.lastFrameBuffer.dispose();
-
 			scene.lastFrameBuffer = new RenderBuffer(null);
 		}
 	}
