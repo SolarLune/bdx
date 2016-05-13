@@ -11,7 +11,7 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 public class RenderBuffer extends FrameBuffer{
 		
 	private SpriteBatch batch;
-	private TextureRegion region;
+	public TextureRegion region;
 		
 	public RenderBuffer(SpriteBatch batch, int bufferWidth, int bufferHeight) {
 		super(Pixmap.Format.RGBA8888, bufferWidth, bufferHeight, true);
