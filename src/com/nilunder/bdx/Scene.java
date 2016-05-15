@@ -396,8 +396,10 @@ public class Scene implements Named{
 		for (ScreenShader s : screenShaders)
 			s.dispose();
 
-		for (Camera c : cameras)
-			c.renderBuffer.dispose();
+		for (Camera c : cameras) {
+			if (c.renderBuffer != null)
+				c.renderBuffer.dispose();
+		}
 
 		for (Material m : materials.values()) {
 			if (m.currentTexture != null)
