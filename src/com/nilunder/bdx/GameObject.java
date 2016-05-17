@@ -679,7 +679,7 @@ public class GameObject implements Named{
 	}
 
 	public Vector3f scale(){
-		return scale;
+		return new Vector3f(scale);
 	}
 
 	public Vector3f dimensions(){
