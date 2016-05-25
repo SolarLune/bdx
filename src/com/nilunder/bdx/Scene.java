@@ -87,6 +87,7 @@ public class Scene implements Named{
 	private float fogStart;
 	private float fogDepth;
 	private boolean fogOn;
+	private boolean valid;
 
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
@@ -381,6 +382,8 @@ public class Scene implements Named{
 		for (GameObject g : sortByPriority(new ArrayList<GameObject>(objects))){
 			initGameObject(g);
 		}
+
+		valid = true;
 	}
 
 	public void dispose(){
@@ -887,6 +890,8 @@ public class Scene implements Named{
 
 	public void end(){
 
+		valid = false;
+
 		for (GameObject g : objects)
 			g.end();
 
@@ -994,6 +999,10 @@ public class Scene implements Named{
 
 	public Vector2f fogRange(){
 		return new Vector2f(fogStart, fogDepth);
+	}
+
+	public boolean valid(){
+		return valid;
 	}
 
 }
