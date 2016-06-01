@@ -22,8 +22,8 @@ public class Camera extends GameObject{
 	
 	public Type type;
 	public com.badlogic.gdx.graphics.Camera data;
-	boolean renderingToTexture;
-	RenderBuffer renderBuffer;
+	public boolean renderingToTexture;
+	public RenderBuffer renderBuffer;
 
 	public void initData(Type type){
 		this.type = type;
@@ -65,7 +65,7 @@ public class Camera extends GameObject{
   	}
 	
 	public void width(float w){
-		data.viewportWidth = w;
+		data.viewportWidth = Math.max(w, 1);		// A width of 0 crashes BDX
 	}
 	
 	public float width(){
@@ -73,7 +73,7 @@ public class Camera extends GameObject{
 	}
 	
 	public void height(float h){
-		data.viewportHeight = h;
+		data.viewportHeight = Math.max(h, 1);
 	}
 	
 	public float height(){
@@ -117,13 +117,21 @@ public class Camera extends GameObject{
 		axis = axis("Y");
 		data.up.set(axis.x, axis.y, axis.z);
 		data.update();
+
+		if (renderingToTexture) {
+			if (renderBuffer == null || ((int) width() != renderBuffer.getWidth() || (int) height() != renderBuffer.getHeight())) {
+				if (renderBuffer != null)
+					renderBuffer.dispose();
+				renderBuffer = new RenderBuffer(null, (int) width(), (int) height());
+			}
+		}
 	}
 
 	public TextureRegion texture(){
-		renderingToTexture = true;
-		if (renderBuffer == null)
-			renderBuffer = new RenderBuffer(null);
-		return renderBuffer.region;
+		TextureRegion r = null;
+		if (renderBuffer != null)
+			r = renderBuffer.region;
+		return r;
 	}
 
 }

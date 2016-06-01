@@ -255,7 +255,7 @@ public class Bdx{
 			renderWorld(modelBatch, scene, scene.camera);			// Render main view
 
 			for (Camera cam : scene.cameras){
-				if (cam.renderingToTexture) {
+				if (cam.renderingToTexture && cam.renderBuffer != null) {
 					cam.renderBuffer.begin();
 					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 					Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -407,7 +407,7 @@ public class Bdx{
 			for (Camera cam : scene.cameras) {                // Have to do this, as the RenderBuffers need to be resized for the new window size
 				if (cam.renderBuffer != null)
 					cam.renderBuffer.dispose();
-				cam.renderBuffer = new RenderBuffer(null);
+				cam.renderBuffer = null;
 			}
 
 			if (scene.lastFrameBuffer != null)

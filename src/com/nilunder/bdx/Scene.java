@@ -868,7 +868,10 @@ public class Scene implements Named{
 			Bdx.profiler.stop("__logic");
 
 			updateVisuals();
-			camera.update();
+			for (Camera cam : cameras) {
+				if (cam == camera || cam.renderingToTexture)		// Update camera if it's the main scene camera, or if it's rendering to texture
+					cam.update();
+			}
 			Bdx.profiler.stop("__scene");
 
 			try{
