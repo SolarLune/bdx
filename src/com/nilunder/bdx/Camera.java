@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector3;
 
 import com.bulletphysics.linearmath.Transform;
 import com.nilunder.bdx.gl.RenderBuffer;
+import com.nilunder.bdx.utils.ArrayListNamed;
 
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
@@ -24,6 +25,7 @@ public class Camera extends GameObject{
 	public com.badlogic.gdx.graphics.Camera data;
 	public boolean renderingToTexture;
 	public RenderBuffer renderBuffer;
+	public ArrayListNamed<GameObject> ignoreObjects;
 
 	public void initData(Type type){
 		this.type = type;
@@ -32,6 +34,7 @@ public class Camera extends GameObject{
 		}else{
 			data = new OrthographicCamera();
 		}
+		ignoreObjects = new ArrayListNamed<GameObject>();
 	}
 	
 	public void projection(Matrix4f mat){
