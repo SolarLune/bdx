@@ -88,6 +88,7 @@ public class Scene implements Named{
 	private float fogDepth;
 	private boolean fogOn;
 	private boolean valid;
+	private boolean requestedEnd;
 
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
@@ -144,6 +145,7 @@ public class Scene implements Named{
 
 	public void init(){
 		requestedRestart = false;
+		requestedEnd = false;
 		paused = false;
 
 		if (shapeRenderer == null)
@@ -798,6 +800,7 @@ public class Scene implements Named{
 	}
 	
 	private void runObjectLogic(){
+
 		if (requestedRestart){
 			for (GameObject g : objects){
 				g.endNoChildren();
@@ -838,6 +841,25 @@ public class Scene implements Named{
 		}
 
 		toBeRemoved.clear();
+
+		if (requestedEnd) {
+			valid = false;
+
+			for (GameObject g : objects)
+				g.end();
+
+			dispose();
+
+			if (Bdx.scenes.contains(this)) {
+
+				if (Bdx.scenes.size() > 1)
+					Bdx.scenes.remove(this);
+				else
+					Bdx.end();
+
+			}
+
+		}
 
 	}
 	
@@ -892,23 +914,7 @@ public class Scene implements Named{
 	}
 
 	public void end(){
-
-		valid = false;
-
-		for (GameObject g : objects)
-			g.end();
-
-		dispose();
-
-		if (Bdx.scenes.contains(this)) {
-
-			if (Bdx.scenes.size() > 1)
-				Bdx.scenes.remove(this);
-			else
-				Bdx.end();
-
-		}
-
+		requestedEnd = true;
 	}
 
 	public String toString(){
