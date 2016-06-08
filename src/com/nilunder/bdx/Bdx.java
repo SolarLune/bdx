@@ -164,6 +164,7 @@ public class Bdx{
 	private static Color clearColor;
 	private static BDXDepthShaderProvider depthShaderProvider;
 	private static HashMap<Float, RenderBuffer> availableTempBuffers;
+	private static boolean requestedRestart;
 
 	public static void init(){
 		time = 0;
@@ -207,6 +208,7 @@ public class Bdx{
 		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers, gamepads));
 
 		availableTempBuffers = new HashMap<Float, RenderBuffer>();
+		requestedRestart = false;
 
 	}
 
@@ -240,6 +242,9 @@ public class Bdx{
 			shaderProvider.update(scene);
 
 			scene.update();
+
+			if (!scene.valid())
+				continue;
 
 			profiler.start("__render");
 
@@ -356,6 +361,20 @@ public class Bdx{
 		if (profiler.gl.isEnabled()){
 			profiler.gl.updateFields();
 		}
+
+		if (requestedRestart) {
+			requestedRestart = false;
+			Scene.clearColorDefaultSet = false;
+			dispose();
+			for (Scene scene : new ArrayList<Scene>(scenes)) {
+				scenes.remove(scene);
+				scene.end();
+			}
+			if (profiler.scene != null)
+				profiler.scene.end();
+			init();
+			scenes.add(firstScene);
+		}
 	}
 
 	private static void renderWorld(ModelBatch batch, Scene scene, Camera camera){
@@ -379,7 +398,8 @@ public class Bdx{
 			s.dispose();
 		for (RenderBuffer b : availableTempBuffers.values())
 			b.dispose();
-
+		for (Scene s : scenes)
+			s.end();
 	}
 
 	public static void end(){
@@ -417,16 +437,7 @@ public class Bdx{
 	}
 
 	public static void restart(){
-		Scene.clearColorDefaultSet = false;
-		dispose();
-		for (Scene scene : new ArrayList<Scene>(scenes)) {
-			scenes.remove(scene);
-			scene.end();
-		}
-		if (profiler.scene != null)
-			profiler.scene.end();
-		init();
-		scenes.add(firstScene);
+		requestedRestart = true;
 	}
 
 }

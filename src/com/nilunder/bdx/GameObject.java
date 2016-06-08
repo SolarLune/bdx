@@ -606,8 +606,10 @@ public class GameObject implements Named{
 		onEnd();
 		parent(null);
 		valid = false;
-		if (uniqueModel != null)
+		if (uniqueModel != null) {
 			uniqueModel.dispose();
+			uniqueModel = null;
+		}
 		scene.remove(this);
 		for (GameObject g : touchingObjects)
 			g.activate();
@@ -821,6 +823,9 @@ public class GameObject implements Named{
 			visible = false;
 			return;
 		}
+
+		if (joinedMeshObjects.contains(this))
+			throw new RuntimeException("ERROR: " + name() + ".joinedMeshObjects cannot contain a reference to itself.");
 		
 		// Join the transformed vertex arrays
 		
@@ -888,6 +893,10 @@ public class GameObject implements Named{
 		for (short i=0; i < numIndices; i++){
 			mpb.index(i);
 		}
+
+		if (uniqueModel != null)
+			uniqueModel.dispose();
+
 		uniqueModel = builder.end();
 		modelInstance = new ModelInstance(uniqueModel);
 		mesh = new com.nilunder.bdx.gl.Mesh(modelInstance.model);
