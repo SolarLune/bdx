@@ -2,6 +2,7 @@ package com.nilunder.bdx;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
@@ -13,6 +14,7 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -816,100 +818,134 @@ public class GameObject implements Named{
 
 	public void updateJoinedMesh(boolean endJoinedMeshObjects){
 		
-		// Set invisible and remove body if not joining anything
-		
 		if (joinedMeshObjects.isEmpty()){
-			scene.world.removeRigidBody(body);
-			visible = false;
-			return;
+			throw new RuntimeException("ERROR: " + name() + ".joinedMeshObjects is empty."); 
 		}
-
-		if (joinedMeshObjects.contains(this))
-			throw new RuntimeException("ERROR: " + name() + ".joinedMeshObjects cannot contain a reference to itself.");
 		
-		// Join the transformed vertex arrays
+		if (joinedMeshObjects.contains(this)){
+			throw new RuntimeException("ERROR: " + name() + ".joinedMeshObjects cannot contain a reference to itself.");
+		}
+		
+		// Collect transformed vertex arrays for each material & calculate number of indices
 		
 		int VERT_STRIDE = Bdx.VERT_STRIDE;
 		
-		ArrayList<float[]> tvaList = new ArrayList<float[]>();
-		int tvaListJoinedLength = 0;
-		GameObject g = null;
+		HashMap<String, ArrayList<float[]>> tvaMap = new HashMap<String, ArrayList<float[]>>();
+		HashMap<String, Integer> lenMap = new HashMap<String, Integer>();
 		
-		for (int k=0; k < joinedMeshObjects.size(); k++){
+		GameObject g;
+		String matName;
+		MeshPart meshPart;
+		float[] va, tva;
+		int numIndices, numVertices, offset, j;
+		Vector3f p, s, vP, nP, vPT, nPT;
+		Matrix3f o;
+		
+		for (int k = 0; k < joinedMeshObjects.size(); k++){
 			g = joinedMeshObjects.get(k);
 			
-			Vector3f p = g.position();
-			Matrix3f o = g.orientation();
-			Vector3f s = g.scale();
+			p = g.position();
+			o = g.orientation();
+			s = g.scale();
 			
-			Mesh m = g.modelInstance.model.meshes.first();
-			float[] va = new float[m.getNumVertices() * VERT_STRIDE];
-			m.getVertices(0, va.length, va);
-			
-			float[] tva = new float[va.length];
-			int len = va.length / VERT_STRIDE;
-			int j = 0;
-			
-			for (int i=0; i < len; i++){
-				Vector3f vP = new Vector3f(va[j], va[j+1], va[j+2]);
-				Vector3f nP = new Vector3f(va[j+3], va[j+4], va[j+5]);
-				Vector3f vPT = o.mult(vP.mul(s)).plus(p);
-				Vector3f nPT = o.mult(vP.plus(nP)).minus(o.mult(vP));
-				tva[j] = vPT.x;
-				tva[j+1] = vPT.y;
-				tva[j+2] = vPT.z;
-				tva[j+3] = nPT.x;
-				tva[j+4] = nPT.y;
-				tva[j+5] = nPT.z;
-				tva[j+6] = va[j+6];
-				tva[j+7] = va[j+7];
-				j += VERT_STRIDE;
+			for (NodePart nodePart : g.modelInstance.model.nodes.get(0).parts){
+				meshPart = nodePart.meshPart;
+				numIndices = meshPart.size;
+				numVertices = numIndices * VERT_STRIDE;
+				offset = meshPart.offset * VERT_STRIDE;
+				va = meshPart.mesh.getVertices(offset, numVertices, new float[numVertices]);
+				tva = new float[numVertices];
+				j = 0;
+				
+				for (int i = 0; i < numIndices; i++){
+					vP = new Vector3f(va[j], va[j+1], va[j+2]);
+					nP = new Vector3f(va[j+3], va[j+4], va[j+5]);
+					vPT = o.mult(vP.mul(s)).plus(p);
+					nPT = o.mult(vP.plus(nP)).minus(o.mult(vP));
+					tva[j] = vPT.x;
+					tva[j+1] = vPT.y;
+					tva[j+2] = vPT.z;
+					tva[j+3] = nPT.x;
+					tva[j+4] = nPT.y;
+					tva[j+5] = nPT.z;
+					tva[j+6] = va[j+6];
+					tva[j+7] = va[j+7];
+					j += VERT_STRIDE;
+				}
+				
+				matName = nodePart.material.id;
+				if (!tvaMap.containsKey(matName)){
+					tvaMap.put(matName, new ArrayList<float[]>());
+					lenMap.put(matName, 0);
+				}
+				tvaMap.get(matName).add(tva);
+				lenMap.put(matName, lenMap.get(matName) + tva.length);
 			}
-			
-			tvaListJoinedLength += tva.length;
-			tvaList.add(tva);
 		}
 		
-		float[] tvaListJoined = new float[tvaListJoinedLength];
-		int j = 0;
-		for (float[] tva : tvaList){
-			int len = tva.length;
-			for (int i=0; i < len; i++){
-				tvaListJoined[i + j] = tva[i];
-			}
-			j += len;
-		}
-		
-		// Build to replace the model
+		// Build a unique model out of meshparts for each material
 		
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
-		MeshPartBuilder mpb = builder.part(name, GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, g.materials.get(0));
-		mpb.vertex(tvaListJoined);
-		int numIndices = tvaListJoinedLength / VERT_STRIDE;
-		if (numIndices > 32767){
-			throw new RuntimeException("Maximum number of vertices exceeded. Join not more than 10922 triangles."); 
+		
+		short idx = 0;
+		MeshPartBuilder mpb;
+		int len;
+		
+		for (Map.Entry<String, ArrayList<float[]>> e : tvaMap.entrySet()){
+			matName = e.getKey();
+			len = lenMap.get(matName);
+			tva = new float[len];
+			j = 0;
+			
+			for (float[] verts : e.getValue()){
+				numVertices = verts.length;
+				for (int i = 0; i < numVertices; i++){
+					tva[i + j] = verts[i];
+				}
+				j += numVertices;
+			}
+			
+			mpb = builder.part(matName, GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, scene.materials.get(matName));
+			mpb.vertex(tva);
+			
+			try{
+				for (short i = 0; i < len / VERT_STRIDE; i++){
+					mpb.index(idx);
+					idx += 1;
+				}
+			}catch (OutOfMemoryError error){
+				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. Decrease the number of objects to join.");
+			}
 		}
-		for (short i=0; i < numIndices; i++){
-			mpb.index(i);
-		}
-
+		
 		if (uniqueModel != null)
 			uniqueModel.dispose();
 
 		uniqueModel = builder.end();
+		
+		// Update modelInstance & mesh & materials
+		
 		modelInstance = new ModelInstance(uniqueModel);
 		mesh = new com.nilunder.bdx.gl.Mesh(modelInstance.model);
+		materials.clear();
+		Material mat;
+		
+		for (NodePart nodePart : modelInstance.nodes.get(0).parts){
+			mat = scene.materials.get(nodePart.material.id);
+			nodePart.material = mat;
+			materials.add(mat);
+		}
 		
 		// Update visual
 		
-		visible = json.get("visible").asBoolean();
+		if (json.get("mesh_name").asString() == null){ // in case this was an empty
+			visible = json.get("visible").asBoolean(); // set visbility to initial value
+		}
 		Mesh mesh = uniqueModel.meshes.first();
 		BoundingBox bbox = mesh.calculateBoundingBox();
-		Vector3 dimensions = new Vector3();
-		Vector3 center = new Vector3();
-		bbox.getDimensions(dimensions);
-		bbox.getCenter(center);
+		Vector3 dimensions = bbox.getDimensions(new Vector3());
+		Vector3 center = bbox.getCenter(new Vector3());
 		dimensionsNoScale = new Vector3f(dimensions.x, dimensions.y, dimensions.z);
 		origin = new Vector3f(center.x, center.y, center.z);
 		position(new Vector3f());
@@ -923,6 +959,7 @@ public class GameObject implements Named{
 		body.setUserPointer(this);
 		scene.world.addRigidBody(body);
 		scene.world.updateSingleAabb(body);
+		
 		if (currBodyType.equals("NO_COLLISION")){
 			scene.world.removeRigidBody(body);
 		}
