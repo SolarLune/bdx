@@ -1087,7 +1087,7 @@ public class GameObject implements Named{
 		body.forceActivationState(2);
 	}
 
-	public boolean insideFrustum(){
+	public boolean insideFrustum(Camera camera){
 		Vector3f min = new Vector3f();
 		Vector3f max = new Vector3f();
 		body.getAabb(min, max);
@@ -1099,7 +1099,7 @@ public class GameObject implements Named{
 		else
 			center = min.plus(dimHalved).plus(orientation().mult(origin).mul(scale()));
 		
-		return scene.camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, dimHalved.x, dimHalved.y, dimHalved.z);
+		return camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, dimHalved.x, dimHalved.y, dimHalved.z);
 	}
 
 }

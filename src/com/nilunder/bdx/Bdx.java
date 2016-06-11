@@ -20,25 +20,38 @@ import javax.vecmath.Vector2f;
 public class Bdx{
 
 	public static class Display{
-
-		public void size(int width, int height){
-			Gdx.graphics.setWindowedMode(width, height);
+		public boolean changed;
+		
+		public int width(){
+			return Gdx.graphics.getWidth();
 		}
-		public void size(Vector2f vec){
-			size((int)vec.x, (int)vec.y);
+		public void width(float width){
+			Gdx.graphics.setWindowedMode((int) width, Gdx.graphics.getHeight());
+		}
+		public int height(){
+			return Gdx.graphics.getHeight();
+		}
+		public void height(float height){
+			Gdx.graphics.setWindowedMode(Gdx.graphics.getWidth(), (int) height);
 		}
 		public Vector2f size(){
 			return new Vector2f(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		}
+		public void size(float width, float height){
+			Gdx.graphics.setWindowedMode((int) width, (int) height);
+		}
+		public void size(Vector2f size){
+			size(size.x, size.y);
 		}
 		public Vector2f center(){
 			return new Vector2f(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
 		}
 		public void fullscreen(boolean full){
-			Graphics.DisplayMode dm = Gdx.graphics.getDisplayMode();
-			if (full)
-				Gdx.graphics.setFullscreenMode(dm);
-			else
-				Gdx.graphics.setWindowedMode((int) size().x, (int) size().y);
+			if (full){
+				Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+			}else{
+				size(size());
+			}
 		}
 		public boolean fullscreen(){
 			return Gdx.graphics.isFullscreen();
@@ -75,17 +88,27 @@ public class Bdx{
 				return config.numDirectionalLights;
 			else
 				return config.numSpotLights;
-
 		}
 	}
 
 	public static class ArrayListScenes extends ArrayListNamed<Scene>{
+		@Override
+		public Object clone(){
+			// GWT (2.6.0) doesn't provide a default implementation of Object.clone()
+			ArrayListScenes cloned = new ArrayListScenes();
+			for (Scene scene : this){
+				cloned.add(scene);
+			}
+			return cloned;
+		}
+		@Override
 		public boolean add(Scene scene){
 			boolean ret = super.add(scene);
 			if (scene.objects == null)
 				scene.init();
 			return ret;
 		}
+		@Override
 		public void add(int index, Scene scene){
 			super.add(index, scene);
 			if (scene.objects == null)
@@ -122,16 +145,6 @@ public class Bdx{
 				scenes.add(file.name().replace(".bdx", ""));
 			}
 			return scenes;
-		}
-
-		@Override
-		public Object clone() {
-			// GWT (2.6.0) doesn't provide a default implementation of Object.clone()
-			ArrayListScenes cloned = new ArrayListScenes();
-			for(Scene scene : this) {
-				cloned.add(scene);
-			}
-			return cloned;
 		}
 	}
 
@@ -209,18 +222,16 @@ public class Bdx{
 
 		availableTempBuffers = new HashMap<Float, RenderBuffer>();
 		requestedRestart = false;
-
 	}
 
 	public static void main(){
-
+		
 		profiler.start("__render");
-		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		profiler.stop("__render");
-
+		
 		// -------- Update Input --------
-
+		
 		time += TICK_TIME;
 		++GdxProcessor.currentTick;
 		fingers.clear();
@@ -230,37 +241,36 @@ public class Bdx{
 		}
 		profiler.stop("__scene");
 		// ------------------------------
-
+		
 		for (Component c : components){
 			if (c.state != null)
 				c.state.main();
 		}
 		profiler.stop("__logic");
-
+		
 		for (Scene scene : (ArrayListScenes)scenes.clone()){
-			depthShaderProvider.update(scene);
-			shaderProvider.update(scene);
-
+			
+			profiler.start("__scene");
+			
 			scene.update();
-
+			
+			profiler.stop("__scene");
+			
 			if (!scene.valid())
 				continue;
-
-			profiler.start("__render");
-
+			
 			// ------- Render Scene --------
-
+			
 			if (scene.screenShaders.size() > 0){
 				frameBuffer.begin();
 				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 			}
-
 			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-
-			renderWorld(modelBatch, scene, scene.camera);			// Render main view
-
+			
 			for (Camera cam : scene.cameras){
-				if (cam.renderingToTexture && cam.renderBuffer != null) {
+				if (cam.renderingToTexture){
+					cam.update();
+					cam.updateRenderBuffer();
 					cam.renderBuffer.begin();
 					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 					Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -268,100 +278,112 @@ public class Bdx{
 					cam.renderBuffer.end();
 				}
 			}
-
-			scene.executeDrawCommands();
-
-			if (scene.screenShaders.size() > 0){
-
-				frameBuffer.end();
-
-				boolean usingDepth = false;
-
-				for (ScreenShader filter : scene.screenShaders) {
-					if (filter.usingDepthTexture())
-						usingDepth = true;
+			
+			Camera cam;
+			for (Viewport viewport : scene.viewports){
+				cam = viewport.camera();
+				
+				viewport.apply();
+				
+				depthShaderProvider.update(viewport);
+				shaderProvider.update(viewport);
+				
+				renderWorld(modelBatch, scene, cam);
+				
+				viewport.executeDrawCommands();
+				
+				if (scene.screenShaders.size() > 0){
+					frameBuffer.end();
+					
+					boolean usingDepth = false;
+					for (ScreenShader filter : scene.screenShaders){
+						if (filter.usingDepthTexture())
+							usingDepth = true;
+					}
+					
+					if (usingDepth){
+						Gdx.gl.glClearColor(1, 1, 1, 1);
+						depthBuffer.begin();
+						Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
+						renderWorld(depthBatch, scene, cam);
+						depthBuffer.end();
+						depthBuffer.getColorBufferTexture().bind(2);
+					}
+					
+					scene.lastFrameBuffer.getColorBufferTexture().bind(1);
+					Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+					
+					Gdx.gl.glClearColor(0, 0, 0, 0);
+					
+					Vector2f size = viewport.size();
+					float near = cam.near();
+					float far = cam.far();
+					
+					for (ScreenShader filter : scene.screenShaders){
+						
+						if (!filter.active)
+							continue;
+						
+						filter.begin();
+						filter.setUniformf("time", Bdx.time);
+						filter.setUniformi("lastFrame", 1);
+						filter.setUniformi("depthTexture", 2);
+						filter.setUniformf("screenWidth", size.x);
+						filter.setUniformf("screenHeight", size.y);
+						filter.setUniformf("near", near);
+						filter.setUniformf("far", far);
+						filter.end();
+						
+						if (!availableTempBuffers.containsKey(filter.renderScale.x))
+							availableTempBuffers.put(filter.renderScale.x, new RenderBuffer(spriteBatch, (int)(size.x * filter.renderScale.x), (int)(size.y * filter.renderScale.y)));
+						
+						RenderBuffer tempBuffer = availableTempBuffers.get(filter.renderScale.x);
+						
+						tempBuffer.clear();
+						
+						frameBuffer.drawTo(tempBuffer, filter);
+						
+						if (!filter.overlay)
+							frameBuffer.clear();
+						
+						tempBuffer.drawTo(frameBuffer);
+					}
+					
+					frameBuffer.drawTo(null); //  Draw to screen
+					scene.lastFrameBuffer.clear();
+					frameBuffer.drawTo(scene.lastFrameBuffer);
 				}
-
-				if (usingDepth) {
-					Gdx.gl.glClearColor(1, 1, 1, 1);
-					depthBuffer.begin();
-					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
-					renderWorld(depthBatch, scene, scene.camera);
-					depthBuffer.end();
-					depthBuffer.getColorBufferTexture().bind(2);
-				}
-
-				scene.lastFrameBuffer.getColorBufferTexture().bind(1);
-				Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
-
-				Gdx.gl.glClearColor(0, 0, 0, 0);
-
-				for (ScreenShader filter : scene.screenShaders) {
-
-					if (!filter.active)
-						continue;
-
-					filter.begin();
-					filter.setUniformf("time", Bdx.time);
-					filter.setUniformi("lastFrame", 1);
-					filter.setUniformi("depthTexture", 2);
-					filter.setUniformf("screenWidth", Bdx.display.size().x);
-					filter.setUniformf("screenHeight", Bdx.display.size().y);
-					filter.setUniformf("near", scene.camera.near());
-					filter.setUniformf("far", scene.camera.far());
-					filter.end();
-
-					int width = (int) (Gdx.graphics.getWidth() * filter.renderScale.x);
-					int height = (int) (Gdx.graphics.getHeight() * filter.renderScale.y);
-
-					if (!availableTempBuffers.containsKey(filter.renderScale.x))
-						availableTempBuffers.put(filter.renderScale.x, new RenderBuffer(spriteBatch, width, height));
-
-					RenderBuffer tempBuffer = availableTempBuffers.get(filter.renderScale.x);
-
-					tempBuffer.clear();
-
-					frameBuffer.drawTo(tempBuffer, filter);
-
-					if (!filter.overlay)
-						frameBuffer.clear();
-
-					tempBuffer.drawTo(frameBuffer);
-
-				}
-
-				frameBuffer.drawTo(null); //  Draw to screen
-				scene.lastFrameBuffer.clear();
-				frameBuffer.drawTo(scene.lastFrameBuffer);
+				
+				display.clearColor(display.clearColor());
+				
+				// ------- Render physics debug view --------
+				
+				Bullet.DebugDrawer debugDrawer = (Bullet.DebugDrawer) scene.world.getDebugDrawer();
+				debugDrawer.drawWorld(scene.world, cam.data);
 			}
-
-			display.clearColor(display.clearColor());
-
-			// ------- Render physics debug view --------
-
-			Bullet.DebugDrawer debugDrawer = (Bullet.DebugDrawer)scene.world.getDebugDrawer();
-			debugDrawer.drawWorld(scene.world, scene.camera.data);
-
+			
 			profiler.stop("__render");
 		}
+		
 		mouse.wheelMove = 0;
-
+		Bdx.display.changed = false;
+		
 		profiler.updateVariables();
 		if (profiler.visible()){
 			profiler.updateVisible();
-
+			
 			// ------- Render profiler scene --------
-
+			
 			Scene profilerScene = profiler.scene;
 			profilerScene.update();
 			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-			renderWorld(modelBatch, profilerScene, profilerScene.camera);
-			profilerScene.executeDrawCommands();
+			renderWorld(modelBatch, profilerScene, profilerScene.viewports.get(0).camera());
+			//profilerScene.viewports.get(0).executeDrawCommands(); // profiler scene unexposed
 		}
 		if (profiler.gl.isEnabled()){
 			profiler.gl.updateFields();
 		}
-
+		
 		if (requestedRestart) {
 			requestedRestart = false;
 			Scene.clearColorDefaultSet = false;
@@ -375,12 +397,14 @@ public class Bdx{
 			init();
 			scenes.add(firstScene);
 		}
+		
+		profiler.stop("__scene");
 	}
 
 	private static void renderWorld(ModelBatch batch, Scene scene, Camera camera){
 		batch.begin(camera.data);
 		for (GameObject g : scene.objects){
-			if (g.visible() && g.insideFrustum() && !camera.ignoreObjects.contains(g))
+			if (g.visible() && g.insideFrustum(camera) && !camera.ignoreObjects.contains(g))
 				batch.render(g.modelInstance, scene.environment);
 		}
 		batch.end();
@@ -433,7 +457,17 @@ public class Bdx{
 			if (scene.lastFrameBuffer != null)
 				scene.lastFrameBuffer.dispose();
 			scene.lastFrameBuffer = new RenderBuffer(null);
+			
+			for (Viewport viewport : scene.viewports){
+				viewport.update(width, height);
+			}
 		}
+		
+		if (profiler.visible()){
+			profiler.updateViewport(width, height);
+		}
+		
+		Bdx.display.changed = true;
 	}
 
 	public static void restart(){
