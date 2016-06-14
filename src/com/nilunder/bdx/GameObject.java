@@ -67,6 +67,8 @@ public class GameObject implements Named{
 	private Model uniqueModel;
 	public ArrayListMaterials materials;
 	public boolean initialized;
+	public int logicFrequency;
+	public float logicCounter;
 	private Vector3f scale;
 
 	public class ArrayListGameObject extends ArrayListNamed<GameObject> {
@@ -145,6 +147,8 @@ public class GameObject implements Named{
 		materials = new ArrayListMaterials();
 		valid = true;
 		scale = new Vector3f();
+		logicFrequency = Bdx.TICK_RATE;
+		logicCounter = 1;
 	}
 
 	public String name(){

@@ -821,10 +821,19 @@ public class Scene implements Named{
 			if (g instanceof Light)
 				((Light) g).updateLight();
 			for (Component c : g.components){
-				if (c.state != null)
-					c.state.main();
+				if (c.state != null) {
+					if (c.logicCounter >= 1) {
+						c.logicCounter -= 1;
+						c.state.main();
+					}
+					c.logicCounter += c.logicFrequency * Bdx.TICK_TIME;
+				}
 			}
-			g.main();
+			if (g.logicCounter >= 1) {
+				g.logicCounter -= 1;
+				g.main();
+			}
+			g.logicCounter += g.logicFrequency * Bdx.TICK_TIME;
 		}
 
 		for (GameObject g : toBeAdded) {
