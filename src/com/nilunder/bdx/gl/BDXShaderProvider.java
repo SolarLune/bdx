@@ -30,11 +30,10 @@ class BDXDefaultShader extends DefaultShader {
 		super(renderable, config);
 	}
 
-	public BDXDefaultShader(Renderable renderable, DefaultShader.Config config, MaterialShader shaderProgram) {
+	public BDXDefaultShader(Renderable renderable, DefaultShader.Config config, MaterialShader materialShader) {
 		super(renderable,
 				config,
-				shaderProgram.set(createPrefix(renderable, config) + shaderProgram.vertexShader,
-						createPrefix(renderable, config) + shaderProgram.fragmentShader).compile().programData);
+				materialShader.setPrefix(createPrefix(renderable, config)).compile().programData);
 	}
 
 	public void render(Renderable renderable, Attributes combinedAttributes)
@@ -87,11 +86,9 @@ class BDXDefaultShader extends DefaultShader {
 
 		String matName = renderable.material.id;
 
-		boolean hasCustomShader = Bdx.matShaders.containsKey(matName);	// Is there a custom shader for the rendered material?
+		if (Bdx.matShaders.containsKey(matName)) {						// Is there a custom shader for the rendered material?
 
-		if (hasCustomShader) {
-
-			if (Bdx.matShaders.get(matName).programData == program)					// Is this shader for that rendered material?
+			if (Bdx.matShaders.get(matName).programData == program)	    // Is this shader for that rendered material?
 				return true;											// If so, it can be used to render
 			else
 				return false;
@@ -157,8 +154,9 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 		for (Shader s : shaders){
 			BDXDefaultShader shader = (BDXDefaultShader) s;
 			if (shader.materialName != null)
-				Bdx.matShaders.remove(shader.materialName);		// Remove the ShaderProgram from the custom Shaders HashMap because
-			s.dispose();										// Shader.dispose() destroys the ShaderProgram, too.
+				Bdx.matShaders.get(shader.materialName).dispose();	// "Empty" the MaterialShader; it'll be recompiled when necessary, so no need to remove it
+			else
+				s.dispose();
 		}
 		shaders.clear();
 	}
