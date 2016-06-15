@@ -25,8 +25,9 @@ public class Timer {
 	}
 
 	public float time(){
-		if (paused) return delta;
-		return Bdx.time - timeLast;
+		float f = Bdx.time - timeLast;
+		if (paused) f = delta;
+		return Math.round(f * 10000.0f) / 10000.0f;
 	}
 
 	public float timeLeft(){
@@ -55,7 +56,7 @@ public class Timer {
 	}
 
 	public boolean done(){
-		return time() > interval;
+		return time() >= interval;
 	}
 
 	public void done(boolean done){
