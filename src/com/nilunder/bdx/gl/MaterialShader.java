@@ -9,20 +9,17 @@ public class MaterialShader implements Disposable{
 
 	public String vertexShader;
 	public String fragmentShader;
+	private String prefix;
+
 	public com.badlogic.gdx.graphics.glutils.ShaderProgram programData;
 
 	public MaterialShader(String vertexShader, String fragmentShader) {
-		set(vertexShader, fragmentShader);
+		this.vertexShader = vertexShader;
+		this.fragmentShader = fragmentShader;
 	}
 
 	public MaterialShader(FileHandle vertexShader, FileHandle fragmentShader) {
 		this(vertexShader.readString(), fragmentShader.readString());
-	}
-
-	public MaterialShader set(String vertexShader, String fragmentShader) {
-		this.vertexShader = vertexShader;
-		this.fragmentShader = fragmentShader;
-		return this;
 	}
 
 	public static MaterialShader load(String vertexPath, String fragmentPath) {
@@ -31,10 +28,9 @@ public class MaterialShader implements Disposable{
 
 	public MaterialShader compile(){
 
-		if (programData != null)
-			programData.dispose();
+		dispose();
 
-		programData = new ShaderProgram(vertexShader, fragmentShader);
+		programData = new ShaderProgram(prefix + vertexShader, prefix + fragmentShader);
 
 		if (!programData.isCompiled())
 			throw new RuntimeException("Shader compilation error: " + programData.getLog());
@@ -47,10 +43,15 @@ public class MaterialShader implements Disposable{
 	}
 
 	public void dispose(){
-		if (programData != null) {
+		if (compiled()) {
 			programData.dispose();
 			programData = null;
 		}
+	}
+
+	public MaterialShader setPrefix(String prefix){
+		this.prefix = prefix;
+		return this;
 	}
 
 }
