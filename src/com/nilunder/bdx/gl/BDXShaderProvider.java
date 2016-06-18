@@ -13,7 +13,6 @@ import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.nilunder.bdx.Bdx;
 import com.nilunder.bdx.Scene;
-import com.nilunder.bdx.gl.Viewport;
 
 class BDXDefaultShader extends DefaultShader {
 
@@ -31,10 +30,11 @@ class BDXDefaultShader extends DefaultShader {
 		super(renderable, config);
 	}
 
-	public BDXDefaultShader(Renderable renderable, DefaultShader.Config config, MaterialShader materialShader) {
+	public BDXDefaultShader(Renderable renderable, DefaultShader.Config config, MaterialShader shaderProgram) {
 		super(renderable,
 				config,
-				materialShader.setPrefix(createPrefix(renderable, config)).compile().programData);
+				shaderProgram.set(createPrefix(renderable, config) + shaderProgram.vertexShader,
+						createPrefix(renderable, config) + shaderProgram.fragmentShader).compile().programData);
 	}
 
 	public void render(Renderable renderable, Attributes combinedAttributes)
@@ -68,15 +68,15 @@ class BDXDefaultShader extends DefaultShader {
 		else
 			set(u_emitColor, emit.color);
 
-		if (shaderProvider.viewport != null) {
+		if (shaderProvider.scene != null) {
 
 			ColorAttribute fog = (ColorAttribute) renderable.environment.get(ColorAttribute.Fog);
 			if (fog == null)
 				set(u_fogRange, 0f, 0f);
 			else
-				set(u_fogRange, shaderProvider.viewport.scene().fogRange().x, shaderProvider.viewport.scene().fogRange().y);
+				set(u_fogRange, shaderProvider.scene.fogRange().x, shaderProvider.scene.fogRange().y);
 
-			set(u_camRange, shaderProvider.viewport.camera().near(), shaderProvider.viewport.camera().far());
+			set(u_camRange, shaderProvider.scene.camera.near(), shaderProvider.scene.camera.far());
 
 		}
 
@@ -87,9 +87,11 @@ class BDXDefaultShader extends DefaultShader {
 
 		String matName = renderable.material.id;
 
-		if (Bdx.matShaders.containsKey(matName)) {						// Is there a custom shader for the rendered material?
+		boolean hasCustomShader = Bdx.matShaders.containsKey(matName);	// Is there a custom shader for the rendered material?
 
-			if (Bdx.matShaders.get(matName).programData == program)	    // Is this shader for that rendered material?
+		if (hasCustomShader) {
+
+			if (Bdx.matShaders.get(matName).programData == program)					// Is this shader for that rendered material?
 				return true;											// If so, it can be used to render
 			else
 				return false;
@@ -108,7 +110,7 @@ class BDXDefaultShader extends DefaultShader {
 
 public class BDXShaderProvider extends DefaultShaderProvider {
 
-	Viewport viewport;
+	Scene scene;
 
 	public BDXShaderProvider(){
 
@@ -147,17 +149,16 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 		return shader;
 	}
 
-	public void update(Viewport viewport){
-		this.viewport = viewport;
+	public void update(Scene scene){
+		this.scene = scene;
 	}
 
 	public void deleteShaders(){
 		for (Shader s : shaders){
 			BDXDefaultShader shader = (BDXDefaultShader) s;
 			if (shader.materialName != null)
-				Bdx.matShaders.get(shader.materialName).dispose();	// "Empty" the MaterialShader; it'll be recompiled when necessary, so no need to remove it
-			else
-				s.dispose();
+				Bdx.matShaders.remove(shader.materialName);		// Remove the ShaderProgram from the custom Shaders HashMap because
+			s.dispose();										// Shader.dispose() destroys the ShaderProgram, too.
 		}
 		shaders.clear();
 	}

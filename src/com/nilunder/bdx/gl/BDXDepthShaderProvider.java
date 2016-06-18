@@ -6,10 +6,10 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.shaders.DepthShader;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
-import com.nilunder.bdx.gl.Viewport;
+import com.nilunder.bdx.Scene;
 
 class BDXDepthShader extends DepthShader {
-	public Viewport viewport;
+	public Scene scene;
 
 	public BDXDepthShader(Renderable renderable) {
 		super(renderable, new DepthShader.Config());
@@ -21,9 +21,9 @@ class BDXDepthShader extends DepthShader {
 
 	public void render(Renderable renderable, Attributes combinedAttributes) {
 		super.render(renderable, combinedAttributes);
-		if (viewport != null) {
-			program.setUniformf("far", viewport.camera().far());
-			program.setUniformf("near", viewport.camera().near());
+		if (scene != null) {
+			program.setUniformf("far", scene.camera.far());
+			program.setUniformf("near", scene.camera.near());
 		}
 	}
 }
@@ -38,9 +38,9 @@ public class BDXDepthShaderProvider extends DepthShaderProvider {
 		return new BDXDepthShader(renderable, this.config);
 	}
 
-	public void update(Viewport viewport){
+	public void update(Scene scene){
 		for (Shader s : shaders) {
-			((BDXDepthShader) s).viewport = viewport;
+			((BDXDepthShader) s).scene = scene;
 		}
 	}
 

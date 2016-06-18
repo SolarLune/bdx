@@ -11,7 +11,6 @@ import com.nilunder.bdx.Bdx;
 import com.nilunder.bdx.Scene;
 import com.nilunder.bdx.GameObject;
 import com.nilunder.bdx.Text;
-import com.nilunder.bdx.gl.Viewport;
 
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
@@ -231,6 +230,7 @@ public class Profiler{
 	}
 	
 	private final int TICK_RATE = Bdx.TICK_RATE;
+	private final float SCREEN_SIZE = 512;
 	private final Color BG_COLOR = new Color(0.125f, 0.125f, 0.125f, 0.5f);
 	private final float SPACING = 0.6f;
 	private final float BAR_HEIGHT = 0.4f;
@@ -251,22 +251,23 @@ public class Profiler{
 	private ArrayList<Long> tickTimes;
 	
 	private GameObject display;
-	private GameObject background;
 	private Text tickInfo;
 	private HashMap<String, Text> texts;
 	private HashMap<String, GameObject> bars;
 	
+	private float scale;
+	private float ratio;
 	private boolean visible;
 	private boolean tickInfoVisible;
 	private boolean subsystemsVisible;
 	private boolean glVisible;
 	private boolean propsVisible;
 	private boolean initialized;
+	private Vector2f lastDisplaySize;
 	private float verticalOffset;
 	private float horizontalOffset;
 	
 	public Scene scene;
-	public Viewport viewport;
 	
 	public float avgTickRate;
 	public float avgTickTime;
@@ -284,6 +285,7 @@ public class Profiler{
 			tickTimes.add(1000000000L / TICK_RATE);
 		}
 		
+		scale = 1f;
 		initialized = false;
 		avgTickRate = TICK_RATE;
 		avgTickTime = 1000 / TICK_RATE;
@@ -314,7 +316,8 @@ public class Profiler{
 	}
 	
 	private void scaleBackground(){
-		background.scale(horizontalOffset, SPACING - verticalOffset, 1);
+		Vector3f sc = new Vector3f(horizontalOffset, verticalOffset - SPACING, 1);
+		display.children.get("__PBackground").scale(sc.mul(display.scale()));
 	}
 	
 	private void initTickInfo(){
@@ -354,12 +357,17 @@ public class Profiler{
 				scene.init();
 				
 				display = scene.add("__PDisplay");
-				background = display.children.get("__PBackground");
+				GameObject background = display.children.get("__PBackground");
 				background.materials.color(BG_COLOR);
+				background.parent(display);
 				
-				viewport = scene.viewports.get(0);
-				viewport.type(Viewport.Type.SCREEN);
-				updateViewport();
+				lastDisplaySize = Bdx.display.size();
+				ratio = lastDisplaySize.y / lastDisplaySize.x;
+				Vector3f p = scene.camera.position();
+				p.y *= ratio;
+				scene.camera.position(p);
+				
+				updateDisplay();
 			}
 			
 			if (tickInfoVisible){
@@ -491,8 +499,8 @@ public class Profiler{
 		}
 	}
 	
-	public float scale(){
-		return viewport.sizeNormalized().x;
+	private void updateDisplay(){
+		display.scale(new Vector3f(SCREEN_SIZE / lastDisplaySize.x, ratio * SCREEN_SIZE / lastDisplaySize.y, 1).mul(scale));
 	}
 	
 	public void scale(float f){
@@ -500,8 +508,8 @@ public class Profiler{
 			System.err.println(ERR_MSG);
 			return;
 		}
-		viewport.sizeNormalized(f, f);
-		updateViewport();
+		scale = f;
+		updateDisplay();
 	}
 	
 	public void updateVariables(){
@@ -524,7 +532,9 @@ public class Profiler{
 	
 	private GameObject add(String name, Vector3f position){
 		GameObject obj = scene.add(name);
-		obj.position(position);
+		Vector3f scale = display.scale();
+		obj.scale(scale);
+		obj.position(position.mul(scale));
 		obj.parent(display);
 		return obj;
 	}
@@ -568,18 +578,10 @@ public class Profiler{
 			String n = name.startsWith("__") ? name.split("__")[1] : name;
 			float m = nanos.get(name) * 0.000001f;
 			float p = percents.get(name);
-			bars.get(name).scale(new Vector3f(BAR_WIDTH * p * 0.01f, BAR_HEIGHT, 1));
+			Vector3f barScale = new Vector3f(BAR_WIDTH * p * 0.01f, BAR_HEIGHT, 1);
+			bars.get(name).scale(barScale.mul(display.scale()));
 			texts.get(name).text(formatForSubsystems(n, m, "ms", p, "%"));
 		}
-	}
-	
-	public void updateViewport(float width, float height){
-		viewport.positionNormalized(0, 1 - viewport.resolution().y * viewport.sizeNormalized().y / height);
-		viewport.update(width, height);
-	}
-	
-	public void updateViewport(){
-		updateViewport(Bdx.display.width(), Bdx.display.height());
 	}
 	
 	public void updateVisible(){
@@ -599,7 +601,11 @@ public class Profiler{
 			gl.updateTexts();
 		}
 		
-		viewport.apply();
+		Vector2f ds = Bdx.display.size();
+		if (!lastDisplaySize.equals(ds)){
+			lastDisplaySize = ds;
+			updateDisplay();
+		}
 	}
 	
 	private static String formatForProps(String key, String value){
