@@ -23,7 +23,6 @@ import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.JsonReader;
@@ -41,12 +40,14 @@ import com.bulletphysics.linearmath.Transform;
 import com.nilunder.bdx.gl.Material;
 import com.nilunder.bdx.gl.RenderBuffer;
 import com.nilunder.bdx.gl.ScreenShader;
+import com.nilunder.bdx.gl.Viewport;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
 import com.nilunder.bdx.GameObject.ArrayListGameObject;
 
 public class Scene implements Named{
+
 	public static HashMap<String, Instantiator> instantiators;
 
 	public JsonValue json;
@@ -54,8 +55,7 @@ public class Scene implements Named{
 	public String name;
 	public LinkedListNamed<GameObject> objects;
 	public LinkedListNamed<Light> lights;
-	public Camera camera;
-	public ArrayList<Camera> cameras;
+	public ArrayListNamed<Camera> cameras;
 	public HashMap<Model, Vector2f> modelToFrame;
 
 	private FileHandle scene;
@@ -71,16 +71,14 @@ public class Scene implements Named{
 	private ArrayList<GameObject> toBeRemoved;
 
 	private boolean requestedRestart;
+	private boolean requestedEnd;
 	public boolean paused;
 	
 	private Instantiator instantiator;
 	
+	public LinkedListNamed<Viewport> viewports;
 	public HashMap<String, GameObject> templates;
-	public ArrayList<ScreenShader> screenShaders;
-	public RenderBuffer lastFrameBuffer;
 	public Environment environment;
-	static private ShapeRenderer shapeRenderer;
-	private ArrayList<ArrayList<Object>> drawCommands;
 	static public boolean clearColorDefaultSet;
 
 	private Color fogColor;
@@ -88,7 +86,6 @@ public class Scene implements Named{
 	private float fogDepth;
 	private boolean fogOn;
 	private boolean valid;
-	private boolean requestedEnd;
 
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
@@ -147,18 +144,13 @@ public class Scene implements Named{
 		requestedRestart = false;
 		requestedEnd = false;
 		paused = false;
-
-		if (shapeRenderer == null)
-			shapeRenderer = new ShapeRenderer();
-		drawCommands = new ArrayList<ArrayList<Object>>();
-		lastFrameBuffer = new RenderBuffer(null);
+		viewports = new LinkedListNamed<Viewport>();
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0, 0, 0, 1));
 		environment.set(new PointLightsAttribute());
 		environment.set(new SpotLightsAttribute());
 		environment.set(new DirectionalLightsAttribute());
 				
-		screenShaders = new ArrayList<ScreenShader>();
 		defaultMaterial = new Material("__BDX_DEFAULT");
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.Diffuse, 1, 1, 1, 1));
@@ -343,18 +335,16 @@ public class Scene implements Named{
 				}
 			}else if (type.equals("CAMERA")){
 				Camera c = (Camera)g;
-				Vector2f ds = Bdx.display.size();
 				float[] projection = gobj.get("camera").get("projection").asFloatArray();
+				float[] resolution = json.get("resolution").asFloatArray();
 				if (gobj.get("camera").get("type").asString().equals("PERSP")){
 					c.initData(Camera.Type.PERSPECTIVE);
-					c.width(ds.x);
-					c.height(ds.y);
+					c.resolution(resolution[0], resolution[1]);
 					c.projection(new Matrix4f(projection));
 					c.fov(c.fov());
 				}else{
 					c.initData(Camera.Type.ORTHOGRAPHIC);
-					c.width(ds.x);
-					c.height(ds.y);
+					c.resolution(resolution[0], resolution[1]);
 					c.zoom(2 / projection[0]);
 				}
 				Matrix4 pm = new Matrix4(projection);
@@ -374,13 +364,23 @@ public class Scene implements Named{
 		
 		addInstances();
 		
-		cameras = new ArrayList<Camera>();
+		cameras = new ArrayListNamed<Camera>();
 		String[] cameraNames = json.get("cameras").asStringArray();
 		for (String cn : cameraNames)
 			cameras.add((Camera) objects.get(cn));
 		
-		camera = cameras.get(0);
-
+		Camera camera = cameras.get(0);
+		String frameType = json.get("frame_type").asString();
+		Viewport.Type viewportType;
+		if (frameType.equals("LETTERBOX")){
+			viewportType = Viewport.Type.LETTERBOX;
+		}else if (frameType.equals("EXTEND")){
+			viewportType = Viewport.Type.EXTEND;
+		}else{ // "SCALE"
+			viewportType = Viewport.Type.SCALE;
+		}
+		viewports.add(new Viewport(camera.name, camera, viewportType));
+		
 		for (GameObject g : sortByPriority(new ArrayList<GameObject>(objects))){
 			initGameObject(g);
 		}
@@ -389,7 +389,6 @@ public class Scene implements Named{
 	}
 
 	public void dispose(){
-		lastFrameBuffer.dispose();
 		defaultModel.dispose();
 
 		for (Model m : models.values())
@@ -398,8 +397,11 @@ public class Scene implements Named{
 		for (Texture t : textures.values())
 			t.dispose();
 
-		for (ScreenShader s : screenShaders)
-			s.dispose();
+		for (Viewport viewport : viewports) {
+			viewport.lastFrameBuffer.dispose();
+			for (ScreenShader s : viewport.screenShaders)
+				s.dispose();
+		}
 
 		for (Camera c : cameras) {
 			if (c.renderBuffer != null)
@@ -478,8 +480,7 @@ public class Scene implements Named{
 			Camera c = (Camera)g;
 			Camera cobj = (Camera)gobj;
 			c.initData(cobj.type);
-			c.width(cobj.width());
-			c.height(cobj.height());
+			c.resolution(cobj.resolution());
 			if (c.type == Camera.Type.PERSPECTIVE){
 				c.fov(cobj.fov());
 			}else{
@@ -800,7 +801,6 @@ public class Scene implements Named{
 	}
 	
 	private void runObjectLogic(){
-
 		if (requestedRestart){
 			for (GameObject g : objects){
 				g.endNoChildren();
@@ -808,13 +808,12 @@ public class Scene implements Named{
 			dispose();
 			init();
 		}
-
-		Bdx.mouse.scene = this;
-
+		
+		Bdx.mouse.update(this);
 		for (Finger f : Bdx.fingers){
-			f.scene = this;
+			f.update(this);
 		}
-
+		
 		for (GameObject g : objects){
 			if(!g.valid())
 				continue;
@@ -848,7 +847,6 @@ public class Scene implements Named{
 			if (g instanceof Light)
 				lights.remove(g);
 		}
-
 		toBeRemoved.clear();
 
 		if (requestedEnd) {
@@ -895,14 +893,10 @@ public class Scene implements Named{
 		if (!paused){
 
 			Bdx.profiler.start("__logic");
-			runObjectLogic();			
+			runObjectLogic();
 			Bdx.profiler.stop("__logic");
 
 			updateVisuals();
-			for (Camera cam : cameras) {
-				if (cam == camera || cam.renderingToTexture)		// Update camera if it's the main scene camera, or if it's rendering to texture
-					cam.update();
-			}
 			Bdx.profiler.stop("__scene");
 
 			try{
@@ -931,53 +925,7 @@ public class Scene implements Named{
 		return name + " <" + getClass().getName() + "> @" + Integer.toHexString(hashCode());
 
 	}
-
-	public void drawLine(Vector3f start, Vector3f end, Color color){
-		ArrayList<Object> commands = new ArrayList<Object>();
-		commands.add("drawLine");
-		commands.add(color);
-		commands.add(start);
-		commands.add(end);
-		drawCommands.add(commands);
-	}
-
-	public void drawPoint(Vector3f point, Color color){
-		ArrayList<Object> commands = new ArrayList<Object>();
-		commands.add("drawPoint");
-		commands.add(color);
-		commands.add(point);
-		drawCommands.add(commands);
-	}
-
-	public void executeDrawCommands(){
-
-		for (ArrayList<Object> commands : drawCommands) {
-
-			String func = (String) commands.get(0);
-			Color color = (Color) commands.get(1);
-			Vector3f start = (Vector3f) commands.get(2);
-
-			if (func.equals("drawLine")) {
-				Vector3f end = (Vector3f) commands.get(3);
-				shapeRenderer.setProjectionMatrix(camera.data.combined);
-				shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-				shapeRenderer.setColor(color);
-				shapeRenderer.line(start.x, start.y, start.z, end.x, end.y, end.z);
-				shapeRenderer.end();
-			}
-			else {
-				shapeRenderer.setProjectionMatrix(camera.data.combined);
-				shapeRenderer.begin(ShapeRenderer.ShapeType.Point);
-				shapeRenderer.setColor(color);
-				shapeRenderer.point(start.x, start.y, start.z);
-				shapeRenderer.end();
-			}
-		}
-
-		drawCommands.clear();
-
-	}
-
+	
 	public void fog(boolean fogOn){
 		this.fogOn = fogOn;
 		if (fogOn) {
