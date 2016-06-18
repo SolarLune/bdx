@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector3;
 
 import com.bulletphysics.linearmath.Transform;
+
 import com.nilunder.bdx.gl.RenderBuffer;
 import com.nilunder.bdx.utils.ArrayListNamed;
 
@@ -21,12 +22,14 @@ public class Camera extends GameObject{
 		ORTHOGRAPHIC
 	}
 	
+	private Vector2f resolution;
+	
 	public Type type;
 	public com.badlogic.gdx.graphics.Camera data;
 	public boolean renderingToTexture;
 	public RenderBuffer renderBuffer;
 	public ArrayListNamed<GameObject> ignoreObjects;
-
+	
 	public void initData(Type type){
 		this.type = type;
 		if (type == Type.PERSPECTIVE){
@@ -67,26 +70,33 @@ public class Camera extends GameObject{
 		return data.far;
   	}
 	
-	public void width(float w){
-		data.viewportWidth = Math.max(w, 1);		// A width of 0 crashes BDX
-	}
-	
 	public float width(){
 		return data.viewportWidth;
-	}
-	
-	public void height(float h){
-		data.viewportHeight = Math.max(h, 1);
 	}
 	
 	public float height(){
 		return data.viewportHeight;
 	}
 	
+	public Vector2f resolution(){
+		return resolution;
+	}
+	
+	public void resolution(Vector2f resolution){
+		this.resolution = resolution;
+		data.viewportWidth = resolution.x;
+		data.viewportHeight = resolution.y;
+		updateRenderBuffer();
+	}
+	
+	public void resolution(float width, float height){
+		resolution(new Vector2f(width, height));
+	}
+	
 	public void fov(float fov){
 		((PerspectiveCamera)data).fieldOfView = (float)Math.toDegrees(fov);
 	}
-
+	
 	public float fov(){
 		Matrix4f p = projection();
 		float fov;
@@ -96,7 +106,7 @@ public class Camera extends GameObject{
 			fov = 2/p.m11;
 		}
 		return fov;
-	}	
+	}
 	
 	public void zoom(float zoom){
 		((OrthographicCamera)data).zoom = zoom / width();
@@ -104,11 +114,6 @@ public class Camera extends GameObject{
 	
 	public float zoom(){
 		return ((OrthographicCamera)data).zoom * width();
-	}
-	
-	public Vector2f screenPosition(Vector3f worldPosition){
-		Vector3 out = data.project(new Vector3(worldPosition.x, worldPosition.y, worldPosition.z));
-		return new Vector2f(out.x / Gdx.graphics.getWidth(), out.y / Gdx.graphics.getHeight());
 	}
 	
 	public void update(){
@@ -120,21 +125,20 @@ public class Camera extends GameObject{
 		axis = axis("Y");
 		data.up.set(axis.x, axis.y, axis.z);
 		data.update();
-
-		if (renderingToTexture) {
-			if (renderBuffer == null || ((int) width() != renderBuffer.getWidth() || (int) height() != renderBuffer.getHeight())) {
-				if (renderBuffer != null)
-					renderBuffer.dispose();
-				renderBuffer = new RenderBuffer(null, (int) width(), (int) height());
-			}
-		}
 	}
-
-	public TextureRegion texture(){
-		TextureRegion r = null;
+	
+	public void initRenderBuffer(){
+		renderBuffer = new RenderBuffer(null, (int) resolution.x, (int) resolution.y);
+	}
+	
+	public void updateRenderBuffer(){
 		if (renderBuffer != null)
-			r = renderBuffer.region;
-		return r;
+			renderBuffer.dispose();
+		initRenderBuffer();
 	}
-
+	
+	public TextureRegion texture(){
+		return renderBuffer != null ? renderBuffer.region : null;
+	}
+	
 }

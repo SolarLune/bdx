@@ -24,7 +24,7 @@ public class RenderBuffer extends FrameBuffer{
 		this(batch, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());		
 	}
 	
-	public void drawTo(RenderBuffer dest,ScreenShader filter){
+	public void drawTo(RenderBuffer dest, ScreenShader filter, float x, float y, float w, float h){
 
 		if (ScreenShader.nearestFiltering) {
 			if (dest != null)
@@ -37,12 +37,12 @@ public class RenderBuffer extends FrameBuffer{
 			
 		if (dest != null)
 			dest.begin();
-				
+
 		batch.begin();
 		batch.enableBlending();
 		batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		batch.setShader(filter);
-		batch.draw(region, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		batch.draw(region, x, y, w, h);
 		batch.end();
 		
 		if (dest != null)
@@ -50,7 +50,7 @@ public class RenderBuffer extends FrameBuffer{
 	}
 
 	public void drawTo(RenderBuffer dest){
-		drawTo(dest, null);
+		drawTo(dest, null, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 	}
 	
 	public void clear(){
