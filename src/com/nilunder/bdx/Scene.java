@@ -372,14 +372,11 @@ public class Scene implements Named{
 
 		hookParentChild();
 		
+		cameras = new ArrayList<Camera>();
+		
 		addInstances();
 		
-		cameras = new ArrayList<Camera>();
-		String[] cameraNames = json.get("cameras").asStringArray();
-		for (String cn : cameraNames)
-			cameras.add((Camera) objects.get(cn));
-		
-		camera = cameras.get(0);
+		camera = (Camera) objects.get(json.get("cameras").asStringArray()[0]);
 
 		for (GameObject g : sortByPriority(new ArrayList<GameObject>(objects))){
 			initGameObject(g);
@@ -488,6 +485,7 @@ public class Scene implements Named{
 			c.near(cobj.near());
 			c.far(cobj.far());
 			c.update();
+			cameras.add(c);
 		}else if (g instanceof Text){
 			Text t = (Text)g;
 			Text tt = (Text)gobj;
