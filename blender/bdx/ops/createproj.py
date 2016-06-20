@@ -187,7 +187,7 @@ class CreateBdxProject(bpy.types.Operator):
         sc_bdx = bpy.context.scene.bdx
 
         ut.set_file_line(gdx_al, 1,
-                         "package " + sc_bdx.java_pack + '.android;')
+                         "package " + sc_bdx.java_pack + ";")
 
         ut.set_file_line(gdx_al, 8,
                          "import " + sc_bdx.java_pack + ".BdxApp;")
