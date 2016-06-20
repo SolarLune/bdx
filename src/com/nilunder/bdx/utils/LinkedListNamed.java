@@ -12,4 +12,15 @@ public class LinkedListNamed<T extends Named> extends LinkedList<T>{
 		}
 		return null;
 	}
+	
+	public int indexOf(String name){
+		return indexOf(get(name));
+	}
+	
+	public T remove(String name){
+		T x = get(name);
+		remove(x);
+		return x;
+	}
+	
 }
