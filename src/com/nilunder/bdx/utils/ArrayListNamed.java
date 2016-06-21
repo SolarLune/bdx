@@ -12,4 +12,15 @@ public class ArrayListNamed<T extends Named> extends ArrayList<T>{
 		}
 		return null;
 	}
+	
+	public int indexOf(String name){
+		return indexOf(get(name));
+	}
+	
+	public T remove(String name){
+		T x = get(name);
+		remove(x);
+		return x;
+	}
+	
 }
