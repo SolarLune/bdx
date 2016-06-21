@@ -670,15 +670,15 @@ public class Scene implements Named{
 
 				}
 
-				Vector3f delta = ray.position.minus(startPos);
+				float delta = ray.position.minus(startPos).length();
 
-				if (delta.length() < 0.005f) {
-					delta = new Vector3f(dist);
-					delta.length(0.005f);
-				}
+				delta = Math.max(0.005f, delta);
 
-				startPos.add(delta);
-				dist.sub(delta);
+				Vector3f n = new Vector3f(vec);
+				n.length(delta);
+
+				startPos.add(n);
+				dist.sub(n);
 
 			}
 			else
