@@ -614,7 +614,6 @@ public class Scene implements Named{
 	
 	public void remove(GameObject g){
 		toBeAdded.remove(g);
-		world.removeRigidBody(g.body);
 		toBeRemoved.add(g);
 	}
 
@@ -844,6 +843,7 @@ public class Scene implements Named{
 		toBeAdded.clear();
 
 		for (GameObject g : toBeRemoved) {
+			world.removeRigidBody(g.body);
 			objects.remove(g);
 			if (g instanceof Light)
 				lights.remove(g);
