@@ -41,12 +41,14 @@ import com.bulletphysics.linearmath.Transform;
 import com.nilunder.bdx.gl.Material;
 import com.nilunder.bdx.gl.RenderBuffer;
 import com.nilunder.bdx.gl.ScreenShader;
+import com.nilunder.bdx.gl.Viewport;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
 import com.nilunder.bdx.GameObject.ArrayListGameObject;
 
 public class Scene implements Named{
+
 	public static HashMap<String, Instantiator> instantiators;
 
 	public JsonValue json;
@@ -75,6 +77,7 @@ public class Scene implements Named{
 	
 	private Instantiator instantiator;
 	
+	public Viewport viewport;
 	public HashMap<String, GameObject> templates;
 	public ArrayList<ScreenShader> screenShaders;
 	public RenderBuffer lastFrameBuffer;
@@ -342,18 +345,18 @@ public class Scene implements Named{
 				}
 			}else if (type.equals("CAMERA")){
 				Camera c = (Camera)g;
-				Vector2f ds = Bdx.display.size();
 				float[] projection = gobj.get("camera").get("projection").asFloatArray();
+				Vector2f resolution = new Vector2f(json.get("resolution").asFloatArray());
 				if (gobj.get("camera").get("type").asString().equals("PERSP")){
 					c.initData(Camera.Type.PERSPECTIVE);
-					c.width(ds.x);
-					c.height(ds.y);
+					c.size(resolution);
+					c.resolution(resolution);
 					c.projection(new Matrix4f(projection));
 					c.fov(c.fov());
 				}else{
 					c.initData(Camera.Type.ORTHOGRAPHIC);
-					c.width(ds.x);
-					c.height(ds.y);
+					c.size(resolution);
+					c.resolution(resolution);
 					c.zoom(2 / projection[0]);
 				}
 				Matrix4 pm = new Matrix4(projection);
@@ -376,7 +379,17 @@ public class Scene implements Named{
 		addInstances();
 		
 		camera = (Camera) objects.get(json.get("cameras").asStringArray()[0]);
-
+		String frameType = json.get("frame_type").asString();
+		Viewport.Type viewportType;
+		if (frameType.equals("LETTERBOX")){
+			viewportType = Viewport.Type.LETTERBOX;
+		}else if (frameType.equals("EXTEND")){
+			viewportType = Viewport.Type.EXTEND;
+		}else{ // "SCALE"
+			viewportType = Viewport.Type.SCALE;
+		}
+		viewport = new Viewport(this, viewportType);
+		
 		for (GameObject g : sortByPriority(new ArrayList<GameObject>(objects))){
 			initGameObject(g);
 		}
@@ -474,8 +487,8 @@ public class Scene implements Named{
 			Camera c = (Camera)g;
 			Camera cobj = (Camera)gobj;
 			c.initData(cobj.type);
-			c.width(cobj.width());
-			c.height(cobj.height());
+			c.size(cobj.size());
+			c.resolution(cobj.resolution());
 			if (c.type == Camera.Type.PERSPECTIVE){
 				c.fov(cobj.fov());
 			}else{
@@ -796,7 +809,6 @@ public class Scene implements Named{
 	}
 	
 	private void runObjectLogic(){
-
 		if (requestedRestart){
 			for (GameObject g : objects){
 				g.endNoChildren();
@@ -805,10 +817,10 @@ public class Scene implements Named{
 			init();
 		}
 
-		Bdx.mouse.scene = this;
+		Bdx.mouse.init(this);
 
 		for (Finger f : Bdx.fingers){
-			f.scene = this;
+			f.init(this);
 		}
 
 		for (GameObject g : objects){
@@ -845,7 +857,6 @@ public class Scene implements Named{
 			if (g instanceof Light)
 				lights.remove(g);
 		}
-
 		toBeRemoved.clear();
 
 		if (requestedEnd) {
