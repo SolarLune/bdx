@@ -142,7 +142,8 @@ class CreateBdxProject(bpy.types.Operator):
             return n
         
         def compile_sdk_sort_key(strv):
-            return int(strv.split('-')[-1])
+            s = strv.split('-')[-1]
+            return int(s) if s.isdigit() else 0
             
         android_sdk_dir = bpy.context.scene.bdx.android_sdk
         
