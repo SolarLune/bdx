@@ -209,11 +209,13 @@ public class Scene implements Named{
 
 		for (JsonValue mat : json.get("materials")){
 			String texName = mat.get("texture").asString();
+			boolean hasAlpha = mat.get("alpha_blend").asString().equals("ALPHA");
+			float opacity = hasAlpha ? mat.get("opacity").asFloat() : 1;
 
 			Material material = new Material(mat.name);
 
 			float[] c = mat.get("color").asFloatArray();
-			material.set(ColorAttribute.createDiffuse(c[0], c[1], c[2], 1));
+			material.set(ColorAttribute.createDiffuse(c[0], c[1], c[2], opacity));
 
 			float[] s = mat.get("spec_color").asFloatArray();
 
@@ -248,16 +250,13 @@ public class Scene implements Named{
 				material.texture(texture);
 			}
 			
-			BlendingAttribute ba;
-
-			if (mat.get("alpha_blend").asString().equals("ALPHA")) {
-				ba = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-				ba.opacity = mat.get("opacity").asFloat();
+			if (hasAlpha){
+				BlendingAttribute ba = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+				ba.opacity = opacity;
 				material.set(ba);
 				material.set(FloatAttribute.createAlphaTest(0.01f));
-			}
-			else {
-				ba = new BlendingAttribute();
+			}else{
+				BlendingAttribute ba = new BlendingAttribute();
 				ba.blended = false;
 				material.set(ba);
 			}
