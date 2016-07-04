@@ -26,7 +26,32 @@
 		</fileset>
 	</path>
 
-	<target name="build-deps">
+	<target name="libgdx-deps-check">
+		<condition property="libgdx.deps.exist">
+			<available file="${libgdx.libs.dir}/gdx/${libgdx.version}" type="dir"/>
+		</condition>
+	</target>
+
+	<target name="libgdx-deps" depends="libgdx-deps-check" unless="libgdx.deps.exist">
+		<exec executable="bash" osfamily="unix">
+			<arg value="-c"/>
+			<arg value="java -jar '${basedir}/blender/bdx/gen/gdx-setup.jar' --dir '${java.io.tmpdir}/libgdx-test-mygame' --name mygame --package com.badlogic.mygame --mainClass MyGame --sdkLocation '${java.io.tmpdir}' --excludeModules 'android;ios;html' --extensions 'controllers'"/>
+		</exec>
+		<exec executable="bash" osfamily="unix">
+			<arg value="-c"/>
+			<arg value="${java.io.tmpdir}/libgdx-test-mygame/gradlew -p ${java.io.tmpdir}/libgdx-test-mygame desktop:classes"/>
+		</exec>
+		<exec executable="cmd" osfamily="windows">
+			<arg value="/c"/>
+			<arg value="java -jar '${basedir}\blender\bdx\gen\gdx-setup.jar' --dir '${java.io.tmpdir}\libgdx-test-mygame' --name mygame --package com.badlogic.mygame --mainClass MyGame --sdkLocation '${java.io.tmpdir}' --excludeModules 'android;ios;html' --extensions 'controllers'"/>
+		</exec>
+		<exec executable="bash" osfamily="windows">
+			<arg value="/c"/>
+			<arg value="${java.io.tmpdir}\libgdx-test-mygame\gradlew.bat -p ${java.io.tmpdir}\libgdx-test-mygame desktop:classes"/>
+		</exec>
+	</target>
+
+	<target name="build-deps" depends="libgdx-deps">
 		<ant dir="extern/gwt-vecmath"
 			useNativeBasedir="true"
 			inheritAll="false"/>
