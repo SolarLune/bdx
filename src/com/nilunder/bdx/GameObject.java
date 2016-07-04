@@ -388,7 +388,12 @@ public class GameObject implements Named{
 		activate();
 		body.applyCentralForce(vec);
 	}
-	
+
+	public void applyForce(Vector3f force, Vector3f relPos) {
+		activate();
+		body.applyForce(force, relPos);
+	}
+
 	public void applyForce(float x, float y, float z){
 		Vector3f v = new Vector3f(x, y, z);
 		applyForce(v);
@@ -402,7 +407,11 @@ public class GameObject implements Named{
 		Vector3f v = new Vector3f(x, y, z);
 		applyForceLocal(v);
 	}
-	
+
+	public void applyForceLocal(Vector3f force, Vector3f relPos) {
+		applyForce(orientation().mult(force), relPos);
+	}
+
 	public void applyTorque(Vector3f vec){
 		activate();
 		body.applyTorque(vec);
