@@ -15,6 +15,14 @@ public class Random{
 		return list.get(R.nextInt(list.size()));
 	}
 
+	@SafeVarargs
+	public static <T> T choice(T... args) {
+		if (R == null){
+			R = new java.util.Random();
+		}
+		return args[R.nextInt(args.length)];
+	}
+
 	public static float random(){
 		if (R == null){
 			R = new java.util.Random();
