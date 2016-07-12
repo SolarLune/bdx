@@ -393,6 +393,8 @@ public class Bdx{
 		frameBuffer.dispose();
 		depthBuffer.dispose();
 		shaderProvider.dispose();
+		Bdx.sounds.dispose();
+		Bdx.music.dispose();
 
 		for (MaterialShader s : Bdx.matShaders.values())
 			s.dispose();
