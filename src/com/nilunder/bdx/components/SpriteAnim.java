@@ -172,7 +172,7 @@ public class SpriteAnim extends Component<GameObject> {
 	}
 
 	public int frame(){
-		return active.playHead - 1;
+		return active.playHead - active.playDir;
 	}
 
 	public boolean frameChanged(){
