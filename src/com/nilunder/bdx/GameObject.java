@@ -1115,4 +1115,12 @@ public class GameObject implements Named{
 		return scene.camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, dimHalved.x, dimHalved.y, dimHalved.z);
 	}
 
+	public Vector3f vecTo(Vector3f vector){
+		return vector.minus(position());
+	}
+
+	public Vector3f vecTo(GameObject other){
+		return vecTo(other.position());
+	}
+
 }
