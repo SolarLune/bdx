@@ -269,8 +269,6 @@ public class Bdx{
 				}
 			}
 
-			scene.executeDrawCommands();
-
 			if (scene.screenShaders.size() > 0){
 
 				frameBuffer.end();
@@ -334,6 +332,8 @@ public class Bdx{
 				scene.lastFrameBuffer.clear();
 				frameBuffer.drawTo(scene.lastFrameBuffer);
 			}
+
+			scene.executeDrawCommands();
 
 			display.clearColor(display.clearColor());
 
