@@ -17,11 +17,14 @@ class BdxExpRun(bpy.types.Operator):
         asset_dir = j(proot, "android", "assets", "bdx")
         prof_scene_name = "__Profiler"
 
-        # Check if profiler scene exists:
+        # Check if profiler scene needs export:
         bdx_scenes_dir = j(asset_dir, "scenes")
-        no_profile_bdx = prof_scene_name + ".bdx" not in os.listdir(bdx_scenes_dir)
-        show_framerate_profile = bpy.context.scene.game_settings.show_framerate_profile
-        export_profile_scene = show_framerate_profile and no_profile_bdx
+        
+        export_profile_scene = False
+        if prof_scene_name + ".bdx" not in os.listdir(bdx_scenes_dir):
+            for scene in bpy.data.scenes:
+                if scene.game_settings.show_framerate_profile:
+                    export_profile_scene = True
 
         # Delete old scene files except for the profiler.
 
