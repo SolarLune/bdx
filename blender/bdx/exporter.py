@@ -797,7 +797,9 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         "cameras": camera_names(scene),
         "actions": srl_actions(bpy.data.actions),
         "fonts": [f.name for f in fonts],
-        "clearColor": clear_color
+        "clearColor": clear_color,
+        "resolution": [scene.render.resolution_x, scene.render.resolution_y],
+        "frame_type": scene.game_settings.frame_type,
     }
 
     if exprun:

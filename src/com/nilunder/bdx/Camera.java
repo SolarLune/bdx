@@ -4,9 +4,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.math.Vector3;
 
 import com.bulletphysics.linearmath.Transform;
+
+import com.nilunder.bdx.gl.Viewport;
 import com.nilunder.bdx.gl.RenderBuffer;
 import com.nilunder.bdx.utils.ArrayListNamed;
 
@@ -21,19 +24,22 @@ public class Camera extends GameObject{
 		ORTHOGRAPHIC
 	}
 	
+	private Vector2f resolution;
+	
 	public Type type;
 	public com.badlogic.gdx.graphics.Camera data;
 	public boolean renderingToTexture;
 	public RenderBuffer renderBuffer;
 	public ArrayListNamed<GameObject> ignoreObjects;
-
+	
 	public void initData(Type type){
 		this.type = type;
 		if (type == Type.PERSPECTIVE){
 			data = new PerspectiveCamera();
 		}else{
 			data = new OrthographicCamera();
-		}
+		}		
+		resolution = new Vector2f();
 		ignoreObjects = new ArrayListNamed<GameObject>();
 	}
 	
@@ -67,20 +73,47 @@ public class Camera extends GameObject{
 		return data.far;
   	}
 	
-	public void width(float w){
+	public void width(int w){
 		data.viewportWidth = Math.max(w, 1);		// A width of 0 crashes BDX
 	}
 	
-	public float width(){
-		return data.viewportWidth;
+	public int width(){
+		return Math.round(data.viewportWidth);
 	}
 	
-	public void height(float h){
+	public void height(int h){
 		data.viewportHeight = Math.max(h, 1);
 	}
 	
-	public float height(){
-		return data.viewportHeight;
+	public int height(){
+		return Math.round(data.viewportHeight);
+	}
+	
+	public Vector2f size(){
+		return new Vector2f(data.viewportWidth, data.viewportHeight);
+	}
+	
+	public void size(int width, int height){
+		width(width);
+		height(height);
+	}
+	
+	public void size(Vector2f size){
+		size(Math.round(size.x), Math.round(size.y));
+	}
+	
+	public Vector2f resolution(){
+		return new Vector2f(resolution);
+	}
+	
+	public void resolution(int width, int height){
+		resolution.x = width;
+		resolution.y = height;
+		updateRenderBuffer();
+	}
+	
+	public void resolution(Vector2f resolution){
+		resolution(Math.round(resolution.x), Math.round(resolution.y));
 	}
 	
 	public void fov(float fov){
@@ -106,9 +139,24 @@ public class Camera extends GameObject{
 		return ((OrthographicCamera)data).zoom * width();
 	}
 	
-	public Vector2f screenPosition(Vector3f worldPosition){
-		Vector3 out = data.project(new Vector3(worldPosition.x, worldPosition.y, worldPosition.z));
-		return new Vector2f(out.x / Gdx.graphics.getWidth(), out.y / Gdx.graphics.getHeight());
+	public Vector2f screenPosition(Vector3f p){
+		Viewport vp = scene.viewport;
+		Vector3 out = data.project(new Vector3(p.x, p.y, p.z), vp.x, vp.y, vp.w, vp.h);
+		return new Vector2f(Math.round(out.x), Math.round(out.y));
+	}
+	
+	public Vector2f screenPositionNormalized(Vector3f p){
+		return screenPosition(p).div(Bdx.display.size());
+	}
+	
+	public Vector3f[] rayData(Vector2f p){
+		Viewport vp = scene.viewport;
+		Ray pr = data.getPickRay(p.x, Bdx.display.height() - p.y, vp.x, vp.y, vp.w, vp.h);
+		return new Vector3f[]{new Vector3f(pr.origin.x, pr.origin.y, pr.origin.z), new Vector3f(pr.direction.x, pr.direction.y, pr.direction.z)};
+	}
+	
+	public Vector3f[] rayDataNormalized(Vector2f p){
+		return rayData(p.div(Bdx.display.size()));
 	}
 	
 	public void update(){
@@ -120,21 +168,20 @@ public class Camera extends GameObject{
 		axis = axis("Y");
 		data.up.set(axis.x, axis.y, axis.z);
 		data.update();
-
-		if (renderingToTexture) {
-			if (renderBuffer == null || ((int) width() != renderBuffer.getWidth() || (int) height() != renderBuffer.getHeight())) {
-				if (renderBuffer != null)
-					renderBuffer.dispose();
-				renderBuffer = new RenderBuffer(null, (int) width(), (int) height());
-			}
-		}
 	}
-
-	public TextureRegion texture(){
-		TextureRegion r = null;
+	
+	public void initRenderBuffer(){
+		renderBuffer = new RenderBuffer(null, Math.round(resolution.x), Math.round(resolution.y));
+	}
+	
+	public void updateRenderBuffer(){
 		if (renderBuffer != null)
-			r = renderBuffer.region;
-		return r;
+			renderBuffer.dispose();
+		initRenderBuffer();
 	}
-
+	
+	public TextureRegion texture(){
+		return renderBuffer != null ? renderBuffer.region : null;
+	}
+	
 }
