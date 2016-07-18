@@ -103,7 +103,13 @@ def srl_models(objects, use_mesh_modifiers):
     for o in objects:
         if o.type != "MESH":
             continue
-        mesh = o.to_mesh(bpy.context.scene, use_mesh_modifiers, "PREVIEW")
+
+        hasModifiers = len(o.modifiers) > 0
+
+        mesh = o.data
+        if hasModifiers:                    # Create a new mesh that applies the modifiers if the mesh is using them
+            mesh = o.to_mesh(bpy.context.scene, use_mesh_modifiers, "PREVIEW")
+
         m_tris = mat_tris(mesh)
         verts = vertices(mesh)
         m_verts = OrderedDict()
@@ -120,6 +126,9 @@ def srl_models(objects, use_mesh_modifiers):
                 m, tris = mat, m_tris[mat]
                 m_verts[m] = numpy.concatenate([verts[i * tfs : i * tfs + tfs] for i in tris]).tolist()
         name_model[o.data.name] = m_verts
+
+        if hasModifiers:                                                            # Remove the extra mesh if it was created
+            bpy.data.meshes.remove(mesh)
 
     return name_model
 
