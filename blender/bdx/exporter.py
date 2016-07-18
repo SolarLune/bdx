@@ -784,7 +784,7 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         "name": scene.name,
         "gravity": scene.game_settings.physics_gravity,
         "physviz": scene.game_settings.show_physics_visualization,
-        "framerateProfile": scene.game_settings.show_framerate_profile,
+        "framerateProfile": scene.game_settings.show_framerate_profile if scene == context.scene else False,
         "ambientColor": ambient_color,
         "mistOn": mist_on,
         "mistStart": mist_start,
