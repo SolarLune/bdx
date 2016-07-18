@@ -203,7 +203,9 @@ public class Scene implements Named{
 			clearColorDefaultSet = true;
 		}
 
-		Bdx.profiler.init(json.get("framerateProfile").asBoolean());
+		if (json.get("framerateProfile").asBoolean()){
+			Bdx.profiler.init();
+		}
 
 		float[] fc = json.get("clearColor").asFloatArray();
 		fogColor = new Color(fc[0], fc[1], fc[2], 1);
