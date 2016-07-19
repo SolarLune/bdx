@@ -239,7 +239,6 @@ public class Profiler{
 	private final float HORIZONTAL_OFFSET_DEFAULT = BAR_POSITION + SPACING + BAR_WIDTH;
 	private final float FONT_SIZE = 0.315f;
 	private final String EXC_MSG = "User created subsystem names should not start with: \"__\"";
-	private final String ERR_MSG = "warning: \"Show Framerate and Profile\" is not enabled";
 	
 	private long totalStartTime;
 	private long totalDeltaTime;
@@ -261,7 +260,6 @@ public class Profiler{
 	private boolean subsystemsVisible;
 	private boolean glVisible;
 	private boolean propsVisible;
-	private boolean initialized;
 	private float verticalOffset;
 	private float horizontalOffset;
 	
@@ -283,14 +281,12 @@ public class Profiler{
 			tickTimes.add(1000000000L / TICK_RATE);
 		}
 		
-		initialized = false;
 		avgTickRate = TICK_RATE;
 		avgTickTime = 1000 / TICK_RATE;
 		
 		tickInfoVisible = true;
 		propsVisible = true;
 		subsystemsVisible = true;
-		glVisible = false;
 		
 		scene = null;
 
@@ -337,68 +333,77 @@ public class Profiler{
 		}
 	}
 	
-	public void init(boolean framerateProfile){
-		if (initialized){
+	private void initialize(){
+		horizontalOffset = HORIZONTAL_OFFSET_DEFAULT;
+		verticalOffset = 0;
+		
+		if (tickInfoVisible){
+			initTickInfo();
+		}
+		
+		if (propsVisible){
+			props.initTexts();
+		}
+		
+		if (glVisible){
+			gl.enable();
+			gl.initTexts();
+		}
+		
+		if (subsystemsVisible){
+			initSubsystems();
+		}
+		
+		scaleBackground();
+	}
+	
+	public void init(){
+		visible = true;
+		
+		scene = new Scene("__Profiler");
+		scene.init();
+		
+		display = scene.add("__PDisplay");
+		background = display.children.get("__PBackground");
+		background.materials.color(BG_COLOR);
+		
+		scene.viewport.type(Viewport.Type.SCREEN);
+		updateViewport();
+		
+		initialize();
+	}
+	
+	private void reinitialize(){
+		if (!visible){
 			return;
 		}
 		
-		initialized = true;
-		verticalOffset = 0;
-		horizontalOffset = HORIZONTAL_OFFSET_DEFAULT;
-		visible = framerateProfile;
-		if (visible){
-			
-			if (scene == null){
-				scene = new Scene("__Profiler");
-				scene.init();
-				
-				display = scene.add("__PDisplay");
-				background = display.children.get("__PBackground");
-				background.materials.color(BG_COLOR);
-				
-				scene.viewport.type(Viewport.Type.SCREEN);
-				updateViewport();
-			}
-			
-			if (tickInfoVisible){
-				initTickInfo();
-			}
-			
-			if (propsVisible){
-				props.initTexts();
-			}
-			
-			if (glVisible){
-				gl.enable();
-				gl.initTexts();
-			}
-			
-			if (subsystemsVisible){
-				initSubsystems();
-			}
-			
-			scaleBackground();
+		tickInfo.end();
+		
+		for (Text text : texts.values()){
+			text.end();
 		}
+		texts.clear();
+		
+		for (GameObject bar : bars.values()){
+			bar.end();
+		}
+		bars.clear();
+		
+		for (Text text : props.texts.values()){
+			text.end();
+		}
+		props.texts.clear();
+		
+		initialize();
 	}
 	
 	public boolean visible(){
 		return visible;
 	}
 	
-	private void reinitialize(){
-		if (scene != null){
-			texts.clear();
-			bars.clear();
-			props.texts.clear();
-			scene.end();
-			scene = null;
-		}
-		initialized = false;
-	}
-		
 	public void tickInfoVisible(boolean visible){
 		if (!this.visible){
-			System.err.println(ERR_MSG);
 			return;
 		}
 		if (tickInfoVisible == visible){
@@ -410,7 +415,6 @@ public class Profiler{
 	
 	public void subsystemsVisible(boolean visible){
 		if (!this.visible){
-			System.err.println(ERR_MSG);
 			return;
 		}
 		if (subsystemsVisible == visible){
@@ -422,7 +426,6 @@ public class Profiler{
 	
 	public void glVisible(boolean visible){
 		if (!this.visible){
-			System.err.println(ERR_MSG);
 			return;
 		}
 		if (glVisible == visible){
@@ -434,7 +437,6 @@ public class Profiler{
 	
 	public void propsVisible(boolean visible){
 		if (!this.visible){
-			System.err.println(ERR_MSG);
 			return;
 		}
 		if (propsVisible == visible){
@@ -495,7 +497,6 @@ public class Profiler{
 	
 	public void scale(float f){
 		if (!visible){
-			System.err.println(ERR_MSG);
 			return;
 		}
 		scene.viewport.sizeNormalized(f, f);
@@ -580,10 +581,6 @@ public class Profiler{
 	}
 	
 	public void updateVisible(){
-		if (!initialized){
-			init(true);
-		}
-		
 		if (tickInfoVisible){
 			updateTickInfo();
 		}

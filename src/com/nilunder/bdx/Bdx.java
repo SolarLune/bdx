@@ -373,11 +373,10 @@ public class Bdx{
 
 			// ------- Render profiler scene --------
 
-			Scene profilerScene = profiler.scene;
-			profilerScene.update();
+			profiler.scene.update();
 			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-			renderWorld(modelBatch, profilerScene, profilerScene.camera);
-			profilerScene.executeDrawCommands();
+			renderWorld(modelBatch, profiler.scene, profiler.scene.camera);
+			profiler.scene.executeDrawCommands();
 		}
 		if (profiler.gl.isEnabled()){
 			profiler.gl.updateFields();
@@ -391,8 +390,9 @@ public class Bdx{
 				scenes.remove(scene);
 				scene.end();
 			}
-			if (profiler.scene != null)
+			if (profiler.visible()){
 				profiler.scene.end();
+			}
 			init();
 			scenes.add(firstScene);
 		}
