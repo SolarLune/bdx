@@ -151,6 +151,7 @@ public class SpriteAnim extends Component<GameObject> {
 
 		if (active != next){
 			active = next;
+			active.reset();
 			ticker.done(true); // immediate play
 		}
 
