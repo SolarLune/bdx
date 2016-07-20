@@ -230,7 +230,6 @@ public class Profiler{
 		
 	}
 	
-	private final int TICK_RATE = Bdx.TICK_RATE;
 	private final Color BG_COLOR = new Color(0.125f, 0.125f, 0.125f, 0.5f);
 	private final float SPACING = 0.6f;
 	private final float BAR_HEIGHT = 0.4f;
@@ -245,9 +244,8 @@ public class Profiler{
 	private long lastStopTime;
 	private HashMap<String, Long> deltaTimes;
 	private HashMap<String, Long> startTimes;
-	private HashMap<String, Long> nanos;
-	private HashMap<String, Float> percents;
 	private ArrayList<Long> tickTimes;
+	private float counter;
 	
 	private GameObject display;
 	private GameObject background;
@@ -263,8 +261,12 @@ public class Profiler{
 	private float verticalOffset;
 	private float horizontalOffset;
 	
+	public HashMap<String, Long> nanos;
+	public HashMap<String, Float> percents;
+	
 	public Scene scene;
 	
+	public int frequency;
 	public float avgTickRate;
 	public float avgTickTime;
 	public Gl gl;
@@ -277,12 +279,14 @@ public class Profiler{
 		nanos = new HashMap<String, Long>();
 		percents = new HashMap<String, Float>();
 		tickTimes = new ArrayList<Long>();
-		for (int i=0; i < TICK_RATE; i++){
-			tickTimes.add(1000000000L / TICK_RATE);
+		for (int i=0; i < Bdx.TICK_RATE; i++){
+			tickTimes.add((long) Bdx.TICK_TIME);
 		}
 		
-		avgTickRate = TICK_RATE;
-		avgTickTime = 1000 / TICK_RATE;
+		frequency = Bdx.TICK_RATE;
+		counter = 1;
+		avgTickRate = Bdx.TICK_RATE;
+		avgTickTime = Bdx.TICK_TIME;
 		
 		tickInfoVisible = true;
 		propsVisible = true;
@@ -462,7 +466,7 @@ public class Profiler{
 		long deltaTime = stopTime - startTime;
 		
 		if (subsystemsVisible){
-			long storedDeltaTime = deltaTime;
+			long storedDeltaTime = (long) (deltaTime * (float) frequency / Bdx.TICK_RATE);
 			if (deltaTimes.containsKey(name)){
 				storedDeltaTime += deltaTimes.get(name);
 			}
@@ -513,7 +517,7 @@ public class Profiler{
 		for (long l : tickTimes){
 			sumTickTimes += l;
 		}
-		avgTickRate = TICK_RATE * 1000000000f / sumTickTimes;
+		avgTickRate = Bdx.TICK_RATE * 1000000000f / sumTickTimes;
 		avgTickTime = 1000 / avgTickRate;
 		
 		if (gl.isEnabled()){
@@ -581,17 +585,22 @@ public class Profiler{
 	}
 	
 	public void updateVisible(){
-		if (tickInfoVisible){
-			updateTickInfo();
-		}
+		if (counter >= 1){
+			counter -= 1;
+			
+			if (tickInfoVisible){
+				updateTickInfo();
+			}
 
-		if (subsystemsVisible){
-			updateSubsystems();
+			if (subsystemsVisible){
+				updateSubsystems();
+			}
+			
+			if (glVisible){
+				gl.updateTexts();
+			}
 		}
-		
-		if (glVisible){
-			gl.updateTexts();
-		}
+		counter += frequency * Bdx.TICK_TIME;
 		
 		scene.viewport.apply();
 	}
