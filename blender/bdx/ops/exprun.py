@@ -16,22 +16,19 @@ class BdxExpRun(bpy.types.Operator):
         sroot = ut.src_root()
         asset_dir = j(proot, "android", "assets", "bdx")
         prof_scene_name = "__Profiler"
-
-        # Check if profiler scene exists:
         bdx_scenes_dir = j(asset_dir, "scenes")
-        no_profile_bdx = prof_scene_name + ".bdx" not in os.listdir(bdx_scenes_dir)
-        show_framerate_profile = bpy.context.scene.game_settings.show_framerate_profile
-        export_profile_scene = show_framerate_profile and no_profile_bdx
 
         # Delete old scene files except for the profiler.
-
         if os.path.isdir(bdx_scenes_dir):
             old_scenes = ut.listdir(bdx_scenes_dir)
             for f in old_scenes:
-                if os.path.basename(f) != "__Profiler.bdx":
+                if os.path.basename(f) != prof_scene_name + ".bdx":
                     os.remove(f)
 
-        if export_profile_scene:
+        # Check if profiler scene needs export:
+        prof_scene_export = context.scene.game_settings.show_framerate_profile and prof_scene_name + ".bdx" not in os.listdir(bdx_scenes_dir)
+
+        if prof_scene_export:
         
             # Append profiler scene from default blend file:
             prof_blend_name = "profiler.blend"
@@ -59,7 +56,7 @@ class BdxExpRun(bpy.types.Operator):
 
             bpy.ops.export_scene.bdx(filepath=file_path, scene_name=scene.name, exprun=True)
 
-        if export_profile_scene:
+        if prof_scene_export:
         
             # Remove temporal profiler scene:
             bpy.data.scenes.remove(bpy.data.scenes[prof_scene_name])
