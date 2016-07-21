@@ -629,11 +629,11 @@ public class Scene implements Named{
 		toBeRemoved.add(g);
 	}
 
-	public RayHit ray(Vector3f src, Vector3f vec){
-		return ray(src, vec, (short)~0, (short)~0);
+	public RayHit ray(Vector3f src, Vector3f vec, String... props){
+		return ray(src, vec, (short)~0, (short)~0, props);
 	}
 	
-	public RayHit ray(Vector3f src, Vector3f vec, short group, short mask){
+	public RayHit ray(Vector3f src, Vector3f vec, short group, short mask, String... props){
 		Vector3f to = new Vector3f(src);
 		to.add(vec);
 		
@@ -650,15 +650,20 @@ public class Scene implements Named{
 		rh.object = (GameObject) (rrc.collisionObject.getUserPointer());
 		rh.position = rrc.hitPointWorld;
 		rh.normal = rrc.hitNormalWorld;
+
+		for (String p : props){
+			if (!rh.object.props.containsKey(p))
+				return null;
+		}
 		
 		return rh;
 	}
 
-	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec, boolean includeAll){
-		return xray(src, vec, includeAll, (short)~0, (short)~0);
+	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec, boolean includeAll, String... props){
+		return xray(src, vec, includeAll, (short)~0, (short)~0, props);
 	}
 	
-	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec, boolean includeAll, short group, short mask){
+	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec, boolean includeAll, short group, short mask, String... props){
 
 		Vector3f startPos = new Vector3f(src);
 		Vector3f dist = new Vector3f(vec);
@@ -674,7 +679,15 @@ public class Scene implements Named{
 
 			if (ray != null){
 
-				if (!hitObjects.contains(ray.object) || includeAll) {
+				boolean skip = false;
+				for (String prop : props) {
+					if (!ray.object.props.containsKey(prop)) {
+						skip = true;
+						break;
+					}
+				}
+
+				if (!skip && (!hitObjects.contains(ray.object) || includeAll)) {
 
 					hits.add(ray);
 					hitObjects.add(ray.object);
@@ -701,8 +714,8 @@ public class Scene implements Named{
 
 	}
 
-	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec) {
-		return xray(src, vec, false);
+	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec, String... props) {
+		return xray(src, vec, false, props);
 	}
 
 	public Model createModel(JsonValue model) {
