@@ -139,14 +139,17 @@ def register():
     def P_mapto_bdxexprun(dummy):
         """Override P to export and run BDX game, instead of running BGE game"""
 
-        kmi = bpy.data.window_managers["WinMan"].keyconfigs["Blender"].keymaps["Object Mode"].keymap_items
+        keymaps = bpy.data.window_managers["WinMan"].keyconfigs["Blender"].keymaps
+        kmi = keymaps["Object Mode"].keymap_items if "Object Mode" in keymaps else None
 
-        if ut.in_bdx_project():
-            if "view3d.game_start" in kmi:
-                kmi["view3d.game_start"].idname = "object.bdxexprun"
-        else:
-            if "objects.bdxexprun" in kmi:
-                kmi["objects.bdxexprun"].idname = "view3d.game_start"
+        if kmi:
+
+            if ut.in_bdx_project():
+                if "view3d.game_start" in kmi:
+                    kmi["view3d.game_start"].idname = "object.bdxexprun"
+            else:
+                if "objects.bdxexprun" in kmi:
+                    kmi["objects.bdxexprun"].idname = "view3d.game_start"
 
     bpy.app.handlers.load_post.append(P_mapto_bdxexprun)
 
