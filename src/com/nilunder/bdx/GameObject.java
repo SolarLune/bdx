@@ -609,10 +609,10 @@ public class GameObject implements Named{
 	}
 
 	public void end(){
+		endNoChildren();
 		for (GameObject g : new ArrayList<GameObject>(children)){
 			g.end();
 		}
-		endNoChildren();
 	}
 	
 	public void endNoChildren(){
