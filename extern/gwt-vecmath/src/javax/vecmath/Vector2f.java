@@ -165,6 +165,11 @@ public class Vector2f extends Tuple2f implements java.io.Serializable {
 		this.y *= norm;
 	}
 
+	public final Vector2f normalized(){
+		normalize();
+		return this;
+	}
+
 	/**
 	 * Returns the angle in radians between this vector and the vector parameter;
 	 * the return value is constrained to the range [0,PI].
@@ -185,8 +190,38 @@ public class Vector2f extends Tuple2f implements java.io.Serializable {
    /**
     * BDX conveniences:
     */
-   
-   public final Vector2f plus(Vector2f b){
+
+   public final float angle(){
+	   return angle(new Vector2f(1, 0));
+   }
+
+	public final float angleSigned(Vector2f refVec){
+		Vector2f rot = new Vector2f(-refVec.y, refVec.x);
+		float d = dot(rot);
+		if (d < 0)
+			return -angle(refVec);
+		return angle(refVec);
+	}
+
+	public final float angleSigned(){
+		return angleSigned(new Vector2f(1, 0));
+	}
+
+
+	public final Vector2f rotated(float radians) {
+
+	   Vector3f to3D = new Vector3f(x, y, 0);
+	   to3D.set(Matrix3f.rotation(new Vector3f(0, 0, 1), radians).mult(to3D));
+	   return new Vector2f(to3D.x, to3D.y);
+
+   }
+
+	public final void rotate(float radians){
+		this.set(rotated(radians));
+	}
+
+
+	public final Vector2f plus(Vector2f b){
 	   Vector2f a = new Vector2f(this);
 	   a.add(b);
 	   return a;

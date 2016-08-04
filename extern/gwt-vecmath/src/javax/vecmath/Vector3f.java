@@ -187,7 +187,6 @@ public class Vector3f extends Tuple3f implements java.io.Serializable {
         this.z *= norm;
     }
 
-
   /** 
     *   Returns the angle in radians between this vector and the vector
     *   parameter; the return value is constrained to the range [0,PI]. 
@@ -200,13 +199,40 @@ public class Vector3f extends Tuple3f implements java.io.Serializable {
       if( vDot < -1.0) vDot = -1.0;
       if( vDot >  1.0) vDot =  1.0;
       return((float) (Math.acos( vDot )));
-   } 
+   }
+
+    public final float angle(){
+        return angle(new Vector3f(1, 0, 0));
+    }
 
    /**
     * BDX conveniences:
     */
-   
-   public final Vector3f plus(Vector3f b){
+
+    public final Vector3f crossed(Vector3f other) {
+       Vector3f result = new Vector3f();
+       result.cross(this, other);
+       return result;
+    }
+
+    public final void cross(Vector3f other) {
+        this.set(crossed(other));
+    }
+
+    public final Vector3f rotated(Vector3f axis, float radians) {
+        return Matrix3f.rotation(axis, radians).mult(this);
+    }
+
+    public final void rotate(Vector3f axis, float radians) {
+        this.set(rotated(axis, radians));
+    }
+
+    public final Vector3f normalized(){
+        normalize();
+        return this;
+    }
+
+    public final Vector3f plus(Vector3f b){
 	   Vector3f a = new Vector3f(this);
 	   a.add(b);
 	   return a;
@@ -254,7 +280,7 @@ public class Vector3f extends Tuple3f implements java.io.Serializable {
 	   a.z /= b.z;
 	   return a;
    }
-   
+
    public final Vector3f reflected(Vector3f normal){
 	   return normal.mul(-2 * this.dot(normal)).plus(this);  
    }
