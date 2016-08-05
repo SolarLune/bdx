@@ -29,5 +29,7 @@ public class Component<T extends GameObject> implements Named {
 		if (state != null)
 			state.enter();
 	}
-	
+
+	public void onGameObjectEnd(){}
+
 }

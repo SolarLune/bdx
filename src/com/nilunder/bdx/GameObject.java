@@ -625,6 +625,10 @@ public class GameObject implements Named{
 			uniqueModel.dispose();
 			uniqueModel = null;
 		}
+
+		for (Component c : components)
+			c.onGameObjectEnd();
+
 		scene.remove(this);
 		for (GameObject g : touchingObjects)
 			g.activate();
