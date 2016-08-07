@@ -120,7 +120,7 @@ public class MeshAnim extends Component<GameObject> {
 	}
 
 	public int frame(){
-		return active.playHead;
+		return active.playHead - active.playDir;
 	}
 
 	public boolean frameChanged() {
