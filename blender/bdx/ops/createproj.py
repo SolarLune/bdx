@@ -138,7 +138,9 @@ class CreateBdxProject(bpy.types.Operator):
             hto = strv.split('.')
             hto.reverse()
             for i in range(len(hto)):
-                n += int(''.join(c for c in hto[i] if c.isdigit())) * 10 ** i
+                s = ''.join(c for c in hto[i] if c.isdigit())
+                if s:
+                    n += int(s) * 10 ** i
             return n
         
         def compile_sdk_sort_key(strv):
