@@ -166,8 +166,9 @@ public class Vector2f extends Tuple2f implements java.io.Serializable {
 	}
 
 	public final Vector2f normalized(){
-		normalize();
-		return this;
+		Vector2f a = new Vector2f(this);
+		a.normalize();
+		return a;
 	}
 
 	/**

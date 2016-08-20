@@ -228,8 +228,9 @@ public class Vector3f extends Tuple3f implements java.io.Serializable {
     }
 
     public final Vector3f normalized(){
-        normalize();
-        return this;
+		Vector3f a = new Vector3f(this);
+		a.normalize();
+		return a;
     }
 
     public final Vector3f plus(Vector3f b){
