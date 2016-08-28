@@ -112,7 +112,7 @@ public class Keyboard {
 
 		for (String keyName : keyToCode.keySet()){
 
-			if (Gdx.input.isKeyPressed(keyToCode.get(keyName)))	keyNames.add(keyName);
+			if (!keyName.equals("*") && Gdx.input.isKeyPressed(keyToCode.get(keyName)))	keyNames.add(keyName);
 
 		}
 
@@ -126,7 +126,7 @@ public class Keyboard {
 
 		for (String keyName : keyToCode.keySet()){
 
-			if (Gdx.input.isKeyJustPressed(keyToCode.get(keyName)))	keyNames.add(keyName);
+			if (!keyName.equals("*") && Gdx.input.isKeyJustPressed(keyToCode.get(keyName)))	keyNames.add(keyName);
 
 		}
 
