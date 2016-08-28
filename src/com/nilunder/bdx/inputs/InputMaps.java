@@ -15,6 +15,7 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 		public boolean forceHit;
 		public boolean forceDown;
 		public boolean forceUp;
+		public String[] parsedDescriptor;
 		
 		public static class FnHDU{
 			public FnBool[] eval(String d1){
@@ -38,6 +39,11 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 			this();
 
 			final String[] d = descriptor.split(":");
+
+			parsedDescriptor = d;
+
+			if (d[0].contains("g") && d[0].length() == 1)  // There's not a gamepad id number, so add in "0" for the first
+				parsedDescriptor = new String[]{d[0] + "0", d[1]};
 
 			if (d[0].equals("k")){
 				hdu[0] = new FnBool(){
@@ -85,11 +91,9 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 				};
 			}else if (d[0].contains("g")){
 				final int gpIndex;
-				if (descriptor.charAt(1) != ':')
-					// GWT doesn't implement Character.getNumericValue(), so do this instead
-					gpIndex = Integer.parseInt("" + descriptor.charAt(1), 36);
-				else
-					gpIndex = 0;
+
+				// GWT doesn't implement Character.getNumericValue(), so do this instead
+				gpIndex = Integer.parseInt("" + parsedDescriptor[0].charAt(1), 36);
 
 				hdu[0] = new FnBool(){
 					public boolean eval(){
