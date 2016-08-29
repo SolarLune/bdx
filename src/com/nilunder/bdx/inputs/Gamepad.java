@@ -263,7 +263,7 @@ public static class Profile{
 		return name();
 	}
 
-	public ArrayList<Integer> hitButtons(int maxButtonCount){
+	public ArrayList<Integer> downButtons(int maxButtonCount){
 		ArrayList<Integer> buttons = new ArrayList<Integer>();
 		for (int i = 0; i < maxButtonCount; i++) {
 			if (controller.getButton(i))
@@ -272,11 +272,11 @@ public static class Profile{
 		return buttons;
 	}
 
-	public ArrayList<Integer> hitButtons(){
-		return hitButtons(16);
+	public ArrayList<Integer> downButtons(){
+		return downButtons(16);
 	}
 
-	public ArrayList<ArrayList<Integer>> hitAxes(int maxAxisCount, float deadZone){
+	public ArrayList<ArrayList<Integer>> downAxes(int maxAxisCount, float deadZone){
 		ArrayList<ArrayList<Integer>> axes = new ArrayList<ArrayList<Integer>>();
 		for (int i = 0; i < maxAxisCount; i++) {
 			if (Math.abs(controller.getAxis(i)) > deadZone) {
@@ -289,15 +289,26 @@ public static class Profile{
 		return axes;
 	}
 
-	public ArrayList<ArrayList<Integer>> hitAxes() {
-		return hitAxes(8, 0.2f);
+	public ArrayList<ArrayList<Integer>> downAxes() {
+		return downAxes(8, 0.2f);
+	}
+
+	public ArrayList<String> downInputs(){
+		ArrayList<String> inputs = new ArrayList<String>();
+		if (profile != null) {
+			for (String s : profile.btnToCode.keySet()) {
+				if (btnDown(s))
+					inputs.add(s);
+			}
+		}
+		return inputs;
 	}
 
 	public ArrayList<String> hitInputs(){
 		ArrayList<String> inputs = new ArrayList<String>();
 		if (profile != null) {
 			for (String s : profile.btnToCode.keySet()) {
-				if (btnDown(s))
+				if (btnHit(s))
 					inputs.add(s);
 			}
 		}
