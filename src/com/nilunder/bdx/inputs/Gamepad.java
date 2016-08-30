@@ -216,6 +216,32 @@ public static class Profile{
 
 		profiles.put(p.name, p);
 
+		p = new Profile("Generic");
+
+		for (int a = 0; a < 32; a++)
+			p.btnToCode.put("b" + String.valueOf(a), a);
+
+		for (int a = 0; a < 16; a++) {
+			String axisName = "a" + String.valueOf(a);
+			Axis axis = new Axis(a);
+			p.axes.put(axisName, axis);
+			p.btnToCode.put(axisName + "-", -200 - axis.code);
+			p.btnToCode.put(axisName + "+", 200 + axis.code);
+		}
+		
+		for (int a = 0; a < 8; a++) {
+			Stick s = new Stick(p.axes.get("a" + String.valueOf(a * 2)),
+					p.axes.get("a" + String.valueOf(a * 2 + 1)));
+			p.sticks.put("s" + String.valueOf(a), s);
+		}
+
+		p.btnToCode.put("left", 100 + PovDirection.west.ordinal());
+		p.btnToCode.put("right", 100 + PovDirection.east.ordinal());
+		p.btnToCode.put("up", 100 + PovDirection.north.ordinal());
+		p.btnToCode.put("down", 100 + PovDirection.south.ordinal());
+
+		profiles.put(p.name, p);
+
 		profile("XBOX360"); // probably most common, so it's the default
 
 	}
