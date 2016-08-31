@@ -619,7 +619,6 @@ public class GameObject implements Named{
 		if (!valid)
 			return;
 		onEnd();
-		parent(null);
 		valid = false;
 		if (uniqueModel != null) {
 			uniqueModel.dispose();
