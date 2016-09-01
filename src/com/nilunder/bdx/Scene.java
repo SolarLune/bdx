@@ -867,6 +867,7 @@ public class Scene implements Named{
 		toBeAdded.clear();
 
 		for (GameObject g : toBeRemoved) {
+			g.parent(null);
 			world.removeRigidBody(g.body);
 			objects.remove(g);
 			if (g instanceof Light)
