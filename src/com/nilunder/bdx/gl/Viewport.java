@@ -128,8 +128,8 @@ public class Viewport{
 				scene.camera.size(resolution);
 			}else{
 				float dRatio = (float) w / h;
-				float rRatio = resolution.x / resolution.y;
 				if (type == Type.LETTERBOX){
+					float rRatio = resolution.x / resolution.y;
 					if (dRatio < rRatio){
 						int h2 = Math.round(w / rRatio);
 						y += (h - h2) / 2;
@@ -143,11 +143,7 @@ public class Viewport{
 						scene.camera.size(w, h);
 					}
 				}else if (type == Type.EXTEND){
-					if (dRatio < rRatio){
-						scene.camera.size((int) resolution.x, Math.round(resolution.x / dRatio));
-					}else if (dRatio > rRatio){
-						scene.camera.size(Math.round(resolution.y * dRatio), (int) resolution.y);
-					}
+					scene.camera.size(Math.round(resolution.y * dRatio), (int) resolution.y);
 				}
 			}
 		}
