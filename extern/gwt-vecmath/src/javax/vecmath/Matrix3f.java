@@ -2441,4 +2441,11 @@ public class Matrix3f implements java.io.Serializable, Cloneable {
 		m.set(aa);
 		return m;
 	}
+	
+	public final Matrix3f inverted(){
+		Matrix3f m = new Matrix3f(this);
+		m.invert();
+		return m;
+	}
+	
 }
