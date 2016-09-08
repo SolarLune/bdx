@@ -141,9 +141,8 @@ public class Bdx{
 		public ArrayList<String> available(){
 			ArrayList<String> scenes = new ArrayList<String>();
 			FileHandle[] files = Gdx.files.internal("bdx/scenes/").list("bdx");
-			for (FileHandle file : files){
-				scenes.add(file.name().replace(".bdx", ""));
-			}
+			for (FileHandle file : files)
+				scenes.add(file.nameWithoutExtension());
 			return scenes;
 		}
 	}
