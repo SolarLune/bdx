@@ -649,7 +649,7 @@ public class Scene implements Named{
 		RayHit rh = new RayHit();
 		rh.object = (GameObject) (rrc.collisionObject.getUserPointer());
 		rh.position = rrc.hitPointWorld;
-		rh.normal = rrc.hitNormalWorld;
+		rh.normal = rrc.hitNormalWorld.normalized();
 
 		for (String p : props){
 			if (!rh.object.props.containsKey(p))
