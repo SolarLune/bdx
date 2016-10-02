@@ -72,7 +72,10 @@ def in_active_layer(obj):
 
 def instance(dupli_group):
     if dupli_group:
-        return [o.name for o in dupli_group.objects if not o.parent][0]
+        g = [o.name for o in dupli_group.objects if not o.parent]
+        if len(g) == 0:
+            raise Exception("Group \"" + dupli_group.name + "\" doesn't have a top-level (un-parented) object.")
+        return g[0]
 
 def mat_tris(mesh):
     """Returns dict: mat_name -> list_of_triangle_indices"""
