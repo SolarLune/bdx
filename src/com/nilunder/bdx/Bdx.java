@@ -420,8 +420,10 @@ public class Bdx{
 			s.dispose();
 		for (RenderBuffer b : availableTempBuffers.values())
 			b.dispose();
-		for (Scene s : scenes)
-			s.end();
+		for (Scene s : scenes) {
+			s.dispose();
+		}
+
 	}
 
 	public static void end(){

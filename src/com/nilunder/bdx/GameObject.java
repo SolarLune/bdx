@@ -1,6 +1,7 @@
 package com.nilunder.bdx;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,7 +9,6 @@ import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 
-import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -32,6 +32,7 @@ import com.bulletphysics.linearmath.MatrixUtil;
 import com.bulletphysics.linearmath.Transform;
 
 import com.nilunder.bdx.gl.Material;
+import com.nilunder.bdx.gl.Mesh;
 import com.nilunder.bdx.utils.*;
 
 public class GameObject implements Named{
@@ -42,7 +43,6 @@ public class GameObject implements Named{
 	public ArrayListGameObject touchingObjectsLast;
 	public ArrayList<PersistentManifold> contactManifolds;
 	public ModelInstance modelInstance;
-	public com.nilunder.bdx.gl.Mesh mesh;
 	public RigidBody body;
 	public String currBodyType;
 	public String currBoundsType;
@@ -64,12 +64,11 @@ public class GameObject implements Named{
 	private Vector3f localScale;
 	private boolean visible;
 	private boolean valid;
-	private Model uniqueModel;
-	public ArrayListMaterials materials;
 	public boolean initialized;
 	public int logicFrequency;
 	public float logicCounter;
 	private Vector3f scale;
+	private Mesh mesh;
 
 	public class ArrayListGameObject extends ArrayListNamed<GameObject> {
 
@@ -94,49 +93,6 @@ public class GameObject implements Named{
 		
 	}
 
-	public class ArrayListMaterials extends ArrayListNamed<Material> {
-
-		public Material set(int index, Material material) {
-			modelInstance.nodes.get(0).parts.get(index).material = material;
-			return super.set(index, material);
-		}
-
-		public Material set(int index, String matName) {
-			return set(index, scene.materials.get(matName));
-		}
-
-		public void set(Material material){
-			for (int i = 0; i < size(); i++) {
-				set(i, material);
-			}
-		}
-
-		public void set(String matName){
-			set(scene.materials.get(matName));
-		}
-
-		public void color(Color color){
-			for (Material mat : this)
-				mat.color(color);
-		}
-
-		public void tint(Color color){
-			for (Material mat : this)
-				mat.tint(color);
-		}
-
-		public void blendMode(int src, int dest){
-			for (Material mat : this)
-				mat.blendMode(src, dest);
-		}
-
-		public void shadeless(boolean shadelessness){
-			for (Material mat : this)
-				mat.shadeless(shadelessness);
-		}
-
-	}
-
 	public GameObject() {
 		joinedMeshObjects = new ArrayList<GameObject>();
 		touchingObjects = new ArrayListGameObject();
@@ -144,7 +100,6 @@ public class GameObject implements Named{
 		contactManifolds = new ArrayList<PersistentManifold>();
 		components = new ArrayListNamed<Component>();
 		children = new ArrayListGameObject();
-		materials = new ArrayListMaterials();
 		valid = true;
 		scale = new Vector3f();
 		logicFrequency = Bdx.TICK_RATE;
@@ -359,7 +314,7 @@ public class GameObject implements Named{
 		body.setWorldTransform(t);
 
 		// required for static objects:
-		body.getMotionState().setWorldTransform(t); 
+		body.getMotionState().setWorldTransform(t);
 		if (body.isInWorld() && body.isStaticOrKinematicObject()){
 			scene.world.updateSingleAabb(body);
 			for (GameObject g : touchingObjects)
@@ -620,10 +575,6 @@ public class GameObject implements Named{
 			return;
 		onEnd();
 		valid = false;
-		if (uniqueModel != null) {
-			uniqueModel.dispose();
-			uniqueModel = null;
-		}
 
 		for (Component c : components)
 			c.onGameObjectEnd();
@@ -631,6 +582,9 @@ public class GameObject implements Named{
 		scene.remove(this);
 		for (GameObject g : touchingObjects)
 			g.activate();
+
+		if (modelInstance != null)
+			mesh.instances.remove(modelInstance);
 	}
 
 	public boolean valid(){
@@ -707,7 +661,7 @@ public class GameObject implements Named{
 	}
 	
 	public Vector3f axis(String axisName){
-		int axis = "XYZ".indexOf(axisName.charAt(axisName.length() - 1)); 
+		int axis = "XYZ".indexOf(axisName.charAt(axisName.length() - 1));
 		Vector3f v = new Vector3f();
 		orientation().getColumn(axis, v);
 		if (axisName.charAt(0) == '-')
@@ -735,107 +689,144 @@ public class GameObject implements Named{
 		alignAxisToVec(String.valueOf("XYZ".charAt(axis)), vec);
 	}
 
-	public String modelName(){
-		return modelInstance.model.meshParts.first().id;
-	}
-	
-	public void useUniqueModel(){
-		JsonValue modelData = scene.json.get("models").get(modelName());
-		uniqueModel = scene.createModel(modelData);
-		ModelInstance mi = new ModelInstance(uniqueModel);
-		mi.transform.set(modelInstance.transform);
-		modelInstance = mi;
-		mesh = new com.nilunder.bdx.gl.Mesh(modelInstance.model);
-		for (int i = 0; i < modelInstance.nodes.get(0).parts.size; i++){
-			modelInstance.nodes.get(0).parts.get(i).material = materials.get(i);
-		}
+	public Mesh mesh(){
+		return mesh;
 	}
 
-	public void replaceModel(String modelName, boolean updateVisual, boolean updatePhysics){
-		if (modelName.equals(modelName()))
-			return;
+	public void mesh(String meshName){
+
+		Mesh m = null;
+
+		ArrayList<Scene> sceneList = new ArrayList<Scene>(Bdx.scenes);
 		
-		Model model = null;
+		if (sceneList.indexOf(scene) >= 0)
+			Collections.swap(sceneList, sceneList.indexOf(scene), 0);
+		else
+			sceneList.add(0, scene);
+
+		for (Scene sce : sceneList){
+			m = sce.meshes.get(meshName);
+			if (m != null)
+				break;
+		}
+		if (m == null)
+			throw new RuntimeException("No model found with name '" + meshName + "' in an active scene.");
+
+		mesh(m);
+
+	}
+
+	public void mesh(Mesh mesh) {
+
+		String meshName = mesh.name();
+
+		if (mesh == this.mesh)              // You're already set to the current mesh
+			return;
+
 		JsonValue mOrigin = null;
 		JsonValue mDimNoScale = null;
-		for (Scene sce : Bdx.scenes){
-			if (sce.models.containsKey(modelName)){
-				model = sce.models.get(modelName);
-				mOrigin = sce.json.get("origins").get(modelName);
-				mDimNoScale = sce.json.get("dimensions").get(modelName);
+
+		ArrayList<Scene> sceneList = new ArrayList<Scene>(Bdx.scenes);
+		
+		if (sceneList.indexOf(scene) >= 0)
+			Collections.swap(sceneList, sceneList.indexOf(scene), 0);
+		else
+			sceneList.add(0, scene);
+
+		for (Scene sce : sceneList) {
+			if (sce.meshes.containsKey(meshName)){
+				mOrigin = sce.json.get("origins").get(meshName);
+				mDimNoScale = sce.json.get("dimensions").get(meshName);
 				break;
 			}
 		}
-		if (model == null){
-			throw new RuntimeException("No model found with name: '" + modelName + "'");
-		}
+
 		origin = mOrigin == null ? new Vector3f() : new Vector3f(mOrigin.asFloatArray());
 		dimensionsNoScale = mDimNoScale == null ? new Vector3f(1, 1, 1) : new Vector3f(mDimNoScale.asFloatArray());
-		Matrix4 trans = modelInstance.transform;
 
-		if (updateVisual){
-			ModelInstance mi = new ModelInstance(model);
-			mi.transform.set(trans);
-			modelInstance = mi;
-			mesh = new com.nilunder.bdx.gl.Mesh(modelInstance.model);
-			materials.clear();
-			for (NodePart part : modelInstance.nodes.get(0).parts) {
-				Material newMat = new Material(part.material);
-				materials.add(newMat);
-				part.material = newMat;
-			}
+		Matrix4 trans;
+		if (modelInstance != null) {
+			trans = modelInstance.transform;
+			this.mesh.instances.remove(this);
 		}
-		
-		if (updatePhysics){
-			GameObject compParent = parent != null && parent.body.getCollisionShape().isCompound() ? parent : null;
-			boolean isCompChild = compParent != null && !(currBodyType.equals("NO_COLLISION") || currBodyType.equals("SENSOR"));
-			if (isCompChild){
-				parent(null);
-			}
-			
-			Matrix4f transform = transform();
-			Vector3f scale = scale();
-			
-			CollisionShape shape = body.getCollisionShape();
-			body.setCollisionShape(Bullet.makeShape(model.meshes.first(), currBoundsType, shape.getMargin(), shape.isCompound()));
-			
-			if (currBoundsType.equals("CONVEX_HULL")){
-				Transform startTransform = new Transform();
-				body.getMotionState().getWorldTransform(startTransform);
-				Matrix4f originMatrix = new Matrix4f();
-				originMatrix.set(origin);
-				Transform centerOfMassTransform = new Transform();
-				centerOfMassTransform.set(originMatrix);
-				centerOfMassTransform.mul(startTransform);
-				body.setCenterOfMassTransform(centerOfMassTransform);
-			}
-			
-			transform(transform);
-			scale(scale);
+		else
+			trans = new Matrix4();
 
-			if (body.isInWorld()){
-				scene.world.updateSingleAabb(body);
-			}else{ // update Aabb hack for when not in world
-				scene.world.addRigidBody(body);
-				scene.world.updateSingleAabb(body);
-				scene.world.removeRigidBody(body);
-			}
+		this.mesh = mesh;
 
-			if (isCompChild){
-				parent(compParent);
+		modelInstance = mesh.getInstance();
+		modelInstance.transform.set(trans);
+
+	}
+
+	public void updateBody(Mesh mesh){
+
+		GameObject compParent = parent != null && parent.body.getCollisionShape().isCompound() ? parent : null;
+		boolean isCompChild = compParent != null && !(currBodyType.equals("NO_COLLISION") || currBodyType.equals("SENSOR"));
+		if (isCompChild){
+			parent(null);
+		}
+
+		Matrix4f transform = transform();
+		Vector3f scale = scale();
+
+		CollisionShape shape = body.getCollisionShape();
+		body.setCollisionShape(Bullet.makeShape(mesh.model.meshes.first(), currBoundsType, shape.getMargin(), shape.isCompound()));
+
+		if (currBoundsType.equals("CONVEX_HULL")){
+			Transform startTransform = new Transform();
+			body.getMotionState().getWorldTransform(startTransform);
+			Matrix4f originMatrix = new Matrix4f();
+			originMatrix.set(origin);
+			Transform centerOfMassTransform = new Transform();
+			centerOfMassTransform.set(originMatrix);
+			centerOfMassTransform.mul(startTransform);
+			body.setCenterOfMassTransform(centerOfMassTransform);
+		}
+
+		transform(transform);
+		scale(scale);
+
+		if (body.isInWorld()){
+			scene.world.updateSingleAabb(body);
+		}else{ // update Aabb hack for when not in world
+			scene.world.addRigidBody(body);
+			scene.world.updateSingleAabb(body);
+			scene.world.removeRigidBody(body);
+		}
+
+		if (isCompChild){
+			parent(compParent);
+		}
+
+	}
+
+	public void updateBody(String mesh) {
+
+		ArrayList<Scene> sceneList = new ArrayList<Scene>(Bdx.scenes);
+		if (sceneList.indexOf(scene) >= 0)
+			Collections.swap(sceneList, sceneList.indexOf(scene), 0);
+		else
+			sceneList.add(0, scene);
+
+		for (Scene s : sceneList) {
+			Mesh m = s.meshes.get(mesh);
+			if (m != null) {
+				updateBody(m);
+				return;
 			}
 		}
 
 	}
 
-	public void replaceModel(String modelName){
-		replaceModel(modelName, true, false);
+	public void updateBody(){
+		updateBody(mesh);
 	}
 
 	public void updateJoinedMesh(boolean endJoinedMeshObjects){
 		
 		if (joinedMeshObjects.isEmpty()){
-			throw new RuntimeException("ERROR: " + name() + ".joinedMeshObjects is empty."); 
+			throw new RuntimeException("ERROR: " + name() + ".joinedMeshObjects is empty.");
 		}
 		
 		if (joinedMeshObjects.contains(this)){
@@ -934,31 +925,27 @@ public class GameObject implements Named{
 				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. Decrease the number of objects to join.");
 			}
 		}
-		
-		if (uniqueModel != null)
-			uniqueModel.dispose();
 
-		uniqueModel = builder.end();
-		
+		Model finishedModel = builder.end();
+
 		// Update modelInstance & mesh & materials
-		
-		modelInstance = new ModelInstance(uniqueModel);
-		mesh = new com.nilunder.bdx.gl.Mesh(modelInstance.model);
-		materials.clear();
+
+		mesh(new Mesh(finishedModel, scene));
+
 		Material mat;
-		
-		for (NodePart nodePart : modelInstance.nodes.get(0).parts){
-			mat = scene.materials.get(nodePart.material.id);
+
+		mesh().materials.clear();
+
+		for (NodePart nodePart : mesh().model.nodes.get(0).parts){     // Assigns materials from the scene
+			mat = new Material(scene.materials.get(nodePart.material.id));
 			nodePart.material = mat;
-			materials.add(mat);
+			mesh().materials.add(mat);
 		}
-		
-		// Update visual
-		
+
 		if (json.get("mesh_name").asString() == null){ // in case this was an empty
 			visible = json.get("visible").asBoolean(); // set visbility to initial value
 		}
-		Mesh mesh = uniqueModel.meshes.first();
+        com.badlogic.gdx.graphics.Mesh mesh = finishedModel.meshes.first();
 		BoundingBox bbox = mesh.calculateBoundingBox();
 		Vector3 dimensions = bbox.getDimensions(new Vector3());
 		Vector3 center = bbox.getCenter(new Vector3());
@@ -1079,7 +1066,7 @@ public class GameObject implements Named{
 	}
 
 	public void boundsType(String s){
-		Mesh mesh = modelInstance.model.meshes.first();
+		com.badlogic.gdx.graphics.Mesh mesh = modelInstance.model.meshes.first();
 		CollisionShape shape = body.getCollisionShape();
 		shape = Bullet.makeShape(mesh, s, shape.getMargin(), shape.isCompound());
 		body.setCollisionShape(shape);
@@ -1114,7 +1101,7 @@ public class GameObject implements Named{
 			center = min.plus(dimHalved);
 		else
 			center = min.plus(dimHalved).plus(orientation().mult(origin).mul(scale()));
-		
+
 		return scene.camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, dimHalved.x, dimHalved.y, dimHalved.z);
 	}
 
