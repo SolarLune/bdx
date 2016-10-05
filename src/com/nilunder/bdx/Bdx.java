@@ -165,6 +165,8 @@ public class Bdx{
 	public static ArrayList<Component> components;
 	public static HashMap<String, MaterialShader> matShaders;
 	public static BDXShaderProvider shaderProvider;
+	public static boolean defaultMeshCopy = true;
+	public static boolean defaultMaterialCopy = true;
 
 	private static boolean advancedLightingOn;
 	private static ArrayList<Finger> allocatedFingers;

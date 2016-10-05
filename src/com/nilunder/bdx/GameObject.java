@@ -752,7 +752,10 @@ public class GameObject implements Named{
 		else
 			trans = new Matrix4();
 
-		this.mesh = mesh;
+		if (Bdx.defaultMeshCopy)
+			this.mesh = mesh.copy();
+		else
+			this.mesh = mesh;
 
 		modelInstance = mesh.getInstance();
 		modelInstance.transform.set(trans);

@@ -61,7 +61,7 @@ public class Scene implements Named{
 	public HashMap<String,Texture> textures;
 	public HashMap<String,Material> materials;
 	public Material defaultMaterial;
-	private Mesh defaultMesh;
+	public Mesh defaultMesh;
 	public DiscreteDynamicsWorld world;
 
 	private ArrayList<GameObject> toBeAdded;
@@ -163,6 +163,7 @@ public class Scene implements Named{
 		defaultMaterial.set(new BlendingAttribute());
 		defaultMaterial.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
 		defaultMesh = new Mesh(new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates), this);
+		defaultMesh.defaultMesh = true;
 
 		meshes = new HashMap<String, Mesh>();
 		textures = new HashMap<String,Texture>();

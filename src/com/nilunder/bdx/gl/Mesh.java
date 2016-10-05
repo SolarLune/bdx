@@ -1,9 +1,11 @@
 package com.nilunder.bdx.gl;
 
+import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.Json;
@@ -28,13 +30,17 @@ public class Mesh implements Named {
 	public Scene scene;
 	public ArrayListMaterials materials;
 	public ArrayList<ModelInstance> instances;
+	public boolean defaultMesh = false;
 
 	public class ArrayListMaterials extends ArrayListNamed<Material> {
 
 		public Material set(int index, Material material) {
-			model.nodes.get(0).parts.get(index).material = material;
+			Material mat = material;
+			if (Bdx.defaultMaterialCopy)
+				mat = new Material(mat);
+			model.nodes.get(0).parts.get(index).material = mat;
 			for (ModelInstance m : instances)
-				m.nodes.get(0).parts.get(index).material = material;
+				m.nodes.get(0).parts.get(index).material = mat;
 			return super.set(index, material);
 		}
 
@@ -221,11 +227,18 @@ public class Mesh implements Named {
 	}
 
 	public Mesh copy(String newName){
-
-		Model uniqueModel = scene.createModel(new JsonReader().parse(serialized()));
-		Mesh newMesh = new Mesh(uniqueModel, scene, newName);
-
+		
+		Model uniqueModel;
+		Mesh newMesh;
+				
+		if (!defaultMesh)
+			uniqueModel = scene.createModel(new JsonReader().parse(serialized()));
+		else
+			uniqueModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, scene.defaultMaterial, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal | VertexAttributes.Usage.TextureCoordinates);
+		
+		newMesh = new Mesh(uniqueModel, scene, newName);
 		newMesh.materials.clear();
+		newMesh.defaultMesh = defaultMesh;
 
 		for (NodePart part : uniqueModel.nodes.get(0).parts) {
 			Material newMat = new Material(part.material);
