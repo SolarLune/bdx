@@ -1,23 +1,96 @@
 package com.nilunder.bdx.gl;
 
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonReader;
 import com.nilunder.bdx.Bdx;
+import com.nilunder.bdx.Scene;
+import com.nilunder.bdx.utils.ArrayListNamed;
+import com.nilunder.bdx.utils.Color;
+import com.nilunder.bdx.utils.Named;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-public class Mesh {
+public class Mesh implements Named {
 
-    public Model model;
+	public Model model;
+	public String name;
+	public Scene scene;
+	public ArrayListMaterials materials;
+	public ArrayList<ModelInstance> instances;
 
-    public Mesh(Model model){
-        this.model = model;
-    }
+	public class ArrayListMaterials extends ArrayListNamed<Material> {
+
+		public Material set(int index, Material material) {
+			model.nodes.get(0).parts.get(index).material = material;
+			for (ModelInstance m : instances)
+				m.nodes.get(0).parts.get(index).material = material;
+			return super.set(index, material);
+		}
+
+		public Material set(int index, String matName) {
+			return set(index, scene.materials.get(matName));
+		}
+
+		public void set(Material material){
+			for (int i = 0; i < size(); i++) {
+				set(i, material);
+			}
+		}
+
+		public void set(String matName){
+			set(scene.materials.get(matName));
+		}
+
+		public void color(Color color){
+			for (Material mat : this)
+				mat.color(color);
+		}
+
+		public void tint(Color color){
+			for (Material mat : this)
+				mat.tint(color);
+		}
+
+		public void blendMode(int src, int dest){
+			for (Material mat : this)
+				mat.blendMode(src, dest);
+		}
+
+		public void shadeless(boolean shadelessness){
+			for (Material mat : this)
+				mat.shadeless(shadelessness);
+		}
+
+	}
+
+	public Mesh(Model model, Scene scene, String name){
+		this.model = model;
+		this.name = name;
+		this.scene = scene;
+		materials = new ArrayListMaterials();
+		for (NodePart part : model.nodes.get(0).parts)
+			materials.add((Material) part.material);
+		instances = new ArrayList<ModelInstance>();
+	}
+
+	public Mesh(Model model, Scene scene){
+		this(model, scene, model.meshParts.first().id);
+	}
+
+	protected void finalize() throws Throwable {
+		model.dispose();
+	}
 
     public int getVertexCount(int materialSlot){
         return model.nodes.first().parts.get(materialSlot).meshPart.size;
@@ -116,6 +189,69 @@ public class Mesh {
         model.meshes.first().setVertices(verts);
     }
 
-    // Also UV, Normal, and Transforms (and possibly "do this to all" versions that don't use transforms?)
+	public String serialized() {
+
+		HashMap<String, Float[]> out = new HashMap<String, Float[]>();
+		Float[] d;
+
+		for (int i = 0; i < materials.size(); i++) {
+			d = new Float[getVertexCount(i) * Bdx.VERT_STRIDE];
+			for (int v = 0; v < getVertexCount(i); v++) {
+				int vi = v * 8;
+				Vector3f p = vertPos(i, v);
+				d[vi] = p.x;
+				d[vi + 1] = p.y;
+				d[vi + 2] = p.z;
+				p = vertNor(i, v);
+				d[vi + 3] = p.x;
+				d[vi + 4] = p.y;
+				d[vi + 5] = p.z;
+				Vector2f u = vertUV(i, v);
+				d[vi + 6] = u.x;
+				d[vi + 7] = u.y;
+			}
+			out.put(materials.get(i).name(), d);
+		}
+
+		return new Json().toJson(out);
+	}
+
+	public String name(){
+		return name;
+	}
+
+	public Mesh copy(String newName){
+
+		Model uniqueModel = scene.createModel(new JsonReader().parse(serialized()));
+		Mesh newMesh = new Mesh(uniqueModel, scene, newName);
+
+		newMesh.materials.clear();
+
+		for (NodePart part : uniqueModel.nodes.get(0).parts) {
+			Material newMat = new Material(part.material);
+			newMesh.materials.add(newMat);
+			part.material = newMat;
+		}
+
+		return newMesh;
+	}
+
+	public Mesh copy(){
+		return copy(name);
+	}
+
+	public ModelInstance getInstance(){
+		ModelInstance m = new ModelInstance(model);
+		for (int i = 0; i < m.nodes.get(0).parts.size; i++)
+			m.nodes.get(0).parts.get(i).material = materials.get(i);
+		instances.add(m);
+		return m;
+	}
+
+	public String toString(){
+		return name + " <" + getClass().getName() + "> @" + Integer.toHexString(hashCode());
+	}
+
+	// Also UV, Normal, and Transforms (and possibly "do this to all" versions that don't use transforms?)
 
 }

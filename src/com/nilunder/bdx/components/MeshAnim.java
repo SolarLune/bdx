@@ -69,7 +69,7 @@ public class MeshAnim extends Component<GameObject> {
 		ticker = new Timer();
 		speed = 1;
 		state = play;
-		currentMesh = g.modelName();
+		currentMesh = g.mesh().name();
 	}
 
 	public void add(String name, String[] frames){
@@ -110,7 +110,7 @@ public class MeshAnim extends Component<GameObject> {
 
 		if (!currentMesh.equals(frame)) {
 			currentMesh = frame;
-			g.replaceModel(currentMesh);
+			g.mesh(currentMesh);
 		}
 	}
 

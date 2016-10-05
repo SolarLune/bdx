@@ -8,19 +8,15 @@ import javax.vecmath.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
-import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -38,14 +34,13 @@ import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 import com.bulletphysics.linearmath.Transform;
-import com.nilunder.bdx.gl.Material;
-import com.nilunder.bdx.gl.RenderBuffer;
-import com.nilunder.bdx.gl.ScreenShader;
-import com.nilunder.bdx.gl.Viewport;
+import com.nilunder.bdx.gl.*;
+import com.nilunder.bdx.gl.Mesh;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
 import com.nilunder.bdx.GameObject.ArrayListGameObject;
+import com.nilunder.bdx.utils.Color;
 
 public class Scene implements Named{
 
@@ -62,11 +57,11 @@ public class Scene implements Named{
 
 	private FileHandle scene;
 
-	public HashMap<String,Model> models;
+	public HashMap<String, Mesh> meshes;
 	public HashMap<String,Texture> textures;
 	public HashMap<String,Material> materials;
 	public Material defaultMaterial;
-	private Model defaultModel;
+	private Mesh defaultMesh;
 	public DiscreteDynamicsWorld world;
 
 	private ArrayList<GameObject> toBeAdded;
@@ -167,9 +162,9 @@ public class Scene implements Named{
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.Diffuse, 1, 1, 1, 1));
 		defaultMaterial.set(new BlendingAttribute());
 		defaultMaterial.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
-		defaultModel = new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		defaultMesh = new Mesh(new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates), this);
 
-		models = new HashMap<String,Model>();
+		meshes = new HashMap<String, Mesh>();
 		textures = new HashMap<String,Texture>();
 		materials = new HashMap<String,Material>();
 		modelToFrame = new HashMap<>();
@@ -270,7 +265,7 @@ public class Scene implements Named{
 		}
 		
 		for (JsonValue model: json.get("models")){
-			models.put(model.name, createModel(model));
+			meshes.put(model.name, new Mesh(createModel(model), this, model.name));
 		}
 
 		HashMap<String, JsonValue> fonts = new HashMap<>();
@@ -291,27 +286,19 @@ public class Scene implements Named{
 				g.props.put(prop.name, prop);
 			}
 						
-			String modelName = gobj.get("mesh_name").asString();
-			if (modelName != null){
+			String meshName = gobj.get("mesh_name").asString();
+			if (meshName != null){
 				g.visibleNoChildren(gobj.get("visible").asBoolean());
-				g.modelInstance = new ModelInstance(models.get(modelName));
-				g.mesh = new com.nilunder.bdx.gl.Mesh(g.modelInstance.model);
+				g.mesh(meshName);
 			}else{
 				g.visibleNoChildren(false);
-				g.modelInstance = new ModelInstance(defaultModel);
-				g.mesh = new com.nilunder.bdx.gl.Mesh(g.modelInstance.model);
+				g.mesh(defaultMesh);
 			}
 
-			for (NodePart part : g.modelInstance.nodes.get(0).parts) {
-				Material mat = materials.get(part.material.id);
-				part.material = mat;
-				g.materials.add(mat);
-			}
-
-			Mesh mesh = g.modelInstance.model.meshes.first();
+			com.badlogic.gdx.graphics.Mesh mesh = g.modelInstance.model.meshes.first();
 			float[] trans = gobj.get("transform").asFloatArray();
-			JsonValue origin = json.get("origins").get(modelName);
-			JsonValue dimensions = json.get("dimensions").get(modelName);
+			JsonValue origin = json.get("origins").get(meshName);
+			JsonValue dimensions = json.get("dimensions").get(meshName);
 			g.origin = origin == null ? new Vector3f() : new Vector3f(origin.asFloatArray());
 			g.dimensionsNoScale = dimensions == null ? new Vector3f(1, 1, 1) : new Vector3f(dimensions.asFloatArray());
 			JsonValue physics = gobj.get("physics");
@@ -320,7 +307,7 @@ public class Scene implements Named{
 			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
 			g.scale(getGLMatrixScale(trans));
-			
+
 			String type = gobj.get("type").asString();
 			if (type.equals("FONT")){
 				Text t = (Text)g;
@@ -400,11 +387,12 @@ public class Scene implements Named{
 	}
 
 	public void dispose(){
-		lastFrameBuffer.dispose();
-		defaultModel.dispose();
 
-		for (Model m : models.values())
-			m.dispose();
+		valid = false;
+
+		lastFrameBuffer.dispose();
+		defaultMesh = null;
+		meshes = null;
 
 		for (Texture t : textures.values())
 			t.dispose();
@@ -421,6 +409,11 @@ public class Scene implements Named{
 			if (m.currentTexture != null)
 				m.currentTexture.dispose();
 		}
+
+		for (GameObject g : objects) {
+			g.end();
+		}
+
 	}
 	
 	private void hookParentChild(){
@@ -464,14 +457,10 @@ public class Scene implements Named{
 		
 		g.name = gobj.name;
 		g.visibleNoChildren(gobj.visible());
-		g.modelInstance = new ModelInstance(gobj.modelInstance);
-		g.mesh = new com.nilunder.bdx.gl.Mesh(gobj.modelInstance.model);
-
-		for (NodePart part : g.modelInstance.nodes.get(0).parts){
-			Material mat = new Material(gobj.materials.get(part.material.id));
-			g.materials.add(mat);
-			part.material = mat;
-		}
+		
+		g.scene = this;
+		
+		g.mesh(gobj.mesh());
 
 		g.body = Bullet.cloneBody(gobj.body);
 		g.currBodyType = gobj.currBodyType;
@@ -482,8 +471,6 @@ public class Scene implements Named{
 		g.scale(gobj.scale());
 		
 		g.props = new HashMap<String, JsonValue>(gobj.props);
-		
-		g.scene = this;
 
 		if (g instanceof Camera){
 			Camera c = (Camera)g;
@@ -506,7 +493,7 @@ public class Scene implements Named{
 			t.font = tt.font;
 			t.text(tt.text());
 			t.capacity = tt.capacity;
-			t.useUniqueModel();
+			t.mesh(t.mesh().copy());
 		}else if (g instanceof Light){
 			Light l = (Light)g;
 			Light ll = (Light)gobj;
@@ -723,8 +710,11 @@ public class Scene implements Named{
 		builder.begin();
 		short idx = 0;
 		for (JsonValue mat : model){
+			Material m = materials.get(mat.name);
+			if (mat.name.equals(defaultMaterial.id))
+				m = new Material(m);
 			MeshPartBuilder mpb = builder.part(model.name, GL20.GL_TRIANGLES,
-					Usage.Position | Usage.Normal | Usage.TextureCoordinates, materials.get(mat.name));
+					Usage.Position | Usage.Normal | Usage.TextureCoordinates, m);
 			float verts[] = mat.asFloatArray();
 			mpb.vertex(verts);
 			int len = verts.length / Bdx.VERT_STRIDE;
@@ -877,9 +867,6 @@ public class Scene implements Named{
 
 		if (requestedEnd) {
 			valid = false;
-
-			for (GameObject g : objects)
-				g.end();
 
 			dispose();
 

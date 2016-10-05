@@ -369,8 +369,8 @@ public class Profiler{
 		
 		display = scene.add("__PDisplay");
 		background = display.children.get("__PBackground");
-		background.materials.color(BG_COLOR);
-		
+		background.mesh().materials.color(BG_COLOR);
+
 		scene.viewport.type(Viewport.Type.SCREEN);
 		updateViewport();
 		
