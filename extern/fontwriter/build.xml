@@ -1,0 +1,47 @@
+<project name="fontwriter" basedir="." default="build-fontwriter-jar">
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+    <property name="libs.dir" value="../../blender/bdx/libs"/>
+    <property name="gen.dir" value="../../blender/bdx/gen/fontgen/" />
+
+    <property name="modules" value="${user.home}/.gradle/caches/modules-2/files-2.1" />
+
+    <property name="libgdx.libs.dir" value="${modules}/com.badlogicgames.gdx"/>
+    <property name="libgdx.version" value="1.9.2"/>
+
+    <path id="master-classpath">
+        <fileset dir="${libgdx.libs.dir}">
+            <include name="gdx/${libgdx.version}/**/*.jar" />
+            <include name="gdx-tools/${libgdx.version}/**/*.jar"/>
+            <include name="gdx-freetype/${libgdx.version}/**/*.jar" />
+            <include name="gdx-freetype-platform/${libgdx.version}/**/*.jar"/>
+            <include name="gdx-backend-lwjgl/${libgdx.version}/**/*.jar" />
+        </fileset>
+    </path>
+
+    <target name="build-fontwriter" description="Compile source tree java files">
+        <mkdir dir="${build.dir}"/>
+        <javac destdir="${build.dir}"
+               includeantruntime="false"
+               debug="true">
+            <compilerarg line="-encoding utf-8"/>
+            <classpath refid="master-classpath"/>
+            <src path="${src.dir}"/>
+            <exclude name="**/super/**"/>
+        </javac>
+    </target>
+
+    <target name="build-fontwriter-jar" depends="build-fontwriter">
+        <jar destfile="${gen.dir}/fontwriter.jar">
+            <fileset dir="${build.dir}"/>
+            <fileset dir="${src.dir}"/>
+            <manifest>
+                <attribute name="Main-Class" value="com.solarlune.fontwriter.DesktopLauncher"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="clean" description="Clean output directories">
+        <delete dir="${build.dir}" />
+    </target>
+</project>

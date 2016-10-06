@@ -694,23 +694,30 @@ def used_fonts(texts):
 def texts(objects):
     return [o.data for o in objects if o.type == "FONT"]
 
-def generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir):
+def generate_bitmap_fonts(fonts, fontgen_dir, fonts_dir, textures_dir):
     j = os.path.join
 
     # list of fonts to export
     existing = os.listdir(fonts_dir)
     fonts_to_export = [f for f in fonts if f.name + ".fntx" not in existing]
 
+    if bpy.context.scene.bdx.always_export_fonts:
+        fonts_to_export = [f for f in fonts]
+
     if not fonts_to_export:
         return
 
-    # base hiero command
+    # base fontgen command
     gcr = ut.gradle_cache_root()
 
     ver = ut.libgdx_version()
+
     gdx_jars = ["gdx-"+ver+".jar",
                 "gdx-platform-"+ver+"-natives-desktop.jar",
-                "gdx-backend-lwjgl-"+ver+".jar"]
+                "gdx-backend-lwjgl-"+ver+".jar",
+                "gdx-tools-"+ver+".jar",
+                "gdx-freetype-"+ver+".jar",
+                "gdx-freetype-platform-"+ver+"-natives-desktop.jar"]
 
     badlogic = j(gcr, "com.badlogicgames.gdx")
     gdx_jars = [ut.find_file(jar, badlogic) for jar in gdx_jars]
@@ -727,20 +734,37 @@ def generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir):
     lwjgl = j(gcr, "org.lwjgl.lwjgl")
     lwjgl_jars = [ut.find_file(jar, lwjgl) for jar in lwjgl_jars]
 
-    jars = gdx_jars + lwjgl_jars + [j(hiero_dir, "gdx-tools.jar")]
+    jars = gdx_jars + lwjgl_jars + [j(fontgen_dir, "fontwriter.jar")]
 
     sep = ";" if op_sys == "windows" else ":"
-    hiero = 'java -cp "{}" com.badlogic.gdx.tools.hiero.Hiero '.format(sep.join(jars))
+    command = 'java -cp "{}" com.solarlune.fontwriter.DesktopLauncher '.format(sep.join(jars))
 
     # export fonts, via hiero
     for font in fonts_to_export:
         ttf = font.filepath
         if ttf == "<builtin>":
-            ttf = j(hiero_dir, "bfont.ttf")
+            ttf = j(fontgen_dir, "bfont.ttf")
         else:
             ttf = os.path.abspath(bpy.path.abspath(ttf))
-        hiero += '"{}---{}" '.format(ttf, j(fonts_dir, font.name))
-    os.system(hiero)
+
+        size = font.bdx.font_size
+
+        col = font.bdx.font_color
+        alpha = font.bdx.font_alpha
+
+        shdo = font.bdx.font_shadow_offset
+        shdc = font.bdx.font_shadow_color
+        shda = font.bdx.font_shadow_alpha
+
+        outt = font.bdx.font_outline_thickness
+        outc = font.bdx.font_outline_color
+        outa = font.bdx.font_outline_alpha
+        outr = font.bdx.font_outline_rounded
+
+        command += '"{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}" '.format(ttf, j(fonts_dir, font.name), \
+        size, shdo[0], shdo[1], shdc[0], shdc[1], shdc[2], shda, outt, outc[0], outc[1], outc[2], outa, outr, col[0], col[1], col[2], alpha)
+
+    os.system(command)
 
     # move pngs to textures dir
     for f in ut.listdir(fonts_dir, pattern="*.png"):
@@ -820,9 +844,9 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         bdx_dir = j(ut.project_root(), "android", "assets", "bdx")
         fonts_dir = j(bdx_dir, "fonts")
         textures_dir = j(bdx_dir, "textures")
-        hiero_dir = j(ut.gen_root(), "hiero")
+        fontgen_dir = j(ut.gen_root(), "fontgen")
 
-        generate_bitmap_fonts(fonts, hiero_dir, fonts_dir, textures_dir);
+        generate_bitmap_fonts(fonts, fontgen_dir, fonts_dir, textures_dir);
 
         bdx["models"].update(srl_models_text(ts, fonts_dir))
         bdx["materials"].update(srl_materials_text(ts))

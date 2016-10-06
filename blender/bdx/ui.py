@@ -10,24 +10,43 @@ class BdxSceneProps(bpy.types.PropertyGroup):
     base_path = P.StringProperty(name="Base Path", subtype="DIR_PATH")
     dir_name = P.StringProperty(name="Directory")
     android_sdk = P.StringProperty(name="Android SDK", subtype="DIR_PATH")
-    
+    always_export_fonts = P.BoolProperty(name="Always Export Fonts", description="Whether BDX should always export fonts to texture, or only when they don't exist already", default=False)
+
 class BdxObjectProps(bpy.types.PropertyGroup):
     cls_use_custom = P.BoolProperty(name="", description="Use custom Java class for this object")
     cls_custom_name = P.StringProperty(name="", description="Java class name for this object")
     cls_use_priority = P.BoolProperty(name="", description="Use execution priority for this object")
-    
+
+class BdxFontProps(bpy.types.PropertyGroup):
+
+    font_size = P.IntProperty(name="Font Size", description="Sets the font's size, in pixels, on its output texture", default=32, min=1)
+    font_color = P.FloatVectorProperty(name="Font Color", description="Color of the font", subtype="COLOR", default=[1, 1, 1], min=0, max=1)
+    font_alpha = P.FloatProperty(name="Font Alpha", description="Alpha of the font", default=1, min=0, max=1)
+
+    font_shadow_offset = P.IntVectorProperty(name="Shadow Offset", description="Offset of the shadow (in pixels, relative to font size)", size=2, default=[0, 0], min=0)
+    font_shadow_color = P.FloatVectorProperty(name="Shadow Color", description="Color of the shadow", subtype="COLOR", default=[0, 0, 0], min=0, max=1)
+    font_shadow_alpha = P.FloatProperty(name="Shadow Alpha", description="Transparency of the shadow", default=1, min=0, max=1, step=0.1)
+
+    font_outline_thickness = P.IntProperty(name="Outline Thickness", description="Thickness of the outline in pixels", default=0, min=0)
+    font_outline_color = P.FloatVectorProperty(name="Outline Color", description="Color of outlines", subtype="COLOR", default=[0, 0, 0], min=0, max=1)
+    font_outline_alpha = P.FloatProperty(name="Outline Alpha", description="Transparency of outlines", default=1, min=0, max=1, step=0.1)
+    font_outline_rounded = P.BoolProperty(name="Rounded Outlines", description="Whether to have rounded outlines or not", default=False)
+
 bpy.utils.register_class(BdxSceneProps)
 bpy.utils.register_class(BdxObjectProps)
+bpy.utils.register_class(BdxFontProps)
+
 bpy.types.Scene.bdx = P.PointerProperty(type=BdxSceneProps)
 bpy.types.Object.bdx = P.PointerProperty(type=BdxObjectProps)
+bpy.types.VectorFont.bdx = P.PointerProperty(type=BdxFontProps)
 
 prop_move_support = sum([n * pow(10, i) for n, i in zip(bpy.app.version, (4, 2, 0))]) >= 27500
 
 
 class BdxProject(bpy.types.Panel):
-    """Crates the BDX panel in the render properties window"""
+    """Creates the BDX panel in the render properties window"""
     bl_idname = "RENDER_PT_bdx"
-    bl_label = "BDX"
+    bl_label =  "BDX"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
@@ -131,9 +150,50 @@ class BdxObject(bpy.types.Panel):
             row.operator("object.game_property_remove", text="", icon="X", emboss=False).index = i
 
 
+class BdxData(bpy.types.Panel):
+    """Creates the BDX Panel in the Object's Data properties window"""
+    bl_label = "BDX"
+    bl_idname = "DATA_PT_bdx"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "data"
+
+    def draw(self, context):
+
+        if type(context.object.data) == bpy.types.TextCurve:
+
+            txt_bdx = context.object.data.font.bdx
+
+            layout = self.layout
+
+            layout.row().prop(txt_bdx, "font_size")
+
+            row = layout.row()
+            row.prop(txt_bdx, "font_color")
+            row.prop(txt_bdx, "font_alpha")
+
+            layout.row().prop(txt_bdx, "font_shadow_offset")
+            if txt_bdx.font_shadow_offset[0] != 0 or txt_bdx.font_shadow_offset[1] != 0:
+                box = layout.box()
+                box.prop(txt_bdx, "font_shadow_color")
+                box.prop(txt_bdx, "font_shadow_alpha")
+
+            row = layout.row()
+
+            row.prop(txt_bdx, "font_outline_thickness")
+            if txt_bdx.font_outline_thickness > 0:
+                box = layout.box()
+
+                box.prop(txt_bdx, "font_outline_color")
+                box.prop(txt_bdx, "font_outline_alpha")
+                box.prop(txt_bdx, "font_outline_rounded")
+
+            layout.box().prop(context.scene.bdx, "always_export_fonts")
+
 def register():
     bpy.utils.register_class(BdxProject)
     bpy.utils.register_class(BdxObject)
+    bpy.utils.register_class(BdxData)
 
     @bpy.app.handlers.persistent
     def P_mapto_bdxexprun(dummy):
@@ -157,6 +217,7 @@ def register():
 def unregister():
     bpy.utils.unregister_class(BdxProject)
     bpy.utils.unregister_class(BdxObject)
+    bpy.utils.unregister_class(BdxData)
 
 
 if __name__ == "__main__":

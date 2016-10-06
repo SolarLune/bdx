@@ -20,6 +20,7 @@
 			<include name="gdx-backend-lwjgl/${libgdx.version}/**/*.jar" />
 			<include name="gdx-platform/${libgdx.version}/**/*desktop.jar" />
 			<include name="gdx-controllers/${libgdx.version}/**/*.jar" />
+			<include name="gdx-tools/${libgdx.version}/**/*.jar"/>
 		</fileset>
 		<fileset dir="${lwjgl.libs.dir}">
 			<include name="**/*.jar" />
@@ -58,6 +59,9 @@
 		<ant dir="extern/gbullet"
 			useNativeBasedir="true"
 			inheritAll="false"/>
+		<ant dir="extern/fontwriter"
+			 useNativeBaseDir="true"
+			 inheritAll="false"/>
 	</target>
 
 	<target name="build" depends="build-deps" description="Compile source tree java files">
@@ -91,6 +95,10 @@
 			useNativeBasedir="true"
 			inheritAll="false"
 			target="clean"/>
+		<ant dir="extern/fontwriter"
+			 useNativeBaseDir="true"
+			 inheritAll="false"
+			 target="clean"/>
 	</target>
 
 	<target name="clean-all" depends="clean,clean-deps" description="clean + clean-deps">
