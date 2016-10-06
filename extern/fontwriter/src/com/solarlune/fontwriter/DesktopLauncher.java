@@ -20,7 +20,7 @@ public class DesktopLauncher {
 		config.width = 666;
 		config.height = 444;
 
-		ArrayList<String[]> files = new ArrayList<>();
+		final ArrayList<String[]> files = new ArrayList<>();
 
 		for (String a : arg)
 			files.add(a.split("---"));
