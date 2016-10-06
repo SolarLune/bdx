@@ -33,24 +33,35 @@
 		</condition>
 	</target>
 
+	<macrodef name="libgdx-deps-body">
+		<sequential>
+			<exec executable="bash" osfamily="unix">
+				<arg value="-c"/>
+				<arg value="java -jar '${basedir}/blender/bdx/gen/gdx-setup.jar' --dir '${java.io.tmpdir}/libgdx-test-mygame' --name mygame --package com.badlogic.mygame --mainClass MyGame --sdkLocation '${java.io.tmpdir}' --excludeModules 'android;ios;html' --extensions 'controllers;tools'"/>
+			</exec>
+			<exec executable="bash" osfamily="unix">
+				<arg value="-c"/>
+				<arg value="${java.io.tmpdir}/libgdx-test-mygame/gradlew -p ${java.io.tmpdir}/libgdx-test-mygame desktop:classes"/>
+			</exec>
+			<exec executable="cmd" osfamily="windows">
+				<arg value="/c"/>
+				<arg value="java -jar '${basedir}\blender\bdx\gen\gdx-setup.jar' --dir '${java.io.tmpdir}\libgdx-test-mygame' --name mygame --package com.badlogic.mygame --mainClass MyGame --sdkLocation '${java.io.tmpdir}' --excludeModules 'android;ios;html' --extensions 'controllers;tools'"/>
+			</exec>
+			<exec executable="cmd" osfamily="windows">
+				<arg value="/c"/>
+				<arg value="${java.io.tmpdir}\libgdx-test-mygame\gradlew.bat -p ${java.io.tmpdir}\libgdx-test-mygame desktop:classes"/>
+			</exec>
+		</sequential>
+	</macrodef>
+
 	<target name="libgdx-deps" depends="libgdx-deps-check" unless="libgdx.deps.exist">
-		<exec executable="bash" osfamily="unix">
-			<arg value="-c"/>
-			<arg value="java -jar '${basedir}/blender/bdx/gen/gdx-setup.jar' --dir '${java.io.tmpdir}/libgdx-test-mygame' --name mygame --package com.badlogic.mygame --mainClass MyGame --sdkLocation '${java.io.tmpdir}' --excludeModules 'android;ios;html' --extensions 'controllers'"/>
-		</exec>
-		<exec executable="bash" osfamily="unix">
-			<arg value="-c"/>
-			<arg value="${java.io.tmpdir}/libgdx-test-mygame/gradlew -p ${java.io.tmpdir}/libgdx-test-mygame desktop:classes"/>
-		</exec>
-		<exec executable="cmd" osfamily="windows">
-			<arg value="/c"/>
-			<arg value="java -jar '${basedir}\blender\bdx\gen\gdx-setup.jar' --dir '${java.io.tmpdir}\libgdx-test-mygame' --name mygame --package com.badlogic.mygame --mainClass MyGame --sdkLocation '${java.io.tmpdir}' --excludeModules 'android;ios;html' --extensions 'controllers'"/>
-		</exec>
-		<exec executable="cmd" osfamily="windows">
-			<arg value="/c"/>
-			<arg value="${java.io.tmpdir}\libgdx-test-mygame\gradlew.bat -p ${java.io.tmpdir}\libgdx-test-mygame desktop:classes"/>
-		</exec>
+		<libgdx-deps-body/>
 	</target>
+
+	<target name="libgdx-deps-unconditional">
+		<libgdx-deps-body/>
+	</target>
+
 
 	<target name="build-deps" depends="libgdx-deps">
 		<ant dir="extern/gwt-vecmath"
