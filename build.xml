@@ -36,7 +36,7 @@
 	<target name="libgdx-deps" depends="libgdx-deps-check" unless="libgdx.deps.exist">
 		<exec executable="bash" osfamily="unix">
 			<arg value="-c"/>
-			<arg value="java -jar '${basedir}/blender/bdx/gen/gdx-setup.jar' --dir '${java.io.tmpdir}/libgdx-test-mygame' --name mygame --package com.badlogic.mygame --mainClass MyGame --sdkLocation '${java.io.tmpdir}' --excludeModules 'android;ios;html' --extensions 'controllers'"/>
+			<arg value="java -jar '${basedir}/blender/bdx/gen/gdx-setup.jar' --dir '${java.io.tmpdir}/libgdx-test-mygame' --name mygame --package com.badlogic.mygame --mainClass MyGame --sdkLocation '${java.io.tmpdir}' --excludeModules 'android;ios;html' --extensions 'controllers;freetype;tools' "/>
 		</exec>
 		<exec executable="bash" osfamily="unix">
 			<arg value="-c"/>
@@ -44,7 +44,7 @@
 		</exec>
 		<exec executable="cmd" osfamily="windows">
 			<arg value="/c"/>
-			<arg value="java -jar '${basedir}\blender\bdx\gen\gdx-setup.jar' --dir '${java.io.tmpdir}\libgdx-test-mygame' --name mygame --package com.badlogic.mygame --mainClass MyGame --sdkLocation '${java.io.tmpdir}' --excludeModules 'android;ios;html' --extensions 'controllers'"/>
+			<arg value="java -jar '${basedir}\blender\bdx\gen\gdx-setup.jar' --dir '${java.io.tmpdir}\libgdx-test-mygame' --name mygame --package com.badlogic.mygame --mainClass MyGame --sdkLocation '${java.io.tmpdir}' --excludeModules 'android;ios;html' --extensions 'controllers;freetype;tools'"/>
 		</exec>
 		<exec executable="cmd" osfamily="windows">
 			<arg value="/c"/>

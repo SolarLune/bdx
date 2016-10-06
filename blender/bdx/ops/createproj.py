@@ -39,7 +39,7 @@ class CreateBdxProject(bpy.types.Operator):
                "--package", fmt["package"],
                "--mainClass", fmt["mainClass"],
                "--sdkLocation", fmt["sdkLocation"],
-               "--extensions", "controllers;tools"]
+               "--extensions", "controllers;tools;freetype"]
 
         subprocess.check_call(cmd)
 
