@@ -151,11 +151,13 @@ public class SpriteAnim extends Component<GameObject> {
 
 		if (active != next){
 			active = next;
+			active.playDir = speed * active.fps < 0 ? -1 : 1;
 			active.reset();
 			ticker.done(true); // immediate play
 		}
 
 		if (!active.looping && active.onLastFrame()){
+			active.playDir = speed * active.fps < 0 ? -1 : 1;
 			active.reset();
 			ticker.done(true);
 		}
