@@ -59,7 +59,11 @@ class BdxExpRun(bpy.types.Operator):
         if prof_scene_export:
         
             # Remove temporal profiler scene:
-            bpy.data.scenes.remove(bpy.data.scenes[prof_scene_name])
+            version = float("{}.{}".format(*bpy.app.version))
+            if version >= 2.78:
+                bpy.data.scenes.remove(bpy.data.scenes[prof_scene_name], True)
+            else:
+                bpy.data.scenes.remove(bpy.data.scenes[prof_scene_name])
 
         # Modify relevant files:
         bdx_app = j(sroot, "BdxApp.java")

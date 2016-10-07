@@ -40,7 +40,7 @@ bpy.types.Scene.bdx = P.PointerProperty(type=BdxSceneProps)
 bpy.types.Object.bdx = P.PointerProperty(type=BdxObjectProps)
 bpy.types.VectorFont.bdx = P.PointerProperty(type=BdxFontProps)
 
-prop_move_support = sum([n * pow(10, i) for n, i in zip(bpy.app.version, (4, 2, 0))]) >= 27500
+prop_move_support = version = float("{}.{}".format(*bpy.app.version)) >= 2.75
 
 
 class BdxProject(bpy.types.Panel):
