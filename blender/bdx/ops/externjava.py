@@ -12,9 +12,13 @@ class ExternJava(bpy.types.Operator):
         ut.save_internal_java_files(ut.src_root(), overwrite=True)
 
         # Delete internal java texts
+        version = float("{}.{}".format(*bpy.app.version))
         for t in bpy.data.texts:
             if t.name.endswith(".java"):
-                bpy.data.texts.remove(t)
+                if version >= 2.78:
+                    bpy.data.texts.remove(t, True)
+                else:
+                    bpy.data.texts.remove(t)
 
         # Refresh text editor(s) hack
         for area in bpy.context.screen.areas:
