@@ -44,8 +44,8 @@ public class GameObject implements Named{
 	public ArrayList<PersistentManifold> contactManifolds;
 	public ModelInstance modelInstance;
 	public RigidBody body;
-	public String currBodyType;
-	public String currBoundsType;
+	public BodyType currBodyType;
+	public BoundsType currBoundsType;
 	public Vector3f origin;
 	public Vector3f dimensionsNoScale;
 	
@@ -69,6 +69,24 @@ public class GameObject implements Named{
 	public float logicCounter;
 	private Vector3f scale;
 	private Mesh mesh;
+	
+	public enum BodyType {
+		NO_COLLISION,
+		STATIC,
+		SENSOR,
+		DYNAMIC,
+		RIGID_BODY
+	}
+	
+	public enum BoundsType {
+		TRIANGLE_MESH,
+		CONVEX_HULL,
+		SPHERE,
+		BOX,
+		CYLINDER,
+		CAPSULE,
+		CONE
+	}
 
 	public class ArrayListGameObject extends ArrayListNamed<GameObject> {
 
@@ -162,7 +180,7 @@ public class GameObject implements Named{
 				dynamics(false);
 			}
 
-		}else if (currBodyType.equals("STATIC") || currBodyType.equals("SENSOR")){
+		}else if (currBodyType == BodyType.STATIC || currBodyType == BodyType.SENSOR){
 			if (compound && compShapeOld != null)
 				scene.world.addRigidBody(body);
 
@@ -762,7 +780,7 @@ public class GameObject implements Named{
 	public void updateBody(Mesh mesh){
 
 		GameObject compParent = parent != null && parent.body.getCollisionShape().isCompound() ? parent : null;
-		boolean isCompChild = compParent != null && !(currBodyType.equals("NO_COLLISION") || currBodyType.equals("SENSOR"));
+		boolean isCompChild = compParent != null && !(currBodyType == BodyType.NO_COLLISION || currBodyType == BodyType.SENSOR);
 		if (isCompChild){
 			parent(null);
 		}
@@ -773,7 +791,7 @@ public class GameObject implements Named{
 		CollisionShape shape = body.getCollisionShape();
 		body.setCollisionShape(Bullet.makeShape(mesh.model.meshes.first(), currBoundsType, shape.getMargin(), shape.isCompound()));
 
-		if (currBoundsType.equals("CONVEX_HULL")){
+		if (currBoundsType == BoundsType.CONVEX_HULL){
 			Transform startTransform = new Transform();
 			body.getMotionState().getWorldTransform(startTransform);
 			Matrix4f originMatrix = new Matrix4f();
@@ -963,7 +981,7 @@ public class GameObject implements Named{
 		scene.world.addRigidBody(body);
 		scene.world.updateSingleAabb(body);
 		
-		if (currBodyType.equals("NO_COLLISION")){
+		if (currBodyType == BodyType.NO_COLLISION){
 			scene.world.removeRigidBody(body);
 		}
 		
@@ -988,7 +1006,7 @@ public class GameObject implements Named{
 	}
 
 	public void dynamics(boolean restore){
-		if (currBodyType.equals("DYNAMIC") || currBodyType.equals("RIGID_BODY")){
+		if (currBodyType == BodyType.DYNAMIC || currBodyType == BodyType.RIGID_BODY){
 			if (restore){
 				bodyType(currBodyType);
 			}else{ // suspend
@@ -1014,27 +1032,27 @@ public class GameObject implements Named{
 		body.setMassProps(mass, inertia);
 	}
 	
-	public String bodyType(){
+	public BodyType bodyType(){
 		return currBodyType;
 	}
 	
-	public void bodyType(String s){
+	public void bodyType(BodyType bodyType){
 		int flags = body.getCollisionFlags();
 		if (body.isInWorld())
 			scene.world.removeRigidBody(body);
-		if (s.equals("NO_COLLISION")){
+		if (bodyType == BodyType.NO_COLLISION){
 			for (GameObject g : touchingObjects)
 				g.activate();
 			flags &= ~CollisionFlags.KINEMATIC_OBJECT;
 		}else{
-			if (s.equals("STATIC")){
+			if (bodyType == BodyType.STATIC){
 				flags |= CollisionFlags.KINEMATIC_OBJECT;
-			}else if (s.equals("SENSOR")){
+			}else if (bodyType == BodyType.SENSOR){
 				flags |= CollisionFlags.KINEMATIC_OBJECT;
 				flags |= CollisionFlags.NO_CONTACT_RESPONSE;
 			}else{
 				// NO_COLLISION -> DYNAMIC or RIGID_BODY hack
-				if (currBodyType.equals("NO_COLLISION")){
+				if (currBodyType == BodyType.NO_COLLISION){
 					body.clearForces();
 					body.setLinearVelocity(new Vector3f());
 				}
@@ -1045,32 +1063,30 @@ public class GameObject implements Named{
 					body.setCollisionFlags(flags);
 				}
 				flags &= ~CollisionFlags.KINEMATIC_OBJECT;
-				if (s.equals("DYNAMIC")){
+				if (bodyType == BodyType.DYNAMIC){
 					body.setAngularVelocity(new Vector3f());
 					body.setAngularFactor(0);
-				}else if (s.equals("RIGID_BODY")){
+				}else if (bodyType == BodyType.RIGID_BODY){
 					body.setAngularFactor(1);
-				}else{
-					throw new RuntimeException(s + " is no valid bodyType name.");
 				}
 			}
 			scene.world.addRigidBody(body);
 			activate();
 		}
 		body.setCollisionFlags(flags);
-		currBodyType = s;
+		currBodyType = bodyType;
 	}
 	
-	public String boundsType(){
+	public BoundsType boundsType(){
 		return currBoundsType;
 	}
 
-	public void boundsType(String s){
+	public void boundsType(BoundsType boundsType){
 		com.badlogic.gdx.graphics.Mesh mesh = modelInstance.model.meshes.first();
 		CollisionShape shape = body.getCollisionShape();
-		shape = Bullet.makeShape(mesh, s, shape.getMargin(), shape.isCompound());
+		shape = Bullet.makeShape(mesh, boundsType, shape.getMargin(), shape.isCompound());
 		body.setCollisionShape(shape);
-		currBoundsType = s;
+		currBoundsType = boundsType;
 	}
 	
 	public float collisionMargin(){
@@ -1097,7 +1113,7 @@ public class GameObject implements Named{
 		Vector3f dimHalved = max.minus(min).mul(0.5f);
 		Vector3f center;
 
-		if (origin.length() == 0 || currBoundsType.equals("CONVEX_HULL") || currBoundsType.equals("TRIANGLE_MESH"))
+		if (origin.length() == 0 || currBoundsType == BoundsType.CONVEX_HULL || currBoundsType == BoundsType.TRIANGLE_MESH)
 			center = min.plus(dimHalved);
 		else
 			center = min.plus(dimHalved).plus(orientation().mult(origin).mul(scale()));
