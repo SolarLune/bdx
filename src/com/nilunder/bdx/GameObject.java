@@ -791,16 +791,14 @@ public class GameObject implements Named{
 		CollisionShape shape = body.getCollisionShape();
 		body.setCollisionShape(Bullet.makeShape(mesh.model.meshes.first(), currBoundsType, shape.getMargin(), shape.isCompound()));
 
-		if (currBoundsType == BoundsType.CONVEX_HULL){
-			Transform startTransform = new Transform();
-			body.getMotionState().getWorldTransform(startTransform);
-			Matrix4f originMatrix = new Matrix4f();
-			originMatrix.set(origin);
-			Transform centerOfMassTransform = new Transform();
-			centerOfMassTransform.set(originMatrix);
-			centerOfMassTransform.mul(startTransform);
-			body.setCenterOfMassTransform(centerOfMassTransform);
-		}
+		Transform startTransform = new Transform();
+		body.getMotionState().getWorldTransform(startTransform);
+		Matrix4f originMatrix = new Matrix4f();
+		originMatrix.set(origin);
+		Transform centerOfMassTransform = new Transform();
+		centerOfMassTransform.set(originMatrix);
+		centerOfMassTransform.mul(startTransform);
+		body.setCenterOfMassTransform(centerOfMassTransform);
 
 		transform(transform);
 		scale(scale);
