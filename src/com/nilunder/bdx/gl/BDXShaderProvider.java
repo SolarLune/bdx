@@ -23,8 +23,7 @@ class BDXDefaultShader extends DefaultShader {
 	public final int u_camRange = register("u_camRange");
 
 	BDXShaderProvider shaderProvider;
-
-	public String materialName = null;
+	Material applyingMaterial = null;
 
 	public BDXDefaultShader(Renderable renderable, Config config) {
 		super(renderable, config);
@@ -84,22 +83,18 @@ class BDXDefaultShader extends DefaultShader {
 
 	public boolean canRender(Renderable renderable) {
 
-		String matName = renderable.material.id;
+		Material bdxMat = null;
+		if (renderable.material instanceof Material)
+			bdxMat = (Material) renderable.material;
 
-		if (Bdx.matShaders.containsKey(matName)) {						// Is there a custom shader for the rendered material?
-
-			if (Bdx.matShaders.get(matName).programData == program)	    // Is this shader for that rendered material?
-				return true;											// If so, it can be used to render
-			else
-				return false;
-
+		if (bdxMat != null) {
+			if (bdxMat.shader != null && bdxMat.shader.active)				    // Is there a custom shader specified for the rendered material? If so,
+				return bdxMat.shader.programData == program;					// Use this shader only if this is the shader for the material.
+			else															    // Otherwise, the rendered material doesn't have a custom shader specified, so
+				return applyingMaterial == null && super.canRender(renderable);	// Use this shader only if it's not a custom shader
 		}
-		else {															// This material doesn't have a custom shader.
-			if (materialName != null)									// So never use a custom shader; always use an un-customized one.
-				return false;
-			else
-				return super.canRender(renderable);
-		}
+		else																	// We're rendering something that isn't even a BDX Material, so never mind
+			return super.canRender(renderable);
 
 	}
 
@@ -121,29 +116,31 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 
 	public Shader createShader(Renderable renderable) {
 
-		BDXDefaultShader shader;
+		BDXDefaultShader bdxDefaultShader;
+		Material bdxMat = null;
+		if (renderable.material instanceof Material)
+			bdxMat = (Material) renderable.material;
 
-		if (Bdx.matShaders.containsKey(renderable.material.id)) {
-			MaterialShader sp = Bdx.matShaders.get(renderable.material.id);
-			shader = new BDXDefaultShader(renderable, config, sp);
-			shader.materialName = renderable.material.id;
+		if (bdxMat != null && bdxMat.shader != null && bdxMat.shader.active) {
+			bdxDefaultShader = new BDXDefaultShader(renderable, config, bdxMat.shader);
+            bdxDefaultShader.applyingMaterial = bdxMat;
 		}
 		else {
 			if (Bdx.Display.advancedLighting())
-				shader = new BDXDefaultShader(renderable, config);
+				bdxDefaultShader = new BDXDefaultShader(renderable, config);
 			else {
 				DefaultShader.Config lowConfig = new DefaultShader.Config(Gdx.files.internal("bdx/shaders/3d/vertexLighting.vert").readString(),
 						Gdx.files.internal("bdx/shaders/3d/vertexLighting.frag").readString());
 				lowConfig.numPointLights = config.numPointLights;
 				lowConfig.numSpotLights = config.numSpotLights;
 				lowConfig.numDirectionalLights = config.numDirectionalLights;
-				shader = new BDXDefaultShader(renderable, lowConfig);
+				bdxDefaultShader = new BDXDefaultShader(renderable, lowConfig);
 			}
 		}
 
-		shader.shaderProvider = this;
+		bdxDefaultShader.shaderProvider = this;
 
-		return shader;
+		return bdxDefaultShader;
 	}
 
 	public void update(Scene scene){
@@ -152,9 +149,9 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 
 	public void deleteShaders(){
 		for (Shader s : shaders){
-			BDXDefaultShader shader = (BDXDefaultShader) s;
-			if (shader.materialName != null)
-				Bdx.matShaders.get(shader.materialName).dispose();	// "Empty" the MaterialShader; it'll be recompiled when necessary, so no need to remove it
+			BDXDefaultShader bdxDefaultShader = (BDXDefaultShader) s;
+			if (bdxDefaultShader.applyingMaterial != null && bdxDefaultShader.applyingMaterial.shader != null)
+				bdxDefaultShader.applyingMaterial.shader.dispose();	// "Empty" (dispose()) the MaterialShader.
 			else
 				s.dispose();
 		}

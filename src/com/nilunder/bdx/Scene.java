@@ -391,6 +391,9 @@ public class Scene implements Named{
 
 		valid = false;
 
+		for (GameObject g : objects)
+			g.end();
+
 		lastFrameBuffer.dispose();
 		defaultMesh = null;
 		meshes = null;
@@ -407,12 +410,10 @@ public class Scene implements Named{
 		}
 
 		for (Material m : materials.values()) {
+			if (m.shader != null)
+				m.shader.dispose();
 			if (m.currentTexture != null)
 				m.currentTexture.dispose();
-		}
-
-		for (GameObject g : objects) {
-			g.end();
 		}
 
 	}

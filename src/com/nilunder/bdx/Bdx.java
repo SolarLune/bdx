@@ -163,7 +163,6 @@ public class Bdx{
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
 	public static ArrayList<Component> components;
-	public static HashMap<String, MaterialShader> matShaders;
 	public static BDXShaderProvider shaderProvider;
 
 	private static boolean advancedLightingOn;
@@ -191,7 +190,6 @@ public class Bdx{
 		keyboard = new Keyboard();
 		fingers = new ArrayList<Finger>();
 		components = new ArrayList<Component>();
-		matShaders = new HashMap<String, MaterialShader>();
 
 		allocatedFingers = new ArrayList<Finger>();
 		for (int i = 0; i < 10; ++i){
@@ -416,8 +414,6 @@ public class Bdx{
 		Bdx.sounds.dispose();
 		Bdx.music.dispose();
 
-		for (MaterialShader s : Bdx.matShaders.values())
-			s.dispose();
 		for (RenderBuffer b : availableTempBuffers.values())
 			b.dispose();
 		for (Scene s : scenes) {
