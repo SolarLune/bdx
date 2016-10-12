@@ -17,6 +17,7 @@ import com.nilunder.bdx.utils.Named;
 public class Material extends com.badlogic.gdx.graphics.g3d.Material implements Named {
 
 	public Texture currentTexture;
+	public MaterialShader shader;
 
 	public Material() {
 		super();
@@ -44,6 +45,7 @@ public class Material extends com.badlogic.gdx.graphics.g3d.Material implements 
 
 	public Material(Material copyFrom) {
 		super(copyFrom);
+		shader = copyFrom.shader;
 	}
 
 	public Material(com.badlogic.gdx.graphics.g3d.Material copyFrom){

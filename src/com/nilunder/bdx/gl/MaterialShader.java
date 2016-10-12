@@ -10,6 +10,7 @@ public class MaterialShader implements Disposable{
 	public String vertexShader;
 	public String fragmentShader;
 	private String prefix;
+	public boolean active = true;
 
 	public com.badlogic.gdx.graphics.glutils.ShaderProgram programData;
 

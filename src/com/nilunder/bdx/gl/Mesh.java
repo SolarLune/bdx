@@ -228,7 +228,7 @@ public class Mesh implements Named {
 		newMesh.materials.clear();
 
 		for (NodePart part : uniqueModel.nodes.get(0).parts) {
-			Material newMat = new Material(part.material);
+			Material newMat = new Material( (Material) part.material );			// Don't forget to cast to Material for it to be a true copy (see shader copying)
 			newMesh.materials.add(newMat);
 			part.material = newMat;
 		}
