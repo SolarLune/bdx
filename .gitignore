@@ -3,6 +3,7 @@ build/
 bdx.jar
 gbullet.jar
 gwt-vecmath.jar
+fontwriter.jar
 .project
 .classes
 .settings
