@@ -849,6 +849,19 @@ public class GameObject implements Named{
 			throw new RuntimeException("ERROR: " + name() + ".joinedMeshObjects cannot contain a reference to itself.");
 		}
 		
+		// Store and reset position, orientation and scale
+		
+		Vector3f pos = position();
+		position(0, 0, 0);
+		
+		Matrix3f ori = orientation();
+		Matrix3f transId = new Matrix3f();
+		transId.setIdentity();
+		orientation(transId);
+		
+		Vector3f sca = scale();
+		scale(1, 1, 1);
+		
 		// Collect transformed vertex arrays for each material & calculate number of indices
 		
 		int VERT_STRIDE = Bdx.VERT_STRIDE;
@@ -864,12 +877,14 @@ public class GameObject implements Named{
 		Vector3f p, s, vP, nP, vPT, nPT;
 		Matrix3f o;
 		
+		Matrix3f oriInv = ori.inverted();
+		
 		for (int k = 0; k < joinedMeshObjects.size(); k++){
 			g = joinedMeshObjects.get(k);
 			
-			p = g.position();
-			o = g.orientation();
-			s = g.scale();
+			p = oriInv.mult(g.position().minus(pos).div(sca));
+			o = oriInv.mult(g.orientation());
+			s = g.scale().div(sca);
 			
 			for (NodePart nodePart : g.modelInstance.model.nodes.get(0).parts){
 				meshPart = nodePart.meshPart;
@@ -957,30 +972,30 @@ public class GameObject implements Named{
 			nodePart.material = mat;
 			mesh().materials.add(mat);
 		}
-
-		if (json.get("mesh_name").asString() == null){ // in case this was an empty
-			visible = json.get("visible").asBoolean(); // set visbility to initial value
-		}
-        com.badlogic.gdx.graphics.Mesh mesh = finishedModel.meshes.first();
+		
+		// Update dimensionsNoScale and origin
+		
+		com.badlogic.gdx.graphics.Mesh mesh = finishedModel.meshes.first();
 		BoundingBox bbox = mesh.calculateBoundingBox();
 		Vector3 dimensions = bbox.getDimensions(new Vector3());
 		Vector3 center = bbox.getCenter(new Vector3());
 		dimensionsNoScale = new Vector3f(dimensions.x, dimensions.y, dimensions.z);
 		origin = new Vector3f(center.x, center.y, center.z);
-		position(new Vector3f());
 		
-		// Update physics
+		// Restore position, orientation and scale
 		
-		scene.world.removeRigidBody(body);
-		body.destroy();
-		float[] trans = new float[]{1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};
-		body = Bullet.makeBody(mesh, trans, origin, currBodyType, currBoundsType, json.get("physics"));
-		body.setUserPointer(this);
-		scene.world.addRigidBody(body);
-		scene.world.updateSingleAabb(body);
+		position(pos);
+		orientation(ori);
+		scale(sca);
 		
-		if (currBodyType == BodyType.NO_COLLISION){
-			scene.world.removeRigidBody(body);
+		// Update body
+		
+		updateBody();
+		
+		// Set visbility to initial value if empty
+		
+		if (json.get("mesh_name").asString() == null){
+			visible = json.get("visible").asBoolean();
 		}
 		
 		// Update joined mesh objects
