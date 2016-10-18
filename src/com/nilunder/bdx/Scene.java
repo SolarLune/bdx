@@ -725,7 +725,7 @@ public class Scene implements Named{
 					mpb.index(idx);
 					idx += 1;
 				}
-			}catch (OutOfMemoryError e){
+			}catch (Error e){
 				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. " + model.name + " has " + Integer.toString(len) + " vertices.");
 			}
 		}

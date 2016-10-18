@@ -952,7 +952,7 @@ public class GameObject implements Named{
 					mpb.index(idx);
 					idx += 1;
 				}
-			}catch (OutOfMemoryError error){
+			}catch (Error error){
 				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. Decrease the number of objects to join.");
 			}
 		}
