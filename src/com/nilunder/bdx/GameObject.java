@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
@@ -54,8 +55,6 @@ public class GameObject implements Named{
 	public ArrayListGameObject children;
 	
 	public ArrayListNamed<Component> components;
-	
-	public ArrayList<GameObject> joinedMeshObjects;
 	
 	public Scene scene;
 	
@@ -112,7 +111,6 @@ public class GameObject implements Named{
 	}
 
 	public GameObject() {
-		joinedMeshObjects = new ArrayList<GameObject>();
 		touchingObjects = new ArrayListGameObject();
 		touchingObjectsLast = new ArrayListGameObject();
 		contactManifolds = new ArrayList<PersistentManifold>();
@@ -838,86 +836,123 @@ public class GameObject implements Named{
 	public void updateBody(){
 		updateBody(mesh);
 	}
-
-	public void updateJoinedMesh(boolean endJoinedMeshObjects){
+	
+	public void join(ArrayList<GameObject> objects, boolean endObjects){
 		
-		if (joinedMeshObjects.isEmpty()){
-			throw new RuntimeException("ERROR: " + name() + ".joinedMeshObjects is empty.");
+		// collect scaled transforms per mesh
+		
+		HashMap<Mesh, ArrayList<Matrix4f>> map = new HashMap<Mesh, ArrayList<Matrix4f>>();
+		Mesh m;
+		for (GameObject g : objects){
+			m = g.mesh();
+			ArrayList<Matrix4f> l;
+			if (map.containsKey(m)){
+				l = map.get(m);
+			}else{
+				l = new ArrayList<Matrix4f>();
+				map.put(m, l);
+			}
+			Matrix4f t = g.transform();
+			Vector3f s = g.scale();
+			t.setRow(3, s.x, s.y, s.z, 0);
+			l.add(t);
+			if (endObjects){
+				g.end();
+			}
 		}
 		
-		if (joinedMeshObjects.contains(this)){
-			throw new RuntimeException("ERROR: " + name() + ".joinedMeshObjects cannot contain a reference to itself.");
-		}
+		// join
 		
-		// Store and reset position, orientation and scale
-		
-		Vector3f pos = position();
-		position(0, 0, 0);
-		
-		Matrix3f ori = orientation();
-		Matrix3f transId = new Matrix3f();
-		transId.setIdentity();
-		orientation(transId);
-		
-		Vector3f sca = scale();
-		scale(1, 1, 1);
+		join(map);
+	}
+	
+	public void join(ArrayList<GameObject> objects){
+		join(objects, true);
+	}
+	
+	public void join(HashMap<Mesh, ArrayList<Matrix4f>> map){
 		
 		// Collect transformed vertex arrays for each material & calculate number of indices
 		
 		int VERT_STRIDE = Bdx.VERT_STRIDE;
 		
-		HashMap<String, ArrayList<float[]>> tvaMap = new HashMap<String, ArrayList<float[]>>();
-		HashMap<String, Integer> lenMap = new HashMap<String, Integer>();
+		HashMap<Material, ArrayList<float[]>> tvaMap = new HashMap<Material, ArrayList<float[]>>();
+		HashMap<Material, Integer> lenMap = new HashMap<Material, Integer>();
 		
-		GameObject g;
-		String matName;
+		Mesh m;
+		Node node;
+		Material mat;
 		MeshPart meshPart;
 		float[] va, tva;
-		int numIndices, numVertices, offset, j;
-		Vector3f p, s, vP, nP, vPT, nPT;
-		Matrix3f o;
+		int numIndices, numVertices, offset, j, len;
 		
-		Matrix3f oriInv = ori.inverted();
+		Vector3f p = new Vector3f();
+		Vector3f s = new Vector3f();
+		Matrix3f o = new Matrix3f();
+		Vector3f vP = new Vector3f();
+		Vector3f nP = new Vector3f();
+		Vector3f vPT = new Vector3f();
+		Vector3f nPT = new Vector3f();
 		
-		for (int k = 0; k < joinedMeshObjects.size(); k++){
-			g = joinedMeshObjects.get(k);
-			
-			p = oriInv.mult(g.position().minus(pos).div(sca));
-			o = oriInv.mult(g.orientation());
-			s = g.scale().div(sca);
-			
-			for (NodePart nodePart : g.modelInstance.model.nodes.get(0).parts){
-				meshPart = nodePart.meshPart;
-				numIndices = meshPart.size;
-				numVertices = numIndices * VERT_STRIDE;
-				offset = meshPart.offset * VERT_STRIDE;
-				va = meshPart.mesh.getVertices(offset, numVertices, new float[numVertices]);
-				tva = new float[numVertices];
-				j = 0;
-				
-				for (int i = 0; i < numIndices; i++){
-					vP = new Vector3f(va[j], va[j+1], va[j+2]);
-					nP = new Vector3f(va[j+3], va[j+4], va[j+5]);
-					vPT = o.mult(vP.mul(s)).plus(p);
-					nPT = o.mult(vP.plus(nP)).minus(o.mult(vP));
-					tva[j] = vPT.x;
-					tva[j+1] = vPT.y;
-					tva[j+2] = vPT.z;
-					tva[j+3] = nPT.x;
-					tva[j+4] = nPT.y;
-					tva[j+5] = nPT.z;
-					tva[j+6] = va[j+6];
-					tva[j+7] = va[j+7];
-					j += VERT_STRIDE;
+		Vector3f pos = position();
+		Vector3f sca = scale();
+		Matrix3f oriInv = orientation().inverted();
+		
+		for (Map.Entry<Mesh, ArrayList<Matrix4f>> e : map.entrySet()){
+			m = e.getKey();
+			node = m.model.nodes.get(0);
+			for (Matrix4f t : e.getValue()){
+				t.get(p);
+				p.sub(pos);
+				p = oriInv.mult(p.div(sca));
+				t.getRotationScale(o);
+				o = oriInv.mult(o);
+				s.set(t.m30, t.m31, t.m32);
+				if (s.length() == 0){
+					s.set(1, 1, 1);
 				}
+				s = s.div(sca);
 				
-				matName = nodePart.material.id;
-				if (!tvaMap.containsKey(matName)){
-					tvaMap.put(matName, new ArrayList<float[]>());
-					lenMap.put(matName, 0);
+				for (NodePart nodePart : node.parts){
+					meshPart = nodePart.meshPart;
+					numIndices = meshPart.size;
+					numVertices = numIndices * VERT_STRIDE;
+					offset = meshPart.offset * VERT_STRIDE;
+					va = meshPart.mesh.getVertices(offset, numVertices, new float[numVertices]);
+					tva = new float[numVertices];
+					j = 0;
+					
+					for (int i = 0; i < numIndices; i++){
+						vP.set(va[j], va[j+1], va[j+2]);
+						nP.set(va[j+3], va[j+4], va[j+5]);
+						vPT.set(o.mult(vP.mul(s)));
+						vPT.add(p);
+						nPT.set(o.mult(vP.plus(nP)));
+						nPT.sub(o.mult(vP));
+						tva[j] = vPT.x;
+						tva[j+1] = vPT.y;
+						tva[j+2] = vPT.z;
+						tva[j+3] = nPT.x;
+						tva[j+4] = nPT.y;
+						tva[j+5] = nPT.z;
+						tva[j+6] = va[j+6];
+						tva[j+7] = va[j+7];
+						j += VERT_STRIDE;
+					}
+					
+					mat = m.materials.get(nodePart.material.id);
+					ArrayList<float[]> l;
+					if (tvaMap.containsKey(mat)){
+						l = tvaMap.get(mat);
+						len = lenMap.get(mat);
+					}else{
+						l = new ArrayList<float[]>();
+						tvaMap.put(mat, l);
+						len = 0;
+					}
+					l.add(tva);
+					lenMap.put(mat, len + tva.length);
 				}
-				tvaMap.get(matName).add(tva);
-				lenMap.put(matName, lenMap.get(matName) + tva.length);
 			}
 		}
 		
@@ -928,11 +963,10 @@ public class GameObject implements Named{
 		
 		short idx = 0;
 		MeshPartBuilder mpb;
-		int len;
 		
-		for (Map.Entry<String, ArrayList<float[]>> e : tvaMap.entrySet()){
-			matName = e.getKey();
-			len = lenMap.get(matName);
+		for (Map.Entry<Material, ArrayList<float[]>> e : tvaMap.entrySet()){
+			mat = e.getKey();
+			len = lenMap.get(mat);
 			tva = new float[len];
 			j = 0;
 			
@@ -944,7 +978,7 @@ public class GameObject implements Named{
 				j += numVertices;
 			}
 			
-			mpb = builder.part(matName, GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, scene.materials.get(matName));
+			mpb = builder.part(mat.name(), GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, mat);
 			mpb.vertex(tva);
 			
 			try{
@@ -956,22 +990,12 @@ public class GameObject implements Named{
 				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. Decrease the number of objects to join.");
 			}
 		}
-
+		
 		Model finishedModel = builder.end();
-
-		// Update modelInstance & mesh & materials
-
+		
+		// Update mesh
+		
 		mesh(new Mesh(finishedModel, scene));
-
-		Material mat;
-
-		mesh().materials.clear();
-
-		for (NodePart nodePart : mesh().model.nodes.get(0).parts){     // Assigns materials from the scene
-			mat = new Material(scene.materials.get(nodePart.material.id));
-			nodePart.material = mat;
-			mesh().materials.add(mat);
-		}
 		
 		// Update dimensionsNoScale and origin
 		
@@ -982,12 +1006,6 @@ public class GameObject implements Named{
 		dimensionsNoScale = new Vector3f(dimensions.x, dimensions.y, dimensions.z);
 		origin = new Vector3f(center.x, center.y, center.z);
 		
-		// Restore position, orientation and scale
-		
-		position(pos);
-		orientation(ori);
-		scale(sca);
-		
 		// Update body
 		
 		updateBody();
@@ -997,19 +1015,6 @@ public class GameObject implements Named{
 		if (json.get("mesh_name").asString() == null){
 			visible = json.get("visible").asBoolean();
 		}
-		
-		// Update joined mesh objects
-		
-		if (endJoinedMeshObjects){
-			for (GameObject jmo : joinedMeshObjects){
-				jmo.end();
-			}
-			joinedMeshObjects.clear();
-		}
-	}
-	
-	public void updateJoinedMesh(){
-		updateJoinedMesh(false);
 	}
 	
 	public String toString(){
