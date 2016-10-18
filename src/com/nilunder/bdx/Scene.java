@@ -319,12 +319,12 @@ public class Scene implements Named{
 				JsonValue settings = gobj.get("lamp");
 				Light l = (Light)g;
 
-				if (settings.getString("type").equals("POINT"))
-					l.type = Light.Type.POINT;
-				else if (settings.getString("type").equals("SUN"))
+				if (settings.getString("type").equals("SUN"))
 					l.type = Light.Type.SUN;
 				else if (settings.getString("type").equals("SPOT"))
 					l.type = Light.Type.SPOT;
+				else // POINT lamps; HEMI and AREA aren't supported, so they're turned into POINTs
+					l.type = Light.Type.POINT;
 
 				l.energy(settings.getFloat("energy"));
 				float[] c = settings.get("color").asFloatArray();
