@@ -207,6 +207,12 @@ public class Vector3f extends Tuple3f implements java.io.Serializable {
 	 * BDX conveniences:
 	 */
 	
+	public final void scale(Vector3f v){
+		x *= v.x;
+		y *= v.y;
+		z *= v.z;
+	}
+	
 	public final Vector3f crossed(Vector3f other) {
 		Vector3f result = new Vector3f();
 		result.cross(this, other);
