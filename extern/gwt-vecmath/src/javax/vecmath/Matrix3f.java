@@ -2434,13 +2434,6 @@ public class Matrix3f implements java.io.Serializable, Cloneable {
 		a.z = (float)Math.atan2(m10, m00);
 		return a;
 	}
-
-	public final static Matrix3f rotation(Vector3f axis, float angle){
-		AxisAngle4f aa = new AxisAngle4f(axis, angle);
-		Matrix3f m = new Matrix3f();
-		m.set(aa);
-		return m;
-	}
 	
 	public final Matrix3f inverted(){
 		Matrix3f m = new Matrix3f(this);
@@ -2456,6 +2449,19 @@ public class Matrix3f implements java.io.Serializable, Cloneable {
 	
 	public final float[] floatArray(){
 		return new float[]{m00, m01, m02, m10, m11, m12, m20, m21, m22};
+	}
+
+	public final static Matrix3f identity(){
+		Matrix3f m = new Matrix3f();
+		m.setIdentity();
+		return m;
+	}
+	
+	public final static Matrix3f rotation(Vector3f axis, float angle){
+		AxisAngle4f aa = new AxisAngle4f(axis, angle);
+		Matrix3f m = new Matrix3f();
+		m.set(aa);
+		return m;
 	}
 	
 }

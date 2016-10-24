@@ -3958,4 +3958,10 @@ public class Matrix4f implements java.io.Serializable, Cloneable {
 		return m;
 	}
 	
+	public final static Matrix4f identity(){
+		Matrix4f m = new Matrix4f();
+		m.setIdentity();
+		return m;
+	}
+	
 }
