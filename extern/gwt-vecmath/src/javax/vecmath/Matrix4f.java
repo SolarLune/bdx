@@ -3947,4 +3947,15 @@ public class Matrix4f implements java.io.Serializable, Cloneable {
 	public final void setM33(float m33) {
 		this.m33 = m33;
 	}
+	
+	/**
+	 * BDX conveniences:
+	 */
+	
+	public final Matrix4f transposed(){
+		Matrix4f m = new Matrix4f(this);
+		m.transpose();
+		return m;
+	}
+	
 }
