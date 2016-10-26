@@ -18,6 +18,8 @@ import com.bulletphysics.linearmath.*;
 import com.bulletphysics.util.*;
 
 import com.nilunder.bdx.*;
+import com.nilunder.bdx.GameObject.BodyType;
+import com.nilunder.bdx.GameObject.BoundsType;
 
 public class Bullet {
 
@@ -98,15 +100,15 @@ public static class DebugDrawer extends IDebugDraw{
 		return m;
 	}
 
-	public static CollisionShape makeShape(Mesh mesh, GameObject.BoundsType bounds, float margin, boolean compound){
+	public static CollisionShape makeShape(Mesh mesh, BoundsType bounds, float margin, boolean compound){
 
 		CollisionShape shape;
 	
-		if (bounds == GameObject.BoundsType.TRIANGLE_MESH){
+		if (bounds == BoundsType.TRIANGLE_MESH){
 			TriangleIndexVertexArray mi = new TriangleIndexVertexArray();
 			mi.addIndexedMesh(Bullet.makeMesh(mesh), ScalarType.SHORT);
 			shape = new BvhTriangleMeshShape(mi, false);
-		}else if (bounds == GameObject.BoundsType.CONVEX_HULL){
+		}else if (bounds == BoundsType.CONVEX_HULL){
 			float[] verts = new float[mesh.getNumVertices() * mesh.getVertexSize()];
 			mesh.getVertices(verts);
 			ObjectArrayList<Vector3f> vertList = new ObjectArrayList<Vector3f>();
@@ -117,14 +119,14 @@ public static class DebugDrawer extends IDebugDraw{
 			margin *= 0.5f;
 		}else{
 			Vector3 d = mesh.calculateBoundingBox().getDimensions(new Vector3()).scl(0.5f);
-			if (bounds == GameObject.BoundsType.SPHERE){
+			if (bounds == BoundsType.SPHERE){
 				float radius = Math.max(Math.max(d.x, d.y), d.z);
 				shape = new SphereShape(radius);
-			}else if (bounds == GameObject.BoundsType.BOX){
+			}else if (bounds == BoundsType.BOX){
 				shape = new BoxShape(new Vector3f(d.x, d.y, d.z));
-			}else if (bounds == GameObject.BoundsType.CYLINDER){
+			}else if (bounds == BoundsType.CYLINDER){
 				shape = new CylinderShapeZ(new Vector3f(d.x, d.y, d.z));
-			}else if (bounds == GameObject.BoundsType.CAPSULE){
+			}else if (bounds == BoundsType.CAPSULE){
 				float radius = Math.max(d.x, d.y);
 				float height = (d.z - radius) * 2;
 				shape = new CapsuleShapeZ(radius, height);
@@ -149,72 +151,126 @@ public static class DebugDrawer extends IDebugDraw{
 
 	}
 	
-	public static RigidBody makeBody(Mesh mesh, float[] glTransform, Vector3f origin, GameObject.BodyType bodyType, GameObject.BoundsType boundsType, JsonValue physics){
-		CollisionShape shape = makeShape(mesh, boundsType, physics.get("margin").asFloat(), physics.get("compound").asBoolean());
+	public static RigidBody makeBody(Mesh mesh, float[] trans, Vector3f origin, BodyType bodyType, BoundsType boundsType, JsonValue physics){
 		
+		// get scale and unscaled transform
+		
+		Matrix4f m = new Matrix4f(trans);
+		Vector3f scale = new Vector3f();
+		Matrix4f t = new Matrix4f();
+		m.get(scale, t);
+		Transform transformNoScale = new Transform(t);
+		
+		// collect physics properties
+		
+		float margin = physics.get("margin").asFloat();
+		boolean isCompound = physics.get("compound").asBoolean();
 		float mass = physics.get("mass").asFloat();
 		
+		// create new scaled shape and get inertia
+		
+		CollisionShape shape = makeShape(mesh, boundsType, margin, isCompound);
+		shape.setLocalScaling(scale);
 		Vector3f inertia = new Vector3f();
 		shape.calculateLocalInertia(mass, inertia);
 		
-		Transform startTransform = new Transform();
-		startTransform.setFromOpenGLMatrix(glTransform);
+		// create new motion state
+		
 		MotionState motionState;
-		if (boundsType == GameObject.BoundsType.CONVEX_HULL){
-			Transform centerOfMassOffset = new Transform();
+		if (boundsType == BoundsType.CONVEX_HULL){
 			Matrix4f originMatrix = new Matrix4f();
 			originMatrix.set(origin);
-			centerOfMassOffset.set(originMatrix);
-			startTransform.mul(centerOfMassOffset);
-			motionState = new DefaultMotionState(startTransform, centerOfMassOffset);
+			t.mul(originMatrix);
+			Transform centerOfMassTransform = new Transform(t);
+			motionState = new DefaultMotionState(transformNoScale, centerOfMassTransform);
 		}else{
-			motionState = new DefaultMotionState(startTransform);
+			motionState = new DefaultMotionState(transformNoScale);
 		}
 		
-		RigidBodyConstructionInfo ci = new RigidBodyConstructionInfo(mass, motionState, shape, inertia);
+		// create new body
 		
+		RigidBodyConstructionInfo ci = new RigidBodyConstructionInfo(mass, motionState, shape, inertia);
 		RigidBody body = new RigidBody(ci);
 		
+		// set transform
+		
+		body.setWorldTransform(transformNoScale);
+		
+		// set collision flags
+		
 		int flags = 0;
-		if (bodyType == GameObject.BodyType.SENSOR){
+		if (bodyType == BodyType.SENSOR){
 			flags = CollisionFlags.KINEMATIC_OBJECT | CollisionFlags.NO_CONTACT_RESPONSE;
 		}else{
-			if (bodyType == GameObject.BodyType.STATIC){
+			if (bodyType == BodyType.STATIC){
 				flags = CollisionFlags.KINEMATIC_OBJECT;
 				//body.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
-			}else if (bodyType == GameObject.BodyType.DYNAMIC){
+			}else if (bodyType == BodyType.DYNAMIC){
 				body.setAngularFactor(0);
 			}
-			if (physics.get("ghost").asBoolean())
+			if (physics.get("ghost").asBoolean()){
 				flags |= CollisionFlags.NO_CONTACT_RESPONSE;
+			}
 		}
 		body.setCollisionFlags(flags);
 		
+		// set restitution and friction
+		
 		body.setRestitution(physics.get("restitution").asFloat());
 		body.setFriction(physics.get("friction").asFloat());
-
+		
 		return body;
 	}
 
 	public static RigidBody cloneBody(RigidBody body){
-		GameObject gobj = (GameObject)body.getUserPointer();
-		JsonValue physics = gobj.json.get("physics");
+		
+		// get gobj and shape
+		
+		GameObject gobj = (GameObject) body.getUserPointer();
+		CollisionShape shape = body.getCollisionShape();
+		
+		// get unscaled transform
+		
+		Vector3f _ = new Vector3f();
+		Matrix4f t = new Matrix4f();
+		gobj.transform().get(_, t);
+		Transform transformNoScale = new Transform(t);
+		
+		// collect physics properties
+		
+		Vector3f origin = gobj.origin;
+		float margin = shape.getMargin();
+		boolean isCompound = shape.isCompound();
+		BoundsType boundsType = gobj.boundsType();
 		float mass = gobj.mass();
-		
 		Vector3f inertia = new Vector3f();
-		body.getCollisionShape().calculateLocalInertia(mass, inertia);
+		shape.calculateLocalInertia(mass, inertia);
 		
-		CollisionShape shape;
-
+		// create new shape
+		
+		CollisionShape s;
 		if (gobj.modelInstance != null){
-			shape = makeShape(gobj.modelInstance.model.meshes.first(), GameObject.BoundsType.valueOf(physics.get("bounds_type").asString()), physics.get("margin").asFloat(), physics.get("compound").asBoolean());
+			s = makeShape(gobj.modelInstance.model.meshes.first(), boundsType, margin, isCompound);
 		}else{
-			shape = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
+			s = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
 		}
 		
-		RigidBody b = new RigidBody(mass, new DefaultMotionState(new Transform(gobj.transform())),
-								shape,
-								inertia);
+		// create new motion state
+		
+		MotionState motionState;
+		if (boundsType == BoundsType.CONVEX_HULL){
+			Matrix4f originMatrix = new Matrix4f();
+			originMatrix.set(origin);
+			t.mul(originMatrix);
+			Transform centerOfMassTransform = new Transform(t);
+			motionState = new DefaultMotionState(transformNoScale, centerOfMassTransform);
+		}else{
+			motionState = new DefaultMotionState(transformNoScale);
+		}
+		
+		// create new body
+		
+		RigidBody b = new RigidBody(mass, motionState, s, inertia);
 		
 		b.setCollisionFlags(gobj.body.getCollisionFlags());
 		b.setAngularFactor(gobj.body.getAngularFactor());
