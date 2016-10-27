@@ -46,6 +46,7 @@ public class Material extends com.badlogic.gdx.graphics.g3d.Material implements 
 	public Material(Material copyFrom) {
 		super(copyFrom);
 		shader = copyFrom.shader;
+		currentTexture = copyFrom.currentTexture;
 	}
 
 	public Material(com.badlogic.gdx.graphics.g3d.Material copyFrom){
