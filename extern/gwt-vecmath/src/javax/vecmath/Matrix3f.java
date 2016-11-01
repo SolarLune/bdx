@@ -2414,7 +2414,33 @@ public class Matrix3f implements java.io.Serializable, Cloneable {
 	/**
 	 * BDX conveniences:
 	 */
-
+	
+	public final Vector3f scale(){
+		float x = (float) Math.sqrt(m00 * m00 + m01 * m01 + m02 * m02);
+		float y = (float) Math.sqrt(m10 * m10 + m11 * m11 + m12 * m12);
+		float z = (float) Math.sqrt(m20 * m20 + m21 * m21 + m22 * m22);
+		return new Vector3f(x, y, z);
+	}
+	
+	public final void get(Vector3f sca, Matrix3f normalized){
+		sca.set(scale());
+		normalized.set(this);
+		float n;
+		n = 1 / sca.x;
+		normalized.m00 *= n; normalized.m01 *= n; normalized.m02 *= n;
+		n = 1 / sca.y;
+		normalized.m10 *= n; normalized.m11 *= n; normalized.m12 *= n;
+		n = 1 / sca.z;
+		normalized.m20 *= n; normalized.m21 *= n; normalized.m22 *= n;
+	}
+	
+	public final Matrix3f normalized(){
+		Vector3f sca = new Vector3f();
+		Matrix3f normalized = new Matrix3f();
+		get(sca, normalized);
+		return normalized;
+	}
+	
 	public final Matrix3f mult(Matrix3f b){
 		Matrix3f a = new Matrix3f(this);
 		a.mul(b);
@@ -2450,7 +2476,7 @@ public class Matrix3f implements java.io.Serializable, Cloneable {
 	public final float[] floatArray(){
 		return new float[]{m00, m01, m02, m10, m11, m12, m20, m21, m22};
 	}
-
+	
 	public final static Matrix3f identity(){
 		Matrix3f m = new Matrix3f();
 		m.setIdentity();
