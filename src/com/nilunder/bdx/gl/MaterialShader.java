@@ -24,7 +24,7 @@ public class MaterialShader implements Disposable{
 	}
 
 	public static MaterialShader load(String vertexPath, String fragmentPath) {
-		return new MaterialShader(Gdx.files.internal(vertexPath), Gdx.files.internal(fragmentPath));
+		return new MaterialShader(Gdx.files.internal("bdx/shaders/3d/" + vertexPath), Gdx.files.internal("bdx/shaders/3d/" + fragmentPath));
 	}
 
 	public MaterialShader compile(){

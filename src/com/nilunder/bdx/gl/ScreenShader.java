@@ -29,7 +29,11 @@ public class ScreenShader extends com.badlogic.gdx.graphics.glutils.ShaderProgra
 	}
 	
 	public static ScreenShader load(String vertexPath, String fragmentPath) {
-		return new ScreenShader(Gdx.files.internal(vertexPath), Gdx.files.internal(fragmentPath));
+		return new ScreenShader(Gdx.files.internal("bdx/shaders/2d/" + vertexPath), Gdx.files.internal("bdx/shaders/2d/" + fragmentPath));
+	}
+
+	public static ScreenShader load(String fragmentPath) {
+		return load("default.vert", fragmentPath);
 	}
 
 	public boolean usingDepthTexture(){
