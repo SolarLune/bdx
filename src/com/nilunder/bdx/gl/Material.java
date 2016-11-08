@@ -90,6 +90,7 @@ public class Material extends com.badlogic.gdx.graphics.g3d.Material implements 
 		BlendingAttribute ba = (BlendingAttribute) get(BlendingAttribute.Type);
 		ba.sourceFunction = src;
 		ba.destFunction = dest;
+		ba.blended = true;		// Has to be true for the blend mode to take effect
 	}
 
 	public boolean shadeless(){
