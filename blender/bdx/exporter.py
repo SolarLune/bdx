@@ -510,6 +510,7 @@ def srl_objects(objects):
         elif obj.type == "FONT":
             d["font"] = obj.data.font.name
             d["text"] = obj.data.body
+            d["alignment"] = obj.data.align_x
 
         elif obj.type == "LAMP":
             d['lamp'] = {
