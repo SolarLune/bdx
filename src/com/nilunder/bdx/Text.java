@@ -3,8 +3,19 @@ package com.nilunder.bdx;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.graphics.*;
 
+import javax.vecmath.Matrix4f;
+
 public class Text extends GameObject{
+
+	public enum Alignment {
+		LEFT,
+		CENTER,
+		RIGHT
+	}
+
 	private String text;
+	private Alignment alignment;
+
 	public JsonValue font;
 	public int capacity;
 
@@ -33,6 +44,7 @@ public class Text extends GameObject{
 
 		int pos = 0;
 		float z = 0;
+		int totalWidth = 0;
 
 		for (int i = 0; i < capacity; ++i){
 			char chr = ' ';
@@ -48,6 +60,9 @@ public class Text extends GameObject{
 			int w = c.get("width").asInt();
 			int h =  c.get("height").asInt();
 			pos += c.get("xadvance").asInt();
+
+			if (i < text.length() && x + w > totalWidth)
+				totalWidth = x + w;
 
 			float u = c.get("x").asInt();
 			float v = c.get("y").asInt();
@@ -78,8 +93,29 @@ public class Text extends GameObject{
 
 		mesh.setVertices(verts, 0, verts.length);
 
+		if (alignment == Alignment.CENTER || alignment == Alignment.RIGHT) {
+			Matrix4f mat = new Matrix4f();
+			mat.setIdentity();
+			if (alignment == Alignment.CENTER)
+				mat.setM03((-totalWidth / 2f) * scale);
+			else
+				mat.setM03(-totalWidth * scale);
+			mesh().vertTransform(0, mat);
+		}
+
 	}
+
 	public String text(){
 		return text;
 	}
+
+	public void alignment(Alignment alignment){
+		this.alignment = alignment;
+		text(text());
+	}
+
+	public Alignment alignment(){
+		return alignment;
+	}
+
 }

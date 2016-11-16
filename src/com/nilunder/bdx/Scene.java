@@ -315,6 +315,16 @@ public class Scene implements Named{
 				t.font = fonts.get(gobj.get("font").asString());
 				t.text(gobj.get("text").asString());
 				t.capacity = t.text().length();
+
+				String align = gobj.get("alignment").asString();
+
+				if (align.equals("RIGHT"))
+					t.alignment(Text.Alignment.RIGHT);
+				else if (align.equals("CENTER"))
+					t.alignment(Text.Alignment.CENTER);
+				else
+					t.alignment(Text.Alignment.LEFT);
+
 			}else if (type.equals("LAMP")){
 				JsonValue settings = gobj.get("lamp");
 				Light l = (Light)g;
@@ -496,6 +506,7 @@ public class Scene implements Named{
 			t.text(tt.text());
 			t.capacity = tt.capacity;
 			t.mesh(t.mesh().copy());
+			t.alignment(tt.alignment());
 		}else if (g instanceof Light){
 			Light l = (Light)g;
 			Light ll = (Light)gobj;
