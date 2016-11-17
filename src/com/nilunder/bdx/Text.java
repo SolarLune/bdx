@@ -3,8 +3,6 @@ package com.nilunder.bdx;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.graphics.*;
 
-import javax.vecmath.Matrix4f;
-
 public class Text extends GameObject{
 
 	public enum Alignment {
@@ -18,6 +16,7 @@ public class Text extends GameObject{
 
 	public JsonValue font;
 	public int capacity;
+	private float lineHeight = 1.0f;
 
 	public void text(String txt){
 		// Reform quads according to Angel Code font format
@@ -42,66 +41,85 @@ public class Text extends GameObject{
 		float scale = 0.0225f * (builtin ? 1.4f : 1f);
 		float unit_height = at_c.get("height").asInt() * scale;
 
-		int pos = 0;
+		int posX = 0;
+		int posY = 0;
 		float z = 0;
 		int totalWidth = 0;
 
-		for (int i = 0; i < capacity; ++i){
-			char chr = ' ';
-			if (i < text.length())
-				chr = text.charAt(i);
+		String[] lines = text.split("[\n]");
 
-			JsonValue c = char_data.get(Integer.toString(chr));
-			if (c == null)
-				c = char_data.get(Integer.toString(' '));
+		int cap = 0;
+		int past_vi = 0;
 
-			int x = pos + c.get("xoffset").asInt();
-			int y = 0 - c.get("yoffset").asInt();
-			int w = c.get("width").asInt();
-			int h =  c.get("height").asInt();
-			pos += c.get("xadvance").asInt();
+		for (String l : lines) {
 
-			if (i < text.length() && x + w > totalWidth)
-				totalWidth = x + w;
+			for (int i = 0; i < Math.min(l.length(), capacity - cap); ++i) {		// Write chars for the line or text object capacity, whichever's shorter
 
-			float u = c.get("x").asInt();
-			float v = c.get("y").asInt();
+				char chr = ' ';
+				if (i < l.length())
+					chr = l.charAt(i);
 
-			float[][] quad = {
-				{x  , y-h, z, 0, 0, 1, u  , v+h},
-				{x+w, y-h, z, 0, 0, 1, u+w, v+h},
-				{x+w, y  , z, 0, 0, 1, u+w, v  },
-				{x+w, y  , z, 0, 0, 1, u+w, v  },
-				{x  , y  , z, 0, 0, 1, u,   v  },
-				{x  , y-h, z, 0, 0, 1, u  , v+h}
-			};
+				JsonValue c = char_data.get(Integer.toString(chr));
+				if (c == null)
+					c = char_data.get(Integer.toString(' '));
 
-			z += 0.0001;
+				int x = posX + c.get("xoffset").asInt();
+				int y = posY - c.get("yoffset").asInt();
+				int w = c.get("width").asInt();
+				int h = c.get("height").asInt();
+				posX += c.get("xadvance").asInt();
 
-			for (float[] vert: quad){
-				vert[0] *= scale;
-				vert[1] *= scale;
-				vert[0] -= 0.05 + (builtin ? 0.03 : 0);
-				vert[1] += unit_height * (0.76 - (builtin ? 0.05 : 0));
-				vert[6] *= su;
-				vert[7] *= sv;
-				for (float f: vert){
-					verts[vi++] = f;
+				if (i < l.length() && x + w > totalWidth)
+					totalWidth = x + w;
+
+				float u = c.get("x").asInt();
+				float v = c.get("y").asInt();
+
+				float[][] quad = {
+						{x, y - h, z, 0, 0, 1, u, v + h},
+						{x + w, y - h, z, 0, 0, 1, u + w, v + h},
+						{x + w, y, z, 0, 0, 1, u + w, v},
+						{x + w, y, z, 0, 0, 1, u + w, v},
+						{x, y, z, 0, 0, 1, u, v},
+						{x, y - h, z, 0, 0, 1, u, v + h}
+				};
+
+				z += 0.0001;
+
+				for (float[] vert : quad) {
+					vert[0] *= scale;
+					vert[1] *= scale;
+					vert[0] -= 0.05 + (builtin ? 0.03 : 0);
+					vert[1] += unit_height * (0.76 - (builtin ? 0.05 : 0));
+					vert[6] *= su;
+					vert[7] *= sv;
+					for (float f : vert) {
+						verts[vi++] = f;
+					}
+
 				}
+
 			}
+
+			cap += l.length();
+			posY -= (int) (cm.get("lineHeight").asInt() * this.lineHeight);		// Set up the Y for the next text line
+			posX = 0;
+
+			for (int i = past_vi; i < vi; i += Bdx.VERT_STRIDE){
+
+				if (alignment == Alignment.CENTER)
+					verts[i] -= (totalWidth / 2f) * scale;
+				else if (alignment == Alignment.RIGHT)
+					verts[i] -= totalWidth * scale;
+
+			}
+
+			past_vi = vi;
+			totalWidth = 0;
+
 		}
 
 		mesh.setVertices(verts, 0, verts.length);
-
-		if (alignment == Alignment.CENTER || alignment == Alignment.RIGHT) {
-			Matrix4f mat = new Matrix4f();
-			mat.setIdentity();
-			if (alignment == Alignment.CENTER)
-				mat.setM03((-totalWidth / 2f) * scale);
-			else
-				mat.setM03(-totalWidth * scale);
-			mesh().vertTransform(0, mat);
-		}
 
 	}
 
@@ -116,6 +134,15 @@ public class Text extends GameObject{
 
 	public Alignment alignment(){
 		return alignment;
+	}
+
+	public void lineHeight(float lineHeight){
+		this.lineHeight = lineHeight;
+		text(text());
+	}
+
+	public float lineHeight(){
+		return this.lineHeight;
 	}
 
 }
