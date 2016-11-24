@@ -230,7 +230,7 @@ public class Profiler{
 		
 	}
 	
-	private final Color BG_COLOR = new Color(0.125f, 0.125f, 0.125f, 0.5f);
+	private final Color BG_COLOR = new Color(0.125f, 0.125f, 0.125f, 0.75f);
 	private final float SPACING = 0.6f;
 	private final float BAR_HEIGHT = 0.4f;
 	private final float BAR_WIDTH = SPACING * 4;
