@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.glutils.HdpiUtils;
 
 import javax.vecmath.Vector2f;
 import javax.vecmath.Matrix3f;
+import javax.vecmath.Vector3f;
 
 import com.nilunder.bdx.Bdx;
 import com.nilunder.bdx.Scene;
@@ -107,7 +108,17 @@ public class Viewport{
 	public void position(float x, float y){
 		position(new Vector2f(x, y));
 	}
-	
+
+	public Vector2f viewportPositionNormalized(Vector3f position) {
+
+		Vector2f p = scene.camera.screenPositionNormalized(position);
+		p.sub(new Vector2f(x, y).div(Bdx.display.size()));
+		p = p.mul(Bdx.display.size().div(new Vector2f(w, h)));
+
+		return p;
+
+	}
+
 	public void apply(){
 		scene.camera.update();
 		HdpiUtils.glViewport(x, y, w, h);
