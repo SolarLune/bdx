@@ -276,18 +276,30 @@ public class Bdx{
 
 			renderWorld(modelBatch, scene, scene.camera);			// Render main view
 
+			ArrayList<Camera> renderCams = new ArrayList<Camera>();
+
 			for (Camera cam : scene.cameras){
-				if (cam.renderingToTexture){
+				if (cam.renderingToTexture) {
 					cam.update();
-					if (cam.renderBuffer == null){
-						cam.initRenderBuffer();
-					}
-					cam.renderBuffer.begin();
-					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-					Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-					renderWorld(modelBatch, scene, cam);
-					cam.renderBuffer.end();
+					renderCams.add(cam);
 				}
+			}
+
+			for (Light light : scene.lights) {
+				for (Camera cam : light.shadowCams) {
+					if (light.shadowOn())
+						renderCams.add(cam);		// Lights handle updating their cameras
+				}
+			}
+
+			for (Camera cam : renderCams) {
+				if (cam.renderBuffer == null)
+					cam.initRenderBuffer();
+				cam.renderBuffer.begin();
+				Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+				renderWorld(modelBatch, scene, cam);
+				cam.renderBuffer.end();
 			}
 
 			if (scene.screenShaders.size() > 0){

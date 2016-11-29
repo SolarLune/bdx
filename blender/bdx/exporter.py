@@ -521,6 +521,10 @@ def srl_objects(objects):
             }
             if obj.data.type == "SPOT":
                 d["lamp"]["spot_size"] = obj.data.spot_size
+            if obj.data.type == "SUN":
+                d["lamp"]["shadow_on"] = obj.data.use_shadow
+                d["lamp"]["shadow_near"] = obj.data.shadow_buffer_clip_start
+                d["lamp"]["shadow_far"] = obj.data.shadow_buffer_clip_end
 
     r3d = relevant_region_3d_data()
     if r3d:

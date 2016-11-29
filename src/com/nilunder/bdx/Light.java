@@ -3,6 +3,8 @@ package com.nilunder.bdx;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute;
@@ -12,10 +14,15 @@ import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.nilunder.bdx.utils.Color;
 
+import java.util.ArrayList;
+
 public class Light extends GameObject {
 
 	public Type type;
 	public BaseLight lightData;
+	public ArrayList<Camera> shadowCams = new ArrayList<Camera>();
+	public float shadowNear;
+	public float shadowFar;
 	private float energy;
 	private Color color = new Color();
 	private float spotSize;
@@ -31,8 +38,14 @@ public class Light extends GameObject {
 		
 		if (type.equals(Type.POINT))
 			lightData = new PointLight();
-		else if (type.equals(Type.SUN))
+		else if (type.equals(Type.SUN)) {
 			lightData = new DirectionalLight();
+			Camera cam = new Camera();				// This should be an actual camera, I think. We should figure out a way to create a default cam.
+			cam.initData(Camera.Type.PERSPECTIVE);
+			cam.data = new PerspectiveCamera(120f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+			cam.resolution(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());		// Set the resolution for the renderbuffer to render the light's view
+			shadowCams.add(cam);
+		}
 		else if (type.equals(Type.SPOT))
 			lightData = new SpotLight();
 
@@ -72,7 +85,20 @@ public class Light extends GameObject {
 	}
 
 	public void updateLight(){
+
 		if (lightData != null) {
+
+			for (Camera cam : shadowCams) {
+				com.badlogic.gdx.graphics.Camera camData = cam.data;
+				camData.near = shadowNear;
+				camData.far = shadowFar;
+				camData.position.set(position().x, position().y, position().z);
+				Vector3f lookTarget = position();
+				lookTarget.plus(axis(2).negated());
+				camData.lookAt(lookTarget.x, lookTarget.y, lookTarget.z);		// Needs to change to account for multiple sides for a point light shadow
+				camData.update();
+			}
+
 			if (type.equals(Type.POINT)) {
 				PointLight p = (PointLight)lightData;
 				p.set(color.r, color.g, color.b, position().x, position().y, position().z, energy);
@@ -88,6 +114,15 @@ public class Light extends GameObject {
 				s.set(color.r, color.g, color.b, position().x, position().y, position().z, down.x, down.y, down.z, energy, spotSize, exponent);
 			}
 		}
+	}
+
+	public boolean shadowOn(){
+		return shadowCams.size() > 0 && shadowCams.get(0).renderingToTexture;
+	}
+
+	public void shadowOn(boolean on){
+		for (Camera cam : shadowCams)
+			cam.renderingToTexture = on;
 	}
 
 	@Override
