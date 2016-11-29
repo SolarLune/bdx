@@ -930,7 +930,7 @@ public class Scene implements Named{
 			Bdx.profiler.stop("__scene");
 
 			try{
-				world.stepSimulation(Bdx.TICK_TIME, 0);
+				world.stepSimulation(Bdx.TICK_TIME * Bdx.physicsSpeed, 0);
 			}catch (NullPointerException e){
 				throw new RuntimeException("PHYSICS ERROR: Detected collision between Static objects set to Ghost, with Triangle Mesh bounds: Keep them seperated, or use different bounds.");
 			}
