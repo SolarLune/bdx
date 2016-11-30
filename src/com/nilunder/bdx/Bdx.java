@@ -253,6 +253,11 @@ public class Bdx{
 
 		for (Scene scene : (ArrayListScenes)scenes.clone()){
 
+			if (Scene.maxLoadTime > 0 && scene.percentageLoaded < 1) {			// Don't use a scene if it's not finished loading
+				if (!scene.load())												// Try to load it for this frame; if it's not done, then continue
+					continue;
+			}
+
 			scene.update();
 			profiler.stop("__scene");
 

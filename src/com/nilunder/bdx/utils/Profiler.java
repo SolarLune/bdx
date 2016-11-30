@@ -363,10 +363,12 @@ public class Profiler{
 	
 	public void init(){
 		visible = true;
-		
+
+		float oldVal = Scene.maxLoadTime;
+		Scene.maxLoadTime = 0;					// Temporarily disable async loading when loading the scene if it was enabled
 		scene = new Scene("__Profiler");
 		scene.init();
-		
+
 		display = scene.add("__PDisplay");
 		background = display.children.get("__PBackground");
 		background.mesh().materials.color(BG_COLOR);
@@ -375,6 +377,7 @@ public class Profiler{
 		updateViewport();
 		
 		initialize();
+		Scene.maxLoadTime = oldVal;
 	}
 	
 	private void reinitialize(){

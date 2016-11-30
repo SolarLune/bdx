@@ -44,6 +44,12 @@ import com.nilunder.bdx.utils.Color;
 
 public class Scene implements Named{
 
+	static public float maxLoadTime = 0;	// By default, as much time as necessary is allotted to the loading process; otherwise, this is the
+	// max amount of time for loading per "attempt" (so 1/60 would be one frame per attempt, so it'd be like 30 FPS to load)
+	public float percentageLoaded = 0;
+	public String nowLoading = "init";
+	private int loadIndex = 0;
+
 	public static HashMap<String, Instantiator> instantiators;
 
 	public JsonValue json;
@@ -142,130 +148,175 @@ public class Scene implements Named{
 	}
 
 	public void init(){
-		requestedRestart = false;
-		requestedEnd = false;
-		paused = false;
+		nowLoading = "init";
+		load();
+	}
 
-		if (shapeRenderer == null)
-			shapeRenderer = new ShapeRenderer();
-		drawCommands = new ArrayList<ArrayList<Object>>();
-		lastFrameBuffer = new RenderBuffer(null);
-		environment = new Environment();
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0, 0, 0, 1));
-		environment.set(new PointLightsAttribute());
-		environment.set(new SpotLightsAttribute());
-		environment.set(new DirectionalLightsAttribute());
-				
-		screenShaders = new ArrayList<ScreenShader>();
-		defaultMaterial = new Material("__BDX_DEFAULT");
-		defaultMaterial.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
-		defaultMaterial.set(new ColorAttribute(ColorAttribute.Diffuse, 1, 1, 1, 1));
-		defaultMaterial.set(new BlendingAttribute());
-		defaultMaterial.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
-		defaultMesh = new Mesh(new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates), this);
+	private void updatePercentageLoaded(){
+		percentageLoaded = 0;
+		int totalMats = json.get("materials").size;
+		int totalMeshes = json.get("models").size;
+		int totalObjects = json.get("objects").size;
+		percentageLoaded = materials.size() / totalMats + meshes.size() / totalMeshes + templates.size() / totalObjects;
+	}
 
-		meshes = new HashMap<String, Mesh>();
-		textures = new HashMap<String,Texture>();
-		materials = new HashMap<String,Material>();
-		modelToFrame = new HashMap<>();
+	private boolean loadTimeExceeded(long timeStart){
+		long t = (System.currentTimeMillis() - timeStart) / 1000;
+		return maxLoadTime > 0 && t > maxLoadTime;
+	}
 
-		materials.put(defaultMaterial.id, defaultMaterial);
-		
-		BroadphaseInterface broadphase = new DbvtBroadphase();
-		DefaultCollisionConfiguration collisionConfiguration = new DefaultCollisionConfiguration();
-		SequentialImpulseConstraintSolver solver = new SequentialImpulseConstraintSolver();
-		CollisionDispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
+	public boolean load(){
 
-		toBeAdded = new ArrayList<GameObject>();
-		toBeRemoved = new ArrayList<GameObject>();
-		objects = new LinkedListNamed<GameObject>();
-		lights = new LinkedListNamed<Light>();
-		templates = new HashMap<String, GameObject>();
-		
-		json = new JsonReader().parse(scene);
-		name = json.get("name").asString();
-		
-		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-		world.setDebugDrawer(new Bullet.DebugDrawer(json.get("physviz").asBoolean()));
-		gravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
+		long timeStart = System.currentTimeMillis();
 
-		float[] ac = json.get("ambientColor").asFloatArray();
-		ambientLight(new Color(ac[0], ac[1], ac[2], 1));
+		if (nowLoading.equals("init") || maxLoadTime == 0) {
+			requestedRestart = false;
+			requestedEnd = false;
+			paused = false;
 
-		if (!clearColorDefaultSet) {
-			float[] cc = json.get("clearColor").asFloatArray();
-			Bdx.display.clearColor(new Color(cc[0], cc[1], cc[2], 0));
-			clearColorDefaultSet = true;
+			if (shapeRenderer == null)
+				shapeRenderer = new ShapeRenderer();
+			drawCommands = new ArrayList<ArrayList<Object>>();
+			lastFrameBuffer = new RenderBuffer(null);
+			environment = new Environment();
+			environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0, 0, 0, 1));
+			environment.set(new PointLightsAttribute());
+			environment.set(new SpotLightsAttribute());
+			environment.set(new DirectionalLightsAttribute());
+
+			screenShaders = new ArrayList<ScreenShader>();
+			defaultMaterial = new Material("__BDX_DEFAULT");
+			defaultMaterial.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
+			defaultMaterial.set(new ColorAttribute(ColorAttribute.Diffuse, 1, 1, 1, 1));
+			defaultMaterial.set(new BlendingAttribute());
+			defaultMaterial.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
+			defaultMesh = new Mesh(new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates), this);
+
+			meshes = new HashMap<String, Mesh>();
+			textures = new HashMap<String, Texture>();
+			materials = new HashMap<String, Material>();
+			modelToFrame = new HashMap<>();
+
+			materials.put(defaultMaterial.id, defaultMaterial);
+
+			BroadphaseInterface broadphase = new DbvtBroadphase();
+			DefaultCollisionConfiguration collisionConfiguration = new DefaultCollisionConfiguration();
+			SequentialImpulseConstraintSolver solver = new SequentialImpulseConstraintSolver();
+			CollisionDispatcher dispatcher = new CollisionDispatcher(collisionConfiguration);
+
+			toBeAdded = new ArrayList<GameObject>();
+			toBeRemoved = new ArrayList<GameObject>();
+			objects = new LinkedListNamed<GameObject>();
+			lights = new LinkedListNamed<Light>();
+			templates = new HashMap<String, GameObject>();
+
+			json = new JsonReader().parse(scene);			// This is the heavy part
+			name = json.get("name").asString();
+
+			world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+			world.setDebugDrawer(new Bullet.DebugDrawer(json.get("physviz").asBoolean()));
+			gravity(new Vector3f(0, 0, -json.get("gravity").asFloat()));
+
+			float[] ac = json.get("ambientColor").asFloatArray();
+			ambientLight(new Color(ac[0], ac[1], ac[2], 1));
+
+			if (!clearColorDefaultSet) {
+				float[] cc = json.get("clearColor").asFloatArray();
+				Bdx.display.clearColor(new Color(cc[0], cc[1], cc[2], 0));
+				clearColorDefaultSet = true;
+			}
+
+			if (json.get("framerateProfile").asBoolean()) {
+				Bdx.profiler.init();
+			}
+
+			float[] fc = json.get("clearColor").asFloatArray();
+			fogColor = new Color(fc[0], fc[1], fc[2], 1);
+			fog(json.get("mistOn").asBoolean());
+			fogRange(json.get("mistStart").asFloat(), json.get("mistDepth").asFloat());
+
+			nowLoading = "material";
 		}
 
-		if (json.get("framerateProfile").asBoolean()){
-			Bdx.profiler.init();
-		}
+		if (nowLoading.equals("material") || maxLoadTime == 0) {
+			for (int i = loadIndex; i < json.get("materials").size; i++) {
+				JsonValue mat = json.get("materials").get(loadIndex);
+				String texName = mat.get("texture").asString();
+				boolean hasAlpha = mat.get("alpha_blend").asString().equals("ALPHA");
+				float opacity = hasAlpha ? mat.get("opacity").asFloat() : 1;
 
-		float[] fc = json.get("clearColor").asFloatArray();
-		fogColor = new Color(fc[0], fc[1], fc[2], 1);
-		fog(json.get("mistOn").asBoolean());
-		fogRange(json.get("mistStart").asFloat(), json.get("mistDepth").asFloat());
+				Material material = new Material(mat.name);
 
-		for (JsonValue mat : json.get("materials")){
-			String texName = mat.get("texture").asString();
-			boolean hasAlpha = mat.get("alpha_blend").asString().equals("ALPHA");
-			float opacity = hasAlpha ? mat.get("opacity").asFloat() : 1;
+				float[] c = mat.get("color").asFloatArray();
+				material.set(ColorAttribute.createDiffuse(c[0], c[1], c[2], opacity));
 
-			Material material = new Material(mat.name);
+				float[] s = mat.get("spec_color").asFloatArray();
 
-			float[] c = mat.get("color").asFloatArray();
-			material.set(ColorAttribute.createDiffuse(c[0], c[1], c[2], opacity));
+				material.set(ColorAttribute.createSpecular(s[0], s[1], s[2], 1));
 
-			float[] s = mat.get("spec_color").asFloatArray();
+				material.set(FloatAttribute.createShininess(mat.get("shininess").asFloat()));
 
-			material.set(ColorAttribute.createSpecular(s[0], s[1], s[2], 1));
+				material.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
 
-			material.set(FloatAttribute.createShininess(mat.get("shininess").asFloat()));
+				IntAttribute shadeless = (IntAttribute) new BDXIntAttribute();
 
-			material.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
+				if (mat.get("shadeless").asBoolean())
+					shadeless.value = 1;
 
-			IntAttribute shadeless = (IntAttribute) new BDXIntAttribute();
+				material.set(shadeless);
 
-			if (mat.get("shadeless").asBoolean())
-				shadeless.value = 1;
+				float emitStrength = mat.get("emit").asFloat();
+				material.set(new BDXColorAttribute(BDXColorAttribute.Emit, emitStrength, emitStrength, emitStrength));
 
-			material.set(shadeless);
+				if (mat.get("backface_culling").asBoolean())
+					material.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_BACK));
+				else
+					material.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_NONE));
 
-			float emitStrength = mat.get("emit").asFloat();
-			material.set(new BDXColorAttribute(BDXColorAttribute.Emit, emitStrength, emitStrength, emitStrength));
-
-			if (mat.get("backface_culling").asBoolean())
-				material.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_BACK));
-			else
-				material.set(new IntAttribute(IntAttribute.CullFace, GL20.GL_NONE));
-			
-			if (texName != null){
-				Texture texture = textures.get(texName);
-				if (texture == null){
-					texture = new Texture(Gdx.files.internal("bdx/textures/" + texName));
-					textures.put(texName, texture);
+				if (texName != null) {
+					Texture texture = textures.get(texName);
+					if (texture == null) {
+						texture = new Texture(Gdx.files.internal("bdx/textures/" + texName));
+						textures.put(texName, texture);
+					}
+					texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
+					material.texture(texture);
 				}
-				texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
-				material.texture(texture);
-			}
-			
-			if (hasAlpha){
-				BlendingAttribute ba = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-				ba.opacity = opacity;
-				material.set(ba);
-				material.set(FloatAttribute.createAlphaTest(0.01f));
-			}else{
-				BlendingAttribute ba = new BlendingAttribute();
-				ba.blended = false;
-				material.set(ba);
+
+				if (hasAlpha) {
+					BlendingAttribute ba = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+					ba.opacity = opacity;
+					material.set(ba);
+					material.set(FloatAttribute.createAlphaTest(0.01f));
+				} else {
+					BlendingAttribute ba = new BlendingAttribute();
+					ba.blended = false;
+					material.set(ba);
+				}
+
+				materials.put(mat.name, material);
+				updatePercentageLoaded();
+				loadIndex++;
+				if (loadTimeExceeded(timeStart))
+					return false;
 			}
 
-			materials.put(mat.name, material);
+			nowLoading = "meshes";
+			loadIndex = 0;
 		}
-		
-		for (JsonValue model: json.get("models")){
-			meshes.put(model.name, new Mesh(createModel(model), this, model.name));
+
+		if (nowLoading.equals("meshes") || maxLoadTime == 0) {
+			for (int i = loadIndex; i < json.get("models").size; i++) {
+				JsonValue model = json.get("models").get(loadIndex);
+				meshes.put(model.name, new Mesh(createModel(model), this, model.name));
+				updatePercentageLoaded();
+				loadIndex++;
+				if (loadTimeExceeded(timeStart))
+					return false;
+			}
+
+			nowLoading = "objects";
+			loadIndex = 0;
 		}
 
 		HashMap<String, JsonValue> fonts = new HashMap<>();
@@ -276,108 +327,117 @@ public class Scene implements Named{
 
 		FAnim.loadActions(json.get("actions"));
 
-		for (JsonValue gobj: json.get("objects")){
-			GameObject g = instantiator.newObject(gobj);
-			g.json = gobj;
-			g.name = gobj.name;
-			g.scene = this;
-			g.props = new HashMap<String, JsonValue>();
-			for (JsonValue prop : gobj.get("properties")){
-				g.props.put(prop.name, prop);
-			}
-						
-			String meshName = gobj.get("mesh_name").asString();
-			if (meshName != null){
-				g.visibleNoChildren(gobj.get("visible").asBoolean());
-				g.mesh(meshName);
-			}else{
-				g.visibleNoChildren(false);
-				g.mesh(defaultMesh);
-			}
+		if (nowLoading.equals("objects") || maxLoadTime == 0) {
 
-			com.badlogic.gdx.graphics.Mesh mesh = g.modelInstance.model.meshes.first();
-			float[] trans = gobj.get("transform").asFloatArray();
-			JsonValue origin = json.get("origins").get(meshName);
-			JsonValue dimensions = json.get("dimensions").get(meshName);
-			g.origin = origin == null ? new Vector3f() : new Vector3f(origin.asFloatArray());
-			g.dimensionsNoScale = dimensions == null ? new Vector3f(1, 1, 1) : new Vector3f(dimensions.asFloatArray());
-			JsonValue physics = gobj.get("physics");
-			
-			g.currBodyType = GameObject.BodyType.valueOf(physics.get("body_type").asString());
-			g.currBoundsType = GameObject.BoundsType.valueOf(physics.get("bounds_type").asString());
-			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
-			g.body.setUserPointer(g);
-			g.scale(getGLMatrixScale(trans));
-
-			String type = gobj.get("type").asString();
-			if (type.equals("FONT")){
-				Text t = (Text)g;
-				t.font = fonts.get(gobj.get("font").asString());
-				t.text(gobj.get("text").asString());
-				t.capacity = t.text().length();
-
-				String align = gobj.get("alignment").asString();
-
-				if (align.equals("RIGHT"))
-					t.alignment(Text.Alignment.RIGHT);
-				else if (align.equals("CENTER"))
-					t.alignment(Text.Alignment.CENTER);
-				else
-					t.alignment(Text.Alignment.LEFT);
-
-			}else if (type.equals("LAMP")){
-				JsonValue settings = gobj.get("lamp");
-				Light l = (Light)g;
-
-				if (settings.getString("type").equals("SUN"))
-					l.type = Light.Type.SUN;
-				else if (settings.getString("type").equals("SPOT"))
-					l.type = Light.Type.SPOT;
-				else // POINT lamps; HEMI and AREA aren't supported, so they're turned into POINTs
-					l.type = Light.Type.POINT;
-
-				l.energy(settings.getFloat("energy"));
-				float[] c = settings.get("color").asFloatArray();
-				l.color(new Color(c[0], c[1], c[2], c[3]));
-
-				if (l.type.equals(Light.Type.SPOT)) {
-					l.spotSize(settings.getFloat("spot_size"));
+			for (int i = loadIndex; i < json.get("objects").size; i++) {
+				JsonValue gobj = json.get("objects").get(i);
+				GameObject g = instantiator.newObject(gobj);
+				g.json = gobj;
+				g.name = gobj.name;
+				g.scene = this;
+				g.props = new HashMap<String, JsonValue>();
+				for (JsonValue prop : gobj.get("properties")) {
+					g.props.put(prop.name, prop);
 				}
-			}else if (type.equals("CAMERA")){
-				Camera c = (Camera)g;
-				float[] projection = gobj.get("camera").get("projection").asFloatArray();
-				Vector2f resolution = new Vector2f(json.get("resolution").asFloatArray());
-				if (gobj.get("camera").get("type").asString().equals("PERSP")){
-					c.initData(Camera.Type.PERSPECTIVE);
-					c.size(resolution);
-					c.resolution(resolution);
-					c.projection(new Matrix4f(projection));
-					c.fov(c.fov());
-				}else{
-					c.initData(Camera.Type.ORTHOGRAPHIC);
-					c.size(resolution);
-					c.resolution(resolution);
-					c.zoom(2 / projection[0]);
+
+				String meshName = gobj.get("mesh_name").asString();
+				if (meshName != null) {
+					g.visibleNoChildren(gobj.get("visible").asBoolean());
+					g.mesh(meshName);
+				} else {
+					g.visibleNoChildren(false);
+					g.mesh(defaultMesh);
 				}
-				Matrix4 pm = new Matrix4(projection);
-				pm.inv();
-				Vector3 vec = new Vector3(0, 0, -1);
-				vec.prj(pm);
-				c.near(-vec.z);
-				vec.set(0, 0, 1);
-				vec.prj(pm);
-				c.far(-vec.z);
+
+				com.badlogic.gdx.graphics.Mesh mesh = g.modelInstance.model.meshes.first();
+				float[] trans = gobj.get("transform").asFloatArray();
+				JsonValue origin = json.get("origins").get(meshName);
+				JsonValue dimensions = json.get("dimensions").get(meshName);
+				g.origin = origin == null ? new Vector3f() : new Vector3f(origin.asFloatArray());
+				g.dimensionsNoScale = dimensions == null ? new Vector3f(1, 1, 1) : new Vector3f(dimensions.asFloatArray());
+				JsonValue physics = gobj.get("physics");
+
+				g.currBodyType = GameObject.BodyType.valueOf(physics.get("body_type").asString());
+				g.currBoundsType = GameObject.BoundsType.valueOf(physics.get("bounds_type").asString());
+				g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
+				g.body.setUserPointer(g);
+				g.scale(getGLMatrixScale(trans));
+
+				String type = gobj.get("type").asString();
+				if (type.equals("FONT")) {
+					Text t = (Text) g;
+					t.font = fonts.get(gobj.get("font").asString());
+					t.text(gobj.get("text").asString());
+					t.capacity = t.text().length();
+
+					String align = gobj.get("alignment").asString();
+
+					if (align.equals("RIGHT"))
+						t.alignment(Text.Alignment.RIGHT);
+					else if (align.equals("CENTER"))
+						t.alignment(Text.Alignment.CENTER);
+					else
+						t.alignment(Text.Alignment.LEFT);
+
+				} else if (type.equals("LAMP")) {
+					JsonValue settings = gobj.get("lamp");
+					Light l = (Light) g;
+
+					if (settings.getString("type").equals("SUN"))
+						l.type = Light.Type.SUN;
+					else if (settings.getString("type").equals("SPOT"))
+						l.type = Light.Type.SPOT;
+					else // POINT lamps; HEMI and AREA aren't supported, so they're turned into POINTs
+						l.type = Light.Type.POINT;
+
+					l.energy(settings.getFloat("energy"));
+					float[] c = settings.get("color").asFloatArray();
+					l.color(new Color(c[0], c[1], c[2], c[3]));
+
+					if (l.type.equals(Light.Type.SPOT)) {
+						l.spotSize(settings.getFloat("spot_size"));
+					}
+				} else if (type.equals("CAMERA")) {
+					Camera c = (Camera) g;
+					float[] projection = gobj.get("camera").get("projection").asFloatArray();
+					Vector2f resolution = new Vector2f(json.get("resolution").asFloatArray());
+					if (gobj.get("camera").get("type").asString().equals("PERSP")) {
+						c.initData(Camera.Type.PERSPECTIVE);
+						c.size(resolution);
+						c.resolution(resolution);
+						c.projection(new Matrix4f(projection));
+						c.fov(c.fov());
+					} else {
+						c.initData(Camera.Type.ORTHOGRAPHIC);
+						c.size(resolution);
+						c.resolution(resolution);
+						c.zoom(2 / projection[0]);
+					}
+					Matrix4 pm = new Matrix4(projection);
+					pm.inv();
+					Vector3 vec = new Vector3(0, 0, -1);
+					vec.prj(pm);
+					c.near(-vec.z);
+					vec.set(0, 0, 1);
+					vec.prj(pm);
+					c.far(-vec.z);
+				}
+
+				templates.put(g.name, g);
+				updatePercentageLoaded();
+				loadIndex++;
+				if (loadTimeExceeded(timeStart))
+					return false;
 			}
-			
-			templates.put(g.name, g);
+
 		}
 
 		hookParentChild();
-		
+
 		cameras = new ArrayListNamed<Camera>();
-		
+
 		addInstances();
-		
+
 		camera = (Camera) objects.get(json.get("cameras").asStringArray()[0]);
 		String frameType = json.get("frame_type").asString();
 		Viewport.Type viewportType;
@@ -389,12 +449,15 @@ public class Scene implements Named{
 			viewportType = Viewport.Type.SCALE;
 		}
 		viewport = new Viewport(this, viewportType);
-		
+
 		for (GameObject g : sortByPriority(new ArrayList<GameObject>(objects))){
 			initGameObject(g);
 		}
 
 		valid = true;
+
+		percentageLoaded = 1;
+		return true;
 	}
 
 	public void dispose(){
