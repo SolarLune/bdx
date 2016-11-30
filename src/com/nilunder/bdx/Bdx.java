@@ -164,6 +164,8 @@ public class Bdx{
 	public static ArrayList<Finger> fingers;
 	public static ArrayList<Component> components;
 	public static BDXShaderProvider shaderProvider;
+	public static float physicsSpeed;
+	public static float timeSpeed;
 
 	private static boolean advancedLightingOn;
 	private static ArrayList<Finger> allocatedFingers;
@@ -179,6 +181,8 @@ public class Bdx{
 
 	public static void init(){
 		time = 0;
+		physicsSpeed = 1;
+		timeSpeed = 1;
 		profiler = new Profiler();
 		display = new Display();
 		scenes = new ArrayListScenes();
@@ -229,7 +233,7 @@ public class Bdx{
 
 		// -------- Update Input --------
 
-		time += TICK_TIME;
+		time += TICK_TIME * timeSpeed;
 		++GdxProcessor.currentTick;
 		fingers.clear();
 		for (Finger f : allocatedFingers){
