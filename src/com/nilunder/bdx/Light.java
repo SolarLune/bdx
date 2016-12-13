@@ -20,6 +20,7 @@ public class Light extends GameObject {
 	private Color color = new Color();
 	private float spotSize;
 	private float exponent = 1;
+	private boolean on;
 
 	public enum Type {
 		POINT,
@@ -109,6 +110,45 @@ public class Light extends GameObject {
 		super.transform(mat, updateLocal);
 		
 		updateLight();
+	}
+
+	public void on(boolean on){
+
+		this.on = on;
+
+		if (type == Type.POINT) {
+			PointLightsAttribute la = (PointLightsAttribute) scene.environment.get(PointLightsAttribute.Type);
+			PointLight pl = (PointLight) lightData;
+
+			if (on && !la.lights.contains(pl, true))
+				la.lights.add(pl);
+			else if (!on && la.lights.contains(pl, true))
+				la.lights.removeValue(pl, true);
+
+		} else if (type == Type.SUN) {
+			DirectionalLightsAttribute la = (DirectionalLightsAttribute) scene.environment.get(DirectionalLightsAttribute.Type);
+			DirectionalLight dl = (DirectionalLight) lightData;
+
+			if (on && !la.lights.contains(dl, true))
+				la.lights.add(dl);
+			else if (!on && la.lights.contains(dl, true))
+				la.lights.removeValue(dl, true);
+
+		} else if (type == Type.SPOT) {
+			SpotLightsAttribute la = (SpotLightsAttribute) scene.environment.get(SpotLightsAttribute.Type);
+			SpotLight sl = (SpotLight) lightData;
+
+			if (on && !la.lights.contains(sl, true))
+				la.lights.add(sl);
+			else if (!on && la.lights.contains(sl, true))
+				la.lights.removeValue(sl, true);
+
+		}
+
+	}
+
+	public boolean on(){
+		return on;
 	}
 
 }
