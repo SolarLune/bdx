@@ -517,19 +517,7 @@ public class Scene implements Named{
 			l.type = ll.type;
 			l.makeLightData();
 			l.updateLight();
-
-			if (l.lightData instanceof PointLight) {
-				PointLightsAttribute la = (PointLightsAttribute) environment.get(PointLightsAttribute.Type);
-				la.lights.add((PointLight) l.lightData);
-			}
-			else if (l.lightData instanceof DirectionalLight) {
-				DirectionalLightsAttribute la = (DirectionalLightsAttribute) environment.get(DirectionalLightsAttribute.Type);
-				la.lights.add((DirectionalLight) l.lightData);
-			}
-			else if (l.lightData instanceof SpotLight) {
-				SpotLightsAttribute la = (SpotLightsAttribute) environment.get(SpotLightsAttribute.Type);
-				la.lights.add((SpotLight) l.lightData);
-			}
+			l.on(true);
 
 		}
 
