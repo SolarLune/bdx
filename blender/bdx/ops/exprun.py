@@ -1,4 +1,5 @@
 import os
+import sys
 import bpy
 import subprocess
 from .. import utils as ut
@@ -10,6 +11,10 @@ class BdxExpRun(bpy.types.Operator):
     bl_label = "Export and Run"
 
     def execute(self, context):
+
+        # Set the mouse cursor to "WAIT" as soon as exporting starts
+        context.window.cursor_set("WAIT")
+
         j = os.path.join
 
         proot = ut.project_root()
@@ -50,11 +55,15 @@ class BdxExpRun(bpy.types.Operator):
             os.mkdir(inst)
 
         # Export scenes:
-        for scene in bpy.data.scenes:
+        for i in range(len(bpy.data.scenes)):
+            scene = bpy.data.scenes[i]
             file_name =  scene.name + ".bdx"
             file_path = j(asset_dir, "scenes", file_name)
-
+            sys.stdout.write("\rBDX - Exporting Scene: {0} ({1}/{2})                            ".format(scene.name, i+1, len(bpy.data.scenes)))
+            sys.stdout.flush()
             bpy.ops.export_scene.bdx(filepath=file_path, scene_name=scene.name, exprun=True)
+
+        print("")       ## Added blank line for reading comfort
 
         if prof_scene_export:
         
@@ -107,7 +116,6 @@ class BdxExpRun(bpy.types.Operator):
         ut.set_file_var(al, "height", ry)
 
         # Run engine:
-        context.window.cursor_set("WAIT")
 
         gradlew = "gradlew"
         if os.name != "posix":
