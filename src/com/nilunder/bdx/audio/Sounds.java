@@ -1,27 +1,29 @@
 package com.nilunder.bdx.audio;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Sound;
 
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Disposable;
-import com.nilunder.bdx.*;
 
 import java.util.ArrayList;
 
-public class Sounds extends AudioStore<Sound> implements Disposable{
+public class Sounds extends AudioStore<BDXSound> implements Disposable{
+
+	private float volume = 1;
+	private float pan = 0;
+	private float pitch = 1;
 
 	public Sounds(){
 		super("bdx/audio/sounds");
 	}
 
 	@Override
-	public Sound loadAudio(String fileName){
-		return Gdx.audio.newSound(findFile(fileName));
+	public BDXSound loadAudio(String fileName){
+		return new BDXSound(findFile(fileName));
 	}
 
 	public void dispose(){
-		for (Sound s : values())
+		for (BDXSound s : values())
 			s.dispose();
 	}
 
@@ -33,6 +35,30 @@ public class Sounds extends AudioStore<Sound> implements Disposable{
 			tracks.add(file.nameWithoutExtension());
 
 		return tracks;
+	}
+
+	public void volume(float volume) {
+		this.volume = volume;
+	}
+
+	public float volume(){
+		return volume;
+	}
+
+	public void pan(float pan) {
+		this.pan = pan;
+	}
+
+	public float pan() {
+		return pan;
+	}
+
+	public void pitch(float pitch) {
+		this.pitch = pitch;
+	}
+
+	public float pitch() {
+		return pitch;
 	}
 
 }

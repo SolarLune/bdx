@@ -9,9 +9,9 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
+import com.nilunder.bdx.audio.Audio;
 import com.nilunder.bdx.gl.*;
 import com.nilunder.bdx.inputs.*;
-import com.nilunder.bdx.audio.*;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.utils.Color;
 
@@ -155,8 +155,7 @@ public class Bdx{
 	public static Profiler profiler;
 	public static ArrayListScenes scenes;
 	public static Display display;
-	public static Sounds sounds;
-	public static Music music;
+	public static Audio audio;
 	public static Mouse mouse;
 	public static ArrayListNamed<Gamepad> gamepads;
 	public static InputMaps imaps;
@@ -186,8 +185,7 @@ public class Bdx{
 		profiler = new Profiler();
 		display = new Display();
 		scenes = new ArrayListScenes();
-		sounds = new Sounds();
-		music = new Music();
+		audio = new Audio();
 		mouse = new Mouse();
 
 		imaps = new InputMaps();
@@ -397,6 +395,7 @@ public class Bdx{
 			init();
 			scenes.add(firstScene);
 		}
+
 	}
 
 	private static void renderWorld(ModelBatch batch, Scene scene, Camera camera){
@@ -415,8 +414,7 @@ public class Bdx{
 		frameBuffer.dispose();
 		depthBuffer.dispose();
 		shaderProvider.dispose();
-		Bdx.sounds.dispose();
-		Bdx.music.dispose();
+		audio.dispose();
 
 		for (RenderBuffer b : availableTempBuffers.values())
 			b.dispose();
