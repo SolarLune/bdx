@@ -13,8 +13,8 @@ public class BDXMusic {
 
     static ArrayList<BDXMusic> playingMusic;
 
-    public float pan;
-    public float volume;                        // Manually handling volume because fading and global audio / music volume changes affect Music data's volume
+    private float pan;
+    private float volume;                        // Manually handling volume because fading and global audio / music volume changes affect Music data's volume
 
     BDXMusic(FileHandle filePath){
         data = Gdx.audio.newMusic(filePath);
