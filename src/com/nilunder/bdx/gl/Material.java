@@ -4,10 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Attribute;
-import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.utils.Array;
 import com.nilunder.bdx.Scene;
 import com.nilunder.bdx.utils.ArrayListNamed;
@@ -90,7 +87,36 @@ public class Material extends com.badlogic.gdx.graphics.g3d.Material implements 
 		BlendingAttribute ba = (BlendingAttribute) get(BlendingAttribute.Type);
 		ba.sourceFunction = src;
 		ba.destFunction = dest;
-		ba.blended = true;		// Has to be true for the blend mode to take effect
+	}
+
+	public void backToFrontSorting(boolean on) {
+		BlendingAttribute ba = (BlendingAttribute) get(BlendingAttribute.Type);
+		ba.blended = on;		// Has to be true for the blend mode to take effect
+	}
+
+	public boolean backToFrontSorting() {
+		BlendingAttribute ba = (BlendingAttribute) get(BlendingAttribute.Type);
+		return ba.blended;
+	}
+
+	public void depthMask(boolean on) {
+		DepthTestAttribute da = (DepthTestAttribute) get(DepthTestAttribute.Type);
+		da.depthMask = on;
+	}
+
+	public boolean depthMask() {
+		DepthTestAttribute da = (DepthTestAttribute) get(DepthTestAttribute.Type);
+		return da.depthMask;
+	}
+
+	public void depthFunction(int depthFunc) {
+		DepthTestAttribute da = (DepthTestAttribute) get(DepthTestAttribute.Type);
+		da.depthFunc = depthFunc;
+	}
+
+	public int depthFunction() {
+		DepthTestAttribute da = (DepthTestAttribute) get(DepthTestAttribute.Type);
+		return da.depthFunc;
 	}
 
 	public boolean shadeless(){
