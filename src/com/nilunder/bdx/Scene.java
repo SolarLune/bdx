@@ -249,12 +249,15 @@ public class Scene implements Named{
 				texture.setWrap(TextureWrap.Repeat, TextureWrap.Repeat);
 				material.texture(texture);
 			}
-			
+
+			material.set(new DepthTestAttribute());
+
 			if (hasAlpha){
 				BlendingAttribute ba = new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 				ba.opacity = opacity;
 				material.set(ba);
-				material.set(FloatAttribute.createAlphaTest(0.01f));
+				material.set(FloatAttribute.createAlphaTest(0.01f));	// Discard pixels that fail this alpha test (sub-1% alpha)
+				material.backToFrontSorting(true);					// Turn on back-to-front sorting for alpha-enabled objects by default
 			}else{
 				BlendingAttribute ba = new BlendingAttribute();
 				ba.blended = false;
