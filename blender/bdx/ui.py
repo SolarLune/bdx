@@ -11,6 +11,8 @@ class BdxSceneProps(bpy.types.PropertyGroup):
     dir_name = P.StringProperty(name="Directory")
     android_sdk = P.StringProperty(name="Android SDK", subtype="DIR_PATH")
     always_export_fonts = P.BoolProperty(name="Always Export Fonts", description="Whether BDX should always export fonts to texture, or only when they don't exist already", default=False)
+    auto_export = P.BoolProperty(name="Auto-Export On Save", description="If BDX should automatically export game data when you save", default=False)
+    main_scene = P.StringProperty(name="Starting Scene", description="Starting game scene; if blank, the current scene is used")
 
 class BdxObjectProps(bpy.types.PropertyGroup):
     cls_use_custom = P.BoolProperty(name="", description="Use custom Java class for this object")
@@ -56,15 +58,22 @@ class BdxProject(bpy.types.Panel):
 
         r = layout.row
 
+        sc_bdx = context.scene.bdx
+
         if ut.in_bdx_project():
             r().label(text="In BDX project: " + ut.project_name())
 
-            r().operator("object.bdxexprun")
+            b = layout.box()
+            b.operator("object.bdxexprun")
+            b.operator("object.bdxexp")
+            b.operator("object.bdxrun")
+
+            r().prop(sc_bdx, "main_scene")
+            r().prop(sc_bdx, "auto_export")
             r().operator("object.packproj")
             r().operator("object.externjava")
 
         else:
-            sc_bdx = context.scene.bdx
 
             if ut.in_packed_bdx_blend():
                 r().label(text="In packed BDX blend.")
@@ -190,10 +199,16 @@ class BdxData(bpy.types.Panel):
 
             layout.box().prop(context.scene.bdx, "always_export_fonts")
 
+
 def register():
     bpy.utils.register_class(BdxProject)
     bpy.utils.register_class(BdxObject)
     bpy.utils.register_class(BdxData)
+
+    @bpy.app.handlers.persistent
+    def export_on_save(dummy):
+        if bpy.context.scene.bdx.auto_export:
+            bpy.ops.object.bdxexp()
 
     @bpy.app.handlers.persistent
     def P_mapto_bdxexprun(dummy):
@@ -208,10 +223,11 @@ def register():
                 if "view3d.game_start" in kmi:
                     kmi["view3d.game_start"].idname = "object.bdxexprun"
             else:
-                if "objects.bdxexprun" in kmi:
+                if "objects.bdxrun" in kmi:
                     kmi["objects.bdxexprun"].idname = "view3d.game_start"
 
     bpy.app.handlers.load_post.append(P_mapto_bdxexprun)
+    bpy.app.handlers.save_post.append(export_on_save)
 
 
 def unregister():
