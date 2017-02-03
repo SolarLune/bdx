@@ -20,11 +20,11 @@ class BDXDepthShader extends DepthShader {
 	}
 
 	public void render(Renderable renderable, Attributes combinedAttributes) {
-		super.render(renderable, combinedAttributes);
-		if (scene != null) {
+		if (scene != null) {													// The uniforms need to be set before rendering, haha, whoops
 			program.setUniformf("far", scene.camera.far());
 			program.setUniformf("near", scene.camera.near());
 		}
+		super.render(renderable, combinedAttributes);
 	}
 }
 

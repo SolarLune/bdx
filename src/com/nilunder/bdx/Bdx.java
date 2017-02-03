@@ -21,6 +21,7 @@ public class Bdx{
 
 	public static class Display{
 		public boolean changed;
+		public Color clearColor = new Color(0, 0, 0, 0);
 		
 		public int width(){
 			return Gdx.graphics.getWidth();
@@ -55,13 +56,6 @@ public class Bdx{
 		}
 		public boolean fullscreen(){
 			return Gdx.graphics.isFullscreen();
-		}
-		public void clearColor(Color color){
-			clearColor.set(color);
-			Gdx.gl.glClearColor(color.r, color.g, color.b, color.a);
-		}
-		public Color clearColor(){
-			return clearColor;
 		}
 		public static void advancedLighting(boolean on){
 			advancedLightingOn = on;
@@ -173,7 +167,6 @@ public class Bdx{
 	private static RenderBuffer frameBuffer;
 	private static RenderBuffer depthBuffer;
 	private static SpriteBatch spriteBatch;
-	private static Color clearColor;
 	private static BDXDepthShaderProvider depthShaderProvider;
 	private static HashMap<Float, RenderBuffer> availableTempBuffers;
 	private static boolean requestedRestart;
@@ -213,7 +206,6 @@ public class Bdx{
 		depthShaderProvider = new BDXDepthShaderProvider(Gdx.files.internal("bdx/shaders/3d/depthExtract.vert"), Gdx.files.internal("bdx/shaders/3d/depthExtract.frag"));
 
 		depthBatch = new ModelBatch(depthShaderProvider);
-		clearColor = new Color();
 
 		advancedLightingOn = true;
 
@@ -225,8 +217,20 @@ public class Bdx{
 
 	public static void main(){
 
+		boolean screenShadersUsed = false;
+
+		for (Scene scene : scenes) {
+			if (scene.screenShaders.size() > 0) {
+				screenShadersUsed = true;
+				break;
+			}
+		}
+
 		profiler.start("__render");
+		Gdx.gl.glClearColor(display.clearColor.r, display.clearColor.g, display.clearColor.b, display.clearColor.a);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		Gdx.gl.glClearColor(0, 0, 0, 0);
+		Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 		profiler.stop("__render");
 
 		// -------- Update Input --------
@@ -249,7 +253,27 @@ public class Bdx{
 
 		Viewport vp;
 
-		for (Scene scene : (ArrayListScenes)scenes.clone()){
+		ArrayListScenes newSceneList = (ArrayListScenes) scenes.clone();
+
+		boolean depthBufferCleared = false;
+		boolean colorBufferCleared = false;
+
+		for (int i = 0; i < newSceneList.size(); i++){
+
+			Scene scene = newSceneList.get(i);
+			boolean prevSceneRenderPassthrough = false;
+			boolean nextSceneRenderPassthrough = false;
+
+			if (i > 0)
+				prevSceneRenderPassthrough = newSceneList.get(i - 1).renderPassthrough;
+
+			if (i < newSceneList.size() - 1)
+				nextSceneRenderPassthrough = newSceneList.get(i + 1).renderPassthrough;
+
+			if (!prevSceneRenderPassthrough) {
+				colorBufferCleared = false;
+				depthBufferCleared = false;
+			}
 
 			scene.update();
 			profiler.stop("__scene");
@@ -264,31 +288,38 @@ public class Bdx{
 
 			depthShaderProvider.update(scene);
 			shaderProvider.update(scene);
-			
-			if (scene.screenShaders.size() > 0){
+
+			boolean frameBufferInUse = false;
+
+			if (scene.screenShaders.size() > 0 || (screenShadersUsed && scene.renderPassthrough)) { // If the scene is passing its render output, and screen shaders are used, then it needs to use the framebuffer to pass the render on.
+																									// If screen shaders aren't used anywhere, there's no need to render to a framebuffer, as OpenGL will correctly blend normally.
 				frameBuffer.begin();
-				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+				frameBufferInUse = true;
+				if (!colorBufferCleared) {            				// First rendering scene, or previous scene didn't pass a render, so it needs to clear the framebuffer.
+					Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);		// We only need to do this once - the rendered data can accumulate until the last scene renders or
+					colorBufferCleared = true;						// Another scene stops passing the render data up the stack
+				}
 			}
 
-			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);				// We have to clear the depth buffer no matter what, because closer things on previous scenes should never
+																	// overlap further things on overlay scenes
 
 			renderWorld(modelBatch, scene, scene.camera);			// Render main view
 
-			for (Camera cam : scene.cameras){
+			for (Camera cam : scene.cameras){						// Render auxiliary cameras
 				if (cam.renderingToTexture){
 					cam.update();
 					if (cam.renderBuffer == null){
 						cam.initRenderBuffer();
 					}
 					cam.renderBuffer.begin();
-					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-					Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 					renderWorld(modelBatch, scene, cam);
 					cam.renderBuffer.end();
 				}
 			}
 
-			if (scene.screenShaders.size() > 0){
+			if (frameBufferInUse) {
 
 				frameBuffer.end();
 
@@ -299,10 +330,14 @@ public class Bdx{
 						usingDepth = true;
 				}
 
-				if (usingDepth) {
+				if (usingDepth || scene.renderPassthrough) {									// Render depth texture
 					Gdx.gl.glClearColor(1, 1, 1, 1);
 					depthBuffer.begin();
-					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
+					if (!depthBufferCleared) {
+						Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+						depthBufferCleared = true;
+					}
+					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT );
 					renderWorld(depthBatch, scene, scene.camera);
 					depthBuffer.end();
 					depthBuffer.getColorBufferTexture().bind(2);
@@ -344,14 +379,13 @@ public class Bdx{
 
 				}
 
-				frameBuffer.drawTo(null, null, vp.x, vp.y, vp.w, vp.h); //  Draw to screen
+				if (!scene.renderPassthrough || scene == newSceneList.get(newSceneList.size() - 1) || !nextSceneRenderPassthrough)
+					frameBuffer.drawTo(null, null, vp.x, vp.y, vp.w, vp.h); //  Draw to screen, but only if the scene's not passing the render, or if it's the last scene in the list
 				scene.lastFrameBuffer.clear();
 				frameBuffer.drawTo(scene.lastFrameBuffer);
 			}
 
 			scene.executeDrawCommands();
-
-			display.clearColor(display.clearColor());
 
 			// ------- Render physics debug view --------
 
