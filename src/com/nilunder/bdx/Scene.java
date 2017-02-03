@@ -75,6 +75,7 @@ public class Scene implements Named{
 	public Viewport viewport;
 	public HashMap<String, GameObject> templates;
 	public ArrayList<ScreenShader> screenShaders;
+	public boolean renderPassthrough = true;
 	public RenderBuffer lastFrameBuffer;
 	public Environment environment;
 	static private ShapeRenderer shapeRenderer;
@@ -194,7 +195,7 @@ public class Scene implements Named{
 
 		if (!clearColorDefaultSet) {
 			float[] cc = json.get("clearColor").asFloatArray();
-			Bdx.display.clearColor(new Color(cc[0], cc[1], cc[2], 0));
+			Bdx.display.clearColor.set(cc[0], cc[1], cc[2], 0);
 			clearColorDefaultSet = true;
 		}
 
