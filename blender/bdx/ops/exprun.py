@@ -138,15 +138,6 @@ def run(self, context):
     print("------------ BDX END ----------------------------------------------------")
     print(" ")
 
-    # Delete previously saved-out internal files
-
-    java_texts = [t for t in bpy.data.texts.values() if t.name.endswith(".java")]
-
-    for t in java_texts:
-        fp = os.path.join(ut.src_root(), t.name)
-
-        os.remove(fp)
-
     context.window.cursor_set("DEFAULT")
 
 class BdxExp(bpy.types.Operator):

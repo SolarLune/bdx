@@ -199,7 +199,7 @@ def split_path(path):
     else:
         return [tail]
 
-def save_internal_java_files(to_dir, overwrite=False):
+def save_internal_java_files(to_dir, overwrite=True):
     saved = []
     java_texts = [t for t in bpy.data.texts.values() if t.name.endswith(".java")]
 
