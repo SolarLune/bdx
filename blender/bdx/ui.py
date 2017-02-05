@@ -71,7 +71,6 @@ class BdxProject(bpy.types.Panel):
             r().prop(sc_bdx, "main_scene")
             r().prop(sc_bdx, "auto_export")
             r().operator("object.packproj")
-            r().operator("object.externjava")
 
         else:
 
