@@ -2,9 +2,34 @@ import os
 import sys
 import bpy
 import subprocess
+import threading
 from .. import utils as ut
 
+runThread = None
+
+class RunThread(threading.Thread):
+
+    def run(self):
+
+        gradlew = "gradlew"
+        if os.name != "posix":
+            gradlew += ".bat"
+
+        print(" ")
+        print("------------ BDX START --------------------------------------------------")
+        print(" ")
+        try:
+            subprocess.check_call([os.path.join(ut.project_root(), gradlew), "-p", ut.project_root(), "desktop:run"])
+        except subprocess.CalledProcessError:
+            pass
+            # Can't call operator.report() for an error in a thread
+        print(" ")
+        print("------------ BDX END ----------------------------------------------------")
+        print(" ")
+
 def export(self, context):
+
+    global runThread
 
     # Set the mouse cursor to "WAIT" as soon as exporting starts
     context.window.cursor_set("WAIT")
@@ -117,28 +142,22 @@ def export(self, context):
     ut.set_file_var(al, "width", rx)
     ut.set_file_var(al, "height", ry)
 
+    if runThread is not None and runThread.is_alive():
+
+        f = open(j(ut.project_root(), "android", "assets", "finishedExport"), "w")
+        f.close()
+
     context.window.cursor_set("DEFAULT")
 
 def run(self, context):
 
-    context.window.cursor_set("WAIT")
+    global runThread
 
-    gradlew = "gradlew"
-    if os.name != "posix":
-        gradlew += ".bat"
+    if runThread is None or not runThread.is_alive():
 
-    print(" ")
-    print("------------ BDX START --------------------------------------------------")
-    print(" ")
-    try:
-        subprocess.check_call([os.path.join(ut.project_root(), gradlew), "-p", ut.project_root(), "desktop:run"])
-    except subprocess.CalledProcessError:
-        self.report({"ERROR"}, "BDX BUILD FAILED")
-    print(" ")
-    print("------------ BDX END ----------------------------------------------------")
-    print(" ")
-
-    context.window.cursor_set("DEFAULT")
+        runThread = RunThread()
+        runThread.daemon = True  # So exiting Blender will exit the game, too
+        runThread.start()
 
 class BdxExp(bpy.types.Operator):
     """Just exports scene data to .bdx files"""
