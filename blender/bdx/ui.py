@@ -12,6 +12,8 @@ class BdxSceneProps(bpy.types.PropertyGroup):
     android_sdk = P.StringProperty(name="Android SDK", subtype="DIR_PATH")
     always_export_fonts = P.BoolProperty(name="Always Export Fonts", description="Whether BDX should always export fonts to texture, or only when they don't exist already", default=False)
     auto_export = P.BoolProperty(name="Auto-Export On Save", description="If BDX should automatically export game data when you save", default=False)
+    multi_blend_export = P.BoolProperty(name = "Multi-blend Export", description="If BDX should export data from multiple blend files, or just the current one", default=True)
+    diff_export = P.BoolProperty(name="Only Export Newly Updated Blends", description="If BDX should export just newly-changed blend files, or all project blend files", default=True)
     main_scene = P.StringProperty(name="Starting Scene", description="Starting game scene; if blank, the current scene is used")
 
 class BdxObjectProps(bpy.types.PropertyGroup):
@@ -67,6 +69,9 @@ class BdxProject(bpy.types.Panel):
             b.operator("object.bdxexprun")
             b.operator("object.bdxexp")
             b.operator("object.bdxrun")
+            b.prop(sc_bdx, "multi_blend_export")
+            if bpy.context.scene.bdx.multi_blend_export:
+                b.prop(sc_bdx, "diff_export")
 
             r().prop(sc_bdx, "main_scene")
             r().prop(sc_bdx, "auto_export")
