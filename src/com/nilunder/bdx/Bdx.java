@@ -159,6 +159,7 @@ public class Bdx{
 	public static BDXShaderProvider shaderProvider;
 	public static float physicsSpeed;
 	public static float timeSpeed;
+	public static boolean restartOnExport = false;
 
 	private static boolean advancedLightingOn;
 	private static ArrayList<Finger> allocatedFingers;
@@ -216,6 +217,16 @@ public class Bdx{
 	}
 
 	public static void main(){
+
+		// --------- Auto reloading -------- //
+
+		if (restartOnExport) {
+			FileHandle done = Gdx.files.internal("finishedExport");
+			if (done.exists()) {
+				done.file().delete();
+				restart();
+			}
+		}
 
 		boolean screenShadersUsed = false;
 
