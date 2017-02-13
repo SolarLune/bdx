@@ -193,14 +193,14 @@ def export(self, context, multiBlend, diffExport):
 
     export_time = time.time()
 
-    if not multiBlend:
+    if multiBlend:
+        prev_auto_export = bpy.context.scene.bdx.auto_export
+        bpy.context.scene.bdx.auto_export = False
+        bpy.ops.wm.save_mainfile()                              # Save and reload to clear out orphan data left behind by
+        bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)    # linked scenes
+        bpy.context.scene.bdx.auto_export = prev_auto_export
+    else:
         export_time = None
-
-    prev_auto_export = bpy.context.scene.bdx.auto_export
-    bpy.context.scene.bdx.auto_export = False
-    bpy.ops.wm.save_mainfile()                              # Save and reload to clear out orphan data left behind by
-    bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)    # linked scenes
-    bpy.context.scene.bdx.auto_export = prev_auto_export
 
 def run(self, context):
 
