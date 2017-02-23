@@ -7,13 +7,13 @@
 varying vec2 v_texCoords;
 uniform sampler2D u_texture;
 
+const float STRENGTH = 0.25;             // Higher values = more contrast
+const vec3 GRAY = vec3(0.5, 0.5, 0.5);  // The base color that the contrast bases color on
+
 void main() {
-	
-	float strength = 0.5;               // How strong the contrast effect is (higher values = more contrast)
-	vec3 gray = vec3(0.5, 0.5, 0.5);    // The base color that the contrast works against
-	
+
 	vec4 color = texture2D(u_texture, v_texCoords);
-	color.rgb = vec4(gray.rgb + ((color.rgb - gray.rgb) * strength), color.a);
-	gl_FragColor = color;
+	gl_FragColor = vec4(GRAY + ((color.rgb - GRAY) * STRENGTH), color.a);
 
 }
+
