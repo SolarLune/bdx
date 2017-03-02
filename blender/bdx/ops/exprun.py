@@ -56,6 +56,7 @@ def export(self, context, multiBlend, diffExport):
     prev_texts = bpy.data.texts[:]
     linked_scenes = []
     linked_texts = []
+    multipleBlendFilesExported = False
 
     if not multiBlend or (not diffExport and os.path.isdir(bdx_scenes_dir)):    # Delete old scene files except for the profiler.
         old_scenes = ut.listdir(bdx_scenes_dir)
@@ -76,6 +77,8 @@ def export(self, context, multiBlend, diffExport):
                 if not diffExport or (export_time is None or os.path.getmtime(blend_path) > export_time):
 
                     if os.path.splitext(blendName)[1] == ".blend":    # We don't want backups (.blend1, .blend2)
+
+                        multipleBlendFilesExported = True
 
                         with bpy.data.libraries.load(blend_path, link=True) as (data_from, data_to):
                             data_to.scenes += data_from.scenes          # Link scenes from other blends
@@ -193,13 +196,13 @@ def export(self, context, multiBlend, diffExport):
 
     export_time = time.time()
 
-    if multiBlend:
+    if multiBlend and multipleBlendFilesExported:
         prev_auto_export = bpy.context.scene.bdx.auto_export
         bpy.context.scene.bdx.auto_export = False
         bpy.ops.wm.save_mainfile()                              # Save and reload to clear out orphan data left behind by
         bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)    # linked scenes
         bpy.context.scene.bdx.auto_export = prev_auto_export
-    else:
+    if not multiBlend:
         export_time = None
 
 def run(self, context):
