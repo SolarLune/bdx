@@ -54,6 +54,7 @@ public class Scene implements Named{
 	public Camera camera;
 	public ArrayListNamed<Camera> cameras;
 	public HashMap<Model, Vector2f> modelToFrame;
+	public boolean visible;
 
 	private FileHandle scene;
 
@@ -146,6 +147,7 @@ public class Scene implements Named{
 		requestedRestart = false;
 		requestedEnd = false;
 		paused = false;
+		visible = true;
 
 		if (shapeRenderer == null)
 			shapeRenderer = new ShapeRenderer();
