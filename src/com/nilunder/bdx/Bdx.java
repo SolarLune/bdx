@@ -289,7 +289,7 @@ public class Bdx{
 			scene.update();
 			profiler.stop("__scene");
 
-			if (!scene.valid())
+			if (!scene.valid() || !scene.visible)
 				continue;
 
 			// ------- Render Scene --------
