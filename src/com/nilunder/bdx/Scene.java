@@ -14,9 +14,6 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.environment.PointLight;
-import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -877,14 +874,8 @@ public class Scene implements Named{
 
 			dispose();
 
-			if (Bdx.scenes.contains(this)) {
-
-				if (Bdx.scenes.size() > 1)
-					Bdx.scenes.remove(this);
-				else
-					Bdx.end();
-
-			}
+			if (Bdx.scenes.contains(this))
+				Bdx.scenes.remove(this);
 
 		}
 
