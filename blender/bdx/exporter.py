@@ -37,25 +37,6 @@ class EmptyUV:
 def flip_uv(uv):
     uv[1] = 1 - uv[1]
 
-def vertices(mesh):
-    uv_act = mesh.uv_layers.active
-    uv_layer = uv_act.data if uv_act is not None else EmptyUV()
-
-    loop_vert = {l.index: l.vertex_index for l in mesh.loops}
-
-    verts = []
-
-    for poly in mesh.polygons:
-        for li in triform(poly.loop_indices):
-            vert = mesh.vertices[loop_vert[li]]
-            vert_co = list(vert.co)
-            vert_normal = list(vert.normal) if poly.use_smooth else list(poly.normal)
-            vert_uv = list(uv_layer[li].uv)
-            flip_uv(vert_uv)
-            verts += vert_co + vert_normal + vert_uv
-
-    return verts
-
 
 def in_active_layer(obj):
     if obj.name not in scene.objects:
@@ -76,64 +57,6 @@ def instance(dupli_group):
         if len(g) == 0:
             raise Exception("Group \"" + dupli_group.name + "\" doesn't have a top-level (un-parented) object.")
         return g[0]
-
-def mat_tris(mesh):
-    """Returns dict: mat_name -> list_of_triangle_indices"""
-
-    m_ps = {}
-
-    idx_tri = 0
-    for p in mesh.polygons:
-        mat = mesh.materials[p.material_index] if mesh.materials else None
-        mat_name = mat.name if mat else "__BDX_DEFAULT"
-        if not mat_name in m_ps:
-            m_ps[mat_name] = []
-
-        m_ps[mat_name].append(idx_tri)
-        idx_tri += 1
-
-        if len(p.loop_indices) > 3:
-            m_ps[mat_name].append(idx_tri)
-            idx_tri += 1
-
-    return m_ps
-
-def srl_models(objects, use_mesh_modifiers):
-    name_model = {}
-
-    tfs = 3 * 8 # triangle float size: 3 verts at 8 floats each
-
-    for o in objects:
-        if o.type != "MESH":
-            continue
-
-        hasModifiers = len(o.modifiers) > 0
-
-        mesh = o.data
-        if hasModifiers:                    # Create a new mesh that applies the modifiers if the mesh is using them
-            mesh = o.to_mesh(bpy.context.scene, use_mesh_modifiers, "PREVIEW")
-
-        m_tris = mat_tris(mesh)
-        verts = vertices(mesh)
-        m_verts = OrderedDict()
-
-        materials = []
-        for m in mesh.materials:
-            if m is not None:
-                materials.append(m.name)
-        if len(materials) == 0:
-            materials.append("__BDX_DEFAULT")
-
-        for mat in materials:
-            if mat in m_tris.keys():
-                m, tris = mat, m_tris[mat]
-                m_verts[m] = numpy.concatenate([verts[i * tfs : i * tfs + tfs] for i in tris]).tolist()
-        name_model[o.data.name] = m_verts
-
-        if hasModifiers:                                                            # Remove the extra mesh if it was created
-            bpy.data.meshes.remove(mesh)
-
-    return name_model
 
 def srl_origins(objects):
     name_origin = {}
@@ -817,6 +740,44 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         mist_start = 0.0
         mist_depth = 100.0
 
+    mesh_dir = os.path.join(ut.project_root(), "android", "assets", "bdx", "scenes")
+
+    originalSelection = bpy.context.selected_objects
+
+    for o in bpy.context.selected_objects:
+        o.select = False
+
+    for o in objects:
+
+        if o.type == "MESH":
+
+            o.select = True
+
+            p = o
+
+            while p.parent is not None:
+                p = p.parent
+
+            l = p.location[:]
+            s = p.scale[:]
+            r = p.rotation_quaternion[:]
+
+            p.location = [0, 0, 0]
+            p.scale = [1, 1, 1]
+            p.rotation_quaternion = [1, 0, 0, 0]
+
+            bpy.ops.export_json_g3d.g3db(filepath=os.path.join(mesh_dir, o.data.name + ".g3db"), useSelection=True, axis_up="Z", axis_forward="Y")
+
+            p.location = l
+            p.scale = s
+            p.rotation_quaternion = r
+
+            o.select = False
+
+    for o in originalSelection:
+
+        o.select = True
+
     bdx = {
         "name": scene.name,
         "gravity": scene.game_settings.physics_gravity,
@@ -826,7 +787,6 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         "mistOn": mist_on,
         "mistStart": mist_start,
         "mistDepth": mist_depth,
-        "models": srl_models(objects, apply_modifier),
         "origins": srl_origins(objects),
         "dimensions": srl_dimensions(objects),
         "objects": srl_objects(objects),
@@ -849,7 +809,7 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
 
         generate_bitmap_fonts(fonts, fontgen_dir, fonts_dir, textures_dir);
 
-        bdx["models"].update(srl_models_text(ts, fonts_dir))
+        bdx["text_models"] = srl_models_text(ts, fonts_dir)
         bdx["materials"].update(srl_materials_text(ts))
 
         # Generate instantiators

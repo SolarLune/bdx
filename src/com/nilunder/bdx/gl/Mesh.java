@@ -3,6 +3,7 @@ package com.nilunder.bdx.gl;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
@@ -79,8 +80,16 @@ public class Mesh implements Named {
 		this.name = name;
 		this.scene = scene;
 		materials = new ArrayListMaterials();
-		for (NodePart part : model.nodes.get(0).parts)
-			materials.add((Material) part.material);
+		for (Node n : model.nodes) {
+			for (NodePart part : n.parts) {
+				if (part.material.id.equals("__BDX_DEFAULT"))
+					part.material = scene.defaultMaterial;
+				else
+					part.material = scene.materials.get(part.material.id);
+
+				materials.add((Material) part.material);
+			}
+		}
 		instances = new ArrayList<ModelInstance>();
 	}
 

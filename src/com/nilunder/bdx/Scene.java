@@ -7,6 +7,8 @@ import java.util.HashMap;
 import javax.vecmath.*;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Texture.TextureWrap;
@@ -14,9 +16,6 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.environment.PointLight;
-import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -70,10 +69,11 @@ public class Scene implements Named{
 
 	private boolean requestedRestart;
 	public boolean paused;
-	
+
 	private Instantiator instantiator;
 	
 	public Viewport viewport;
+	public AssetManager assetManager;
 	public HashMap<String, GameObject> templates;
 	public ArrayList<ScreenShader> screenShaders;
 	public boolean renderPassthrough = true;
@@ -90,6 +90,19 @@ public class Scene implements Named{
 	private boolean valid;
 	private boolean requestedEnd;
 
+	public static class BDXResolver extends InternalFileHandleResolver {
+		public FileHandle resolve(String fileName) {
+			String f = fileName;
+			if (fileName.contains("../")) {
+				StringBuilder builder = new StringBuilder(f);
+				builder.delete(0, f.lastIndexOf("bdx"));
+				f = builder.toString();
+			}
+
+			return Gdx.files.internal(f);
+		}
+	}
+
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
 	}
@@ -101,6 +114,8 @@ public class Scene implements Named{
 		}else{
 			this.instantiator = new Instantiator();
 		}
+		assetManager = new AssetManager(new BDXResolver());
+		load();
 	}
 
 	public Vector3f gravity(){
@@ -143,7 +158,21 @@ public class Scene implements Named{
 
 	}
 
+	public void load() {
+
+		if (json == null)
+			json = new JsonReader().parse(scene);
+
+		for (JsonValue gobj : json.get("objects")) {
+			String meshName = gobj.get("mesh_name").asString();
+			if (meshName != null && !meshName.contains("__FNT_") && !assetManager.isLoaded("bdx/scenes/" + meshName + ".g3db"))		// Font meshes are exported separately
+				assetManager.load("bdx/scenes/" + meshName + ".g3db", Model.class);			// Queue up the resources for loading
+		}
+
+	}
+
 	public void init(){
+
 		requestedRestart = false;
 		requestedEnd = false;
 		paused = false;
@@ -184,8 +213,7 @@ public class Scene implements Named{
 		objects = new LinkedListNamed<GameObject>();
 		lights = new LinkedListNamed<Light>();
 		templates = new HashMap<String, GameObject>();
-		
-		json = new JsonReader().parse(scene);
+
 		name = json.get("name").asString();
 		
 		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
@@ -270,9 +298,8 @@ public class Scene implements Named{
 			materials.put(mat.name, material);
 		}
 		
-		for (JsonValue model: json.get("models")){
+		for (JsonValue model: json.get("text_models"))
 			meshes.put(model.name, new Mesh(createModel(model), this, model.name));
-		}
 
 		HashMap<String, JsonValue> fonts = new HashMap<>();
 		for (JsonValue fontj: json.get("fonts")){
@@ -294,6 +321,8 @@ public class Scene implements Named{
 						
 			String meshName = gobj.get("mesh_name").asString();
 			if (meshName != null){
+				if (!meshName.contains("__FNT_"))
+					meshes.put(meshName, new Mesh(assetManager.get("bdx/scenes/" + meshName + ".g3db"), this, meshName));
 				g.visibleNoChildren(gobj.get("visible").asBoolean());
 				g.mesh(meshName);
 			}else{
@@ -311,6 +340,7 @@ public class Scene implements Named{
 			
 			g.currBodyType = GameObject.BodyType.valueOf(physics.get("body_type").asString());
 			g.currBoundsType = GameObject.BoundsType.valueOf(physics.get("bounds_type").asString());
+			System.out.println(g.name());
 			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
 			g.scale(getGLMatrixScale(trans));
@@ -404,6 +434,11 @@ public class Scene implements Named{
 	}
 
 	public void dispose(){
+
+		if (assetManager.getProgress() < 1)
+			assetManager.finishLoading();
+
+		assetManager.dispose();
 
 		valid = false;
 
@@ -853,6 +888,10 @@ public class Scene implements Named{
 				g.logicCounter -= 1;
 				g.main();
 			}
+
+			if (g.animationController != null)
+				g.animationController.update(Bdx.TICK_TIME);
+
 			g.logicCounter += g.logicFrequency * Bdx.TICK_TIME;
 		}
 
@@ -909,6 +948,9 @@ public class Scene implements Named{
 	}
 
 	public void update(){
+
+		if (objects == null)		// Initialize the scene if it hasn't been already
+			init();
 		
 		if (!paused){
 

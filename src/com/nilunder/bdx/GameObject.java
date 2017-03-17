@@ -16,6 +16,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -68,7 +69,8 @@ public class GameObject implements Named{
 	public float logicCounter;
 	private Vector3f scale;
 	private Mesh mesh;
-	
+	public AnimationController animationController;
+
 	public enum BodyType {
 		NO_COLLISION,
 		STATIC,
@@ -772,6 +774,7 @@ public class GameObject implements Named{
 
 		modelInstance = mesh.getInstance();
 		modelInstance.transform.set(trans);
+		animationController = new AnimationController(modelInstance);
 
 	}
 
