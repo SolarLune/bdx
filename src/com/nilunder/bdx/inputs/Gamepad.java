@@ -175,12 +175,37 @@ public static class Profile{
 		p.btnToCode.put("lb", 4);
 		p.btnToCode.put("rb", 5);
 
+		p.btnToCode.put("ls", 8);
+		p.btnToCode.put("rs", 9);
+
+		if (SharedLibraryLoader.isLinux) {
+			p.btnToCode.put("ls", 9);
+			p.btnToCode.put("rs", 10);
+		}
+
 		p.axes.put("lx", new Axis(1));
 		p.axes.put("ly", new Axis(0));
-		p.axes.put("rx", new Axis(2));
-		p.axes.put("ry", new Axis(3));
+
+		if (SharedLibraryLoader.isLinux) {
+			p.axes.put("lx", new Axis(0));
+			p.axes.put("ly", new Axis(1));
+		}
+
+		p.axes.put("rx", new Axis(3));
+		p.axes.put("ry", new Axis(2));
+
+		if (SharedLibraryLoader.isLinux) {
+			p.axes.put("rx", new Axis(3));
+			p.axes.put("ry", new Axis(4));
+		}
+
 		p.axes.put("lt", new Axis(4));
 		p.axes.put("rt", new Axis(5));
+
+		if (SharedLibraryLoader.isLinux) {
+			p.axes.put("lt", new Axis(2));
+			p.axes.put("rt", new Axis(5));
+		}
 
 		p.sticks.put("left", new Stick(p.axes.get("lx"), p.axes.get("ly")));
 		p.sticks.put("right", new Stick(p.axes.get("rx"), p.axes.get("ry")));
@@ -205,13 +230,23 @@ public static class Profile{
 		// to use positive values for both triggers.
 		// 
 		p.processAxis = new Profile.FnProcessAxis(){
+
 			public float[] eval(int axis, float value){
-				if (axis == 4 && value < 0){
-					axis = 5; // RT
-					value = -value;
+
+				if (SharedLibraryLoader.isWindows) {
+					if (axis == 4 && value < 0) {
+						axis = 5; // RT
+						value = -value;
+					}
+				}
+				else if ((SharedLibraryLoader.isLinux) && (axis == axes.get("lt").code || axis == axes.get("rt").code)) {		// On Linux, each trigger goes from -1 (released) to 1 (fully pressed)
+					value += 1;
+					value /= 2;
+					value = Math.min(Math.max(value, 0), 1);		// For some reason, the maximum range of the trigger grows when adding one to the value
 				}
 				return new float[]{axis, value};
 			}
+
 		};
 
 		profiles.put(p.name, p);
@@ -302,13 +337,13 @@ public static class Profile{
 		return downButtons(16);
 	}
 
-	public ArrayList<ArrayList<Integer>> downAxes(int maxAxisCount, float deadZone){
+	public ArrayList<ArrayList<Integer>> downAxes(float deadZone){
 		ArrayList<ArrayList<Integer>> axes = new ArrayList<ArrayList<Integer>>();
-		for (int i = 0; i < maxAxisCount; i++) {
-			if (Math.abs(controller.getAxis(i)) > deadZone) {
+		for (Axis axis : profile.axes.values()) {
+			if (Math.abs(axis.value) > deadZone) {
 				ArrayList<Integer> ar = new ArrayList<Integer>();
-				ar.add(i);
-				ar.add((int) Math.signum(controller.getAxis(i)));
+				ar.add(axis.code);
+				ar.add((int) Math.signum(axis.value));
 				axes.add(ar);
 			}
 		}
@@ -316,7 +351,7 @@ public static class Profile{
 	}
 
 	public ArrayList<ArrayList<Integer>> downAxes() {
-		return downAxes(8, 0.2f);
+		return downAxes(0.2f);
 	}
 
 	public ArrayList<String> downInputs(){
