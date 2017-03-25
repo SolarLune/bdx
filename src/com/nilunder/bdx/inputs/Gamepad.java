@@ -324,17 +324,13 @@ public static class Profile{
 		return name();
 	}
 
-	public ArrayList<Integer> downButtons(int maxButtonCount){
+	public ArrayList<Integer> downButtons() {
 		ArrayList<Integer> buttons = new ArrayList<Integer>();
-		for (int i = 0; i < maxButtonCount; i++) {
-			if (controller.getButton(i))
-				buttons.add(i);
+		for (int index : profile.btnToCode.values()) {
+			if (controller.getButton(index))
+				buttons.add(index);
 		}
 		return buttons;
-	}
-
-	public ArrayList<Integer> downButtons(){
-		return downButtons(16);
 	}
 
 	public ArrayList<ArrayList<Integer>> downAxes(float deadZone){
