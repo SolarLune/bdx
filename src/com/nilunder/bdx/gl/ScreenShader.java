@@ -13,19 +13,32 @@ public class ScreenShader extends com.badlogic.gdx.graphics.glutils.ShaderProgra
 	private boolean usingDepthTexture = false;
 	private boolean checkedShaderProgram = false;
 	public boolean active = true;
+	public String vertexShaderPath;
+	public String fragmentShaderPath;
 	
 	public ScreenShader(String vertexShader, String fragmentShader) {
-
 		super(vertexShader, fragmentShader);
+		vertexShaderPath = vertexShader;
+		fragmentShaderPath = fragmentShader;
+		check();
+	}
 
-		if (!isCompiled())
-			throw new RuntimeException("Shader compilation error: " + getLog());
-		
+	public ScreenShader(FileHandle vertexShader, FileHandle fragmentShader) {
+		super(vertexShader, fragmentShader);
+		vertexShaderPath = vertexShader.path();
+		fragmentShaderPath = fragmentShader.path();
+		check();
+	}
+
+	private void check(){
+
+		if (!isCompiled()) {
+			String msg = "Shader compilation error in ScreenShader at:\n" + getLog() + "\n\n\n< Vertex Shader >\n\n" + vertexShaderPath + "\n\n< Fragment Shader >\n\n" + fragmentShaderPath + "\n\n";
+			throw new RuntimeException(msg);
+		}
+
 		renderScale = new Vector2f(1, 1);
 		overlay = false;
-	}
-	public ScreenShader(FileHandle vertexShader, FileHandle fragmentShader) {
-		this(vertexShader.readString(), fragmentShader.readString());
 	}
 	
 	public static ScreenShader load(String vertexPath, String fragmentPath) {
