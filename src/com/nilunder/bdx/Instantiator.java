@@ -17,5 +17,9 @@ public class Instantiator {
 		}
 		return new GameObject();
 	}
-	
+
+	public void loadInComponents(GameObject g) {
+
+	}
+
 }

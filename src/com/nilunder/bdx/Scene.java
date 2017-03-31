@@ -561,6 +561,7 @@ public class Scene implements Named{
 	
 	private void initGameObject(GameObject gobj){
 		if (!gobj.initialized) {
+			instantiator.loadInComponents(gobj);
 			gobj.init();
 			gobj.initialized = true;
 		}

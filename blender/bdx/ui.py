@@ -4,7 +4,9 @@ from . import utils as ut
 
 P = bpy.props
 
+
 class BdxSceneProps(bpy.types.PropertyGroup):
+
     proj_name = P.StringProperty(name="Project Name")
     java_pack = P.StringProperty(name="Java Package")
     base_path = P.StringProperty(name="Base Path", subtype="DIR_PATH")
@@ -16,10 +18,54 @@ class BdxSceneProps(bpy.types.PropertyGroup):
     diff_export = P.BoolProperty(name="Only Export Newly Updated Blends", description="If BDX should export just newly-changed blend files, or all project blend files", default=True)
     main_scene = P.StringProperty(name="Starting Scene", description="Starting game scene; if blank, the current scene is used")
 
+
+class ComponentProperty(bpy.types.PropertyGroup):
+
+    float_val = bpy.props.FloatProperty()
+    int_val = bpy.props.IntProperty()
+    str_val = bpy.props.StringProperty()
+    bool_val = bpy.props.BoolProperty()
+
+    def value_name(self):
+
+        if self.type == "0":
+            return "bool_val"
+        elif self.type == "1":
+            return "int_val"
+        elif self.type == "2":
+            return "float_val"
+        else:
+            return "str_val"
+
+    def value(self):
+
+        if self.type == "0":
+            return self.bool_val
+        elif self.type == "1":
+            return self.int_val
+        elif self.type == "2":
+            return self.float_val
+        else:
+            return self.str_val
+
+    enum_items = ("0", "Boolean", ""), ("1", "Integer", ""), ("2", "Float", ""), ("3", "String", "")
+    name = bpy.props.StringProperty(name="Name", default="comp prop")
+    type = bpy.props.EnumProperty(items=enum_items, name="Component Property Type", default="2")
+
+
+class BdxObjectComponents(bpy.types.PropertyGroup):
+
+    current_comp = P.StringProperty(name="Component Name")
+    props = P.CollectionProperty(type=ComponentProperty)
+
+
 class BdxObjectProps(bpy.types.PropertyGroup):
+
     cls_use_custom = P.BoolProperty(name="", description="Use custom Java class for this object")
     cls_custom_name = P.StringProperty(name="", description="Java class name for this object")
     cls_use_priority = P.BoolProperty(name="", description="Use execution priority for this object")
+    components = P.CollectionProperty(type=BdxObjectComponents)
+
 
 class BdxFontProps(bpy.types.PropertyGroup):
 
@@ -36,7 +82,9 @@ class BdxFontProps(bpy.types.PropertyGroup):
     font_outline_alpha = P.FloatProperty(name="Outline Alpha", description="Transparency of outlines", default=1, min=0, max=1, step=0.1)
     font_outline_rounded = P.BoolProperty(name="Rounded Outlines", description="Whether to have rounded outlines or not", default=False)
 
+bpy.utils.register_class(ComponentProperty)
 bpy.utils.register_class(BdxSceneProps)
+bpy.utils.register_class(BdxObjectComponents)
 bpy.utils.register_class(BdxObjectProps)
 bpy.utils.register_class(BdxFontProps)
 
@@ -121,7 +169,7 @@ class BdxObject(bpy.types.Panel):
             col.label(ob.name + ".java")
         col = row.column()
         col.prop(ob_bdx, "cls_use_custom")
-        
+
         row = layout.row(align=True)
         is_font = (ob.type == "FONT")
         if is_font:
@@ -161,6 +209,46 @@ class BdxObject(bpy.types.Panel):
                 props.index = i
                 props.direction = "DOWN"
             row.operator("object.game_property_remove", text="", icon="X", emboss=False).index = i
+
+        layout.operator("object.add_bdx_component", text="Add Component", icon="ZOOMIN")
+
+        for i in range(len(ob_bdx.components)):
+
+            comp = ob_bdx.components[i]
+
+            box = layout.box()
+            row = box.row()
+            row.prop(comp, "current_comp")
+            p = row.operator("object.move_bdx_component", text="", icon="TRIA_UP")
+            p.index = i
+            p.direction = "UP"
+            p = row.operator("object.move_bdx_component", text="", icon="TRIA_DOWN")
+            p.index = i
+            p.direction = "DOWN"
+            row.operator("object.remove_bdx_component", text="", icon="X", emboss=False).index = i
+            row = box.row()
+
+            row.operator("object.add_bdx_component_property").comp_index = i
+
+            for j in range(len(comp.props)):
+
+                prop = comp.props[j]
+                row = box.row()
+                row.prop(prop, "name")
+                row.prop(prop, "type")
+                val_name = prop.value_name()
+                row.prop(prop, val_name, text="")
+                p = row.operator("object.move_bdx_component_property", text="", icon="TRIA_UP")
+                p.comp_index = i
+                p.prop_index = j
+                p.direction = "UP"
+                p = row.operator("object.move_bdx_component_property", text="", icon="TRIA_DOWN")
+                p.comp_index = i
+                p.prop_index = j
+                p.direction = "DOWN"
+                p = row.operator("object.remove_bdx_component_property", text="", icon="X", emboss=False)
+                p.comp_index = i
+                p.prop_index = j
 
 
 class BdxData(bpy.types.Panel):

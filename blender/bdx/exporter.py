@@ -618,6 +618,9 @@ def instantiator(objects):
 
     """
 
+    def fmt(string):
+        return "\"" + string + "\""
+
     j = os.path.join
 
     src_root = ut.src_root()
@@ -644,32 +647,76 @@ def instantiator(objects):
     name_class = {path_to_name(fp): path_to_class(fp) for fp in relevant_files}
 
     shared_names = []
+    components = {}
     for o in objects:
         cls_name = get_cls_name(o)
+        if len(o.bdx.components) > 0:
+            components[o.name] = o.bdx.components
         if cls_name in name_class:
             shared_names.append(cls_name)
 
     if not shared_names:
         return None
 
-
     with open(j(ut.gen_root(), "Instantiator.java"), 'r') as f:
         lines = f.readlines()
 
     package_name = ut.package_name()
     lines[0] = "package " + package_name + ".inst;\n"
-    lines[4] = "import " + package_name + ".*;\n"
+    lines[6] = "import " + package_name + ".*;\n"
+    if os.path.exists(j(ut.src_root(), "components")):
+        lines[7] = "import " + package_name + ".components.*;\n"
 
-    top = lines[:10]
-    equals, new = lines[10:12]
-    bottom = lines[12:]
+    top = lines[:14]
+    equals, new = lines[14:16]
+    bottom = lines[16:22]
+    comps = lines[22:]
 
     body = []
     for name in shared_names:
         body += [equals.replace("NAME", name),
                  new.replace("NAME", name_class[name])]
 
-    new_lines = top + body + bottom
+    pc = []
+
+    c_i = 0
+
+    for o in components.keys():
+
+        pc += ["\t\tif (g.name.equals(" + fmt(o) + ")) {\n"]
+
+        for c in components[o]:
+
+            if c.current_comp == "":
+                raise Exception("ERROR: GameObject \"" + o + "\" has an empty component in Component Panel.")
+
+            pc += ["\t\t\t\n"]
+
+            cn = c.current_comp
+            if cn.endswith(".java"):
+                cn.replace(".java", "")
+
+            ci = "c_" + str(c_i)
+
+            pc += ["\t\t\t{0} {1} = new {0}(g);\n".format(cn, ci),
+                   "\t\t\tg.components.add({0});\n".format(ci)]
+            for prop in c.props:
+                v = prop.value()
+                if type(prop.value()) == str:
+                    v = fmt(v)
+                elif type(prop.value()) == float:
+                    v = str(v) + "f"
+                else:
+                    v = str(v)
+                pc += ["\t\t\t{0}.{1} = {2};\n".format(ci, prop.name, v)]
+
+            c_i += 1
+
+        pc += ["\t\t}\n"]
+
+    comps = pc + comps
+
+    new_lines = top + body + bottom + comps
 
     return new_lines
 
@@ -857,7 +904,7 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
 
         if lines:
             class_name = ut.str_to_valid_java_class_name(scene.name)
-            lines[5] = lines[5].replace("NAME", class_name)
+            lines[9] = lines[9].replace("NAME", class_name)
 
             inst = j(ut.src_root(), "inst")
 
