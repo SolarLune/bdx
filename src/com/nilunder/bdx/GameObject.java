@@ -64,7 +64,7 @@ public class GameObject implements Named{
 	private boolean visible;
 	private boolean valid;
 	public boolean initialized;
-	public int logicFrequency;
+	public float logicFrequency;
 	public float logicCounter;
 	private Vector3f scale;
 	private Mesh mesh;
@@ -119,7 +119,7 @@ public class GameObject implements Named{
 		valid = true;
 		scale = new Vector3f();
 		logicFrequency = Bdx.TICK_RATE;
-		logicCounter = 1;
+		logicCounter = 1 + Random.random();
 	}
 
 	public String name(){
