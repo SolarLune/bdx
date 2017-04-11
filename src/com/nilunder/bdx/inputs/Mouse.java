@@ -22,8 +22,8 @@ public class Mouse extends Finger{
 	public int wheelMove;
 
 	public Mouse(){
-		codeToLog = new GdxProcessor.UpDownLog[5];
-		for (int i = 0; i < 5; ++i)
+		codeToLog = new GdxProcessor.UpDownLog[7];
+		for (int i = 0; i < 7; ++i)
 			codeToLog[i] = new GdxProcessor.UpDownLog();
 
 		btnToCode = new HashMap<>();
@@ -32,6 +32,8 @@ public class Mouse extends Finger{
 		btnToCode.put("middle", 2);
 		btnToCode.put("back", 3);
 		btnToCode.put("forward", 4);
+		btnToCode.put("wheel-up", 5);
+		btnToCode.put("wheel-down", 6);
 
 		wheelMove = 0;
 		cursorVisible = true;
