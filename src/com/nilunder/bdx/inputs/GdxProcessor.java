@@ -188,6 +188,11 @@ public static class GamepadAdapter extends ControllerAdapter{
 
 	public boolean scrolled(int amount){
 		mouse.wheelMove = amount;
+		int i = 5;
+		if (amount > 0)
+			i = 6;
+		mouse.codeToLog[i].hit = tick();
+		mouse.codeToLog[i].up = tick() + 1;
 		return true;
 	}
 
