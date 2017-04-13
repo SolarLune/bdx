@@ -861,6 +861,9 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
 
             inst = j(ut.src_root(), "inst")
 
+            if not os.path.exists(inst):
+                os.mkdir(inst)
+
             with open(j(inst, class_name + ".java"), 'w') as f:
                 f.writelines(lines)
 
