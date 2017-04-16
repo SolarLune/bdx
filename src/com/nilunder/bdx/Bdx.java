@@ -318,7 +318,7 @@ public class Bdx{
 			renderWorld(modelBatch, scene, scene.camera);			// Render main view
 
 			for (Camera cam : scene.cameras){						// Render auxiliary cameras
-				if (cam.renderingToTexture){
+				if (cam.renderToTexture){
 					cam.update();
 					if (cam.renderBuffer == null){
 						cam.initRenderBuffer();
