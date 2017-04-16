@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.utils.Array;
 import com.nilunder.bdx.Scene;
-import com.nilunder.bdx.utils.ArrayListNamed;
 import com.nilunder.bdx.utils.Color;
 import com.nilunder.bdx.utils.Named;
 
@@ -15,6 +14,7 @@ public class Material extends com.badlogic.gdx.graphics.g3d.Material implements 
 
 	public Texture currentTexture;
 	public MaterialShader shader;
+	public String texturePath;
 
 	public Material() {
 		super();
@@ -138,16 +138,21 @@ public class Material extends com.badlogic.gdx.graphics.g3d.Material implements 
 	}
 
 	public Texture texture(String filename) {
-		Texture tex = new Texture(Gdx.files.internal(filename));
-		tex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
-		texture(tex);
+		Texture tex = currentTexture;
+		if (!filename.equals(texturePath)) {
+			tex = new Texture(Gdx.files.internal("bdx/textures/" + filename));
+			tex.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+			texture(tex);
+			texturePath = filename;
+		}
 		return tex;
 	}
 
 	public void texture(Texture tex) {
-		if (currentTexture != tex) {		// Only switch texture if it's not already pointing to the texture
+		if (currentTexture != tex) {						// Only switch texture if it's not already pointing to the texture
 			currentTexture = tex;
 			this.set(TextureAttribute.createDiffuse(tex));
+			texturePath = null;
 		}
 	}
 
@@ -155,6 +160,7 @@ public class Material extends com.badlogic.gdx.graphics.g3d.Material implements 
 		if (currentTexture != texRegion.getTexture()) {		// Only switch texture if it's not already pointing to the texture
 			currentTexture = texRegion.getTexture();
 			this.set(TextureAttribute.createDiffuse(texRegion));
+			texturePath = null;
 		}
 	}
 
