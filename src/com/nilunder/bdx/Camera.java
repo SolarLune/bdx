@@ -28,7 +28,7 @@ public class Camera extends GameObject{
 	
 	public Type type;
 	public com.badlogic.gdx.graphics.Camera data;
-	public boolean renderingToTexture;
+	public boolean renderToTexture;
 	public RenderBuffer renderBuffer;
 	public ArrayListNamed<GameObject> ignoreObjects;
 	
