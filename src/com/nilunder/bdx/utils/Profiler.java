@@ -405,7 +405,13 @@ public class Profiler{
 	public boolean visible(){
 		return visible;
 	}
-	
+
+	public void visible(boolean visible) {
+		if (scene == null && visible)
+			init();
+		this.visible = visible;
+	}
+
 	public void tickInfoVisible(boolean visible){
 		if (!this.visible){
 			return;
