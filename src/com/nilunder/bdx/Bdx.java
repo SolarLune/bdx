@@ -470,6 +470,9 @@ public class Bdx{
 	}
 
 	public static void end(){
+		if (profiler.visible())
+			profiler.gl.disable();
+
 		Gdx.app.exit();
 	}
 
