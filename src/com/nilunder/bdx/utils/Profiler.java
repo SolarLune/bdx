@@ -412,6 +412,10 @@ public class Profiler{
 		this.visible = visible;
 	}
 
+	public boolean tickInfoVisible(){
+		return tickInfoVisible;
+	}
+
 	public void tickInfoVisible(boolean visible){
 		if (!this.visible){
 			return;
@@ -421,6 +425,10 @@ public class Profiler{
 		}
 		tickInfoVisible = visible;
 		reinitialize();
+	}
+
+	public boolean subsystemsVisible(){
+		return subsystemsVisible;
 	}
 	
 	public void subsystemsVisible(boolean visible){
@@ -433,6 +441,10 @@ public class Profiler{
 		subsystemsVisible = visible;
 		reinitialize();
 	}
+
+	public boolean glVisible(){
+		return glVisible;
+	}
 	
 	public void glVisible(boolean visible){
 		if (!this.visible){
@@ -443,6 +455,10 @@ public class Profiler{
 		}
 		glVisible = visible;
 		reinitialize();
+	}
+
+	public boolean propsVisible(){
+		return propsVisible;
 	}
 	
 	public void propsVisible(boolean visible){
