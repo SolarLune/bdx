@@ -51,6 +51,7 @@ public class GameObject implements Named{
 	public Vector3f dimensionsNoScale;
 	
 	public HashMap<String, JsonValue> props;
+	public boolean frustumCulling;
 	
 	public ArrayListGameObject children;
 	
@@ -120,6 +121,7 @@ public class GameObject implements Named{
 		scale = new Vector3f();
 		logicFrequency = Bdx.TICK_RATE;
 		logicCounter = 1 + Random.random();
+		frustumCulling = true;
 	}
 
 	public String name(){

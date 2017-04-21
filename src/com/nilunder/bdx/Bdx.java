@@ -446,7 +446,7 @@ public class Bdx{
 	private static void renderWorld(ModelBatch batch, Scene scene, Camera camera){
 		batch.begin(camera.data);
 		for (GameObject g : scene.objects){
-			if (g.visible() && g.insideFrustum() && !camera.ignoreObjects.contains(g))
+			if (g.visible() && (g.insideFrustum() || !g.frustumCulling) && !camera.ignoreObjects.contains(g))
 				batch.render(g.modelInstance, scene.environment);
 		}
 		batch.end();
