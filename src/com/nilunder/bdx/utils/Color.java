@@ -2,6 +2,41 @@ package com.nilunder.bdx.utils;
 
 public class Color extends com.badlogic.gdx.graphics.Color {
 
+	public static final Color CLEAR = new Color(com.badlogic.gdx.graphics.Color.CLEAR);
+	public static final Color BLACK = new Color(com.badlogic.gdx.graphics.Color.BLACK);
+	public static final Color WHITE = new Color(com.badlogic.gdx.graphics.Color.WHITE);
+	public static final Color LIGHT_GRAY = new Color(com.badlogic.gdx.graphics.Color.LIGHT_GRAY);
+	public static final Color GRAY = new Color(com.badlogic.gdx.graphics.Color.GRAY);
+	public static final Color DARK_GRAY = new Color(com.badlogic.gdx.graphics.Color.DARK_GRAY);
+	public static final Color BLUE = new Color(com.badlogic.gdx.graphics.Color.BLUE);
+	public static final Color NAVY = new Color(com.badlogic.gdx.graphics.Color.NAVY);
+	public static final Color ROYAL = new Color(com.badlogic.gdx.graphics.Color.ROYAL);
+	public static final Color SLATE = new Color(com.badlogic.gdx.graphics.Color.SLATE);
+	public static final Color SKY = new Color(com.badlogic.gdx.graphics.Color.SKY);
+	public static final Color CYAN = new Color(com.badlogic.gdx.graphics.Color.CYAN);
+	public static final Color TEAL = new Color(com.badlogic.gdx.graphics.Color.TEAL);
+	public static final Color GREEN = new Color(com.badlogic.gdx.graphics.Color.GREEN);
+	public static final Color CHARTREUSE = new Color(com.badlogic.gdx.graphics.Color.CHARTREUSE);
+	public static final Color LIME = new Color(com.badlogic.gdx.graphics.Color.LIME);
+	public static final Color FOREST = new Color(com.badlogic.gdx.graphics.Color.FOREST);
+	public static final Color OLIVE = new Color(com.badlogic.gdx.graphics.Color.OLIVE);
+	public static final Color YELLOW = new Color(com.badlogic.gdx.graphics.Color.YELLOW);
+	public static final Color GOLD = new Color(com.badlogic.gdx.graphics.Color.GOLD);
+	public static final Color GOLDENROD = new Color(com.badlogic.gdx.graphics.Color.GOLDENROD);
+	public static final Color ORANGE = new Color(com.badlogic.gdx.graphics.Color.ORANGE);
+	public static final Color BROWN = new Color(com.badlogic.gdx.graphics.Color.BROWN);
+	public static final Color TAN = new Color(com.badlogic.gdx.graphics.Color.TAN);
+	public static final Color FIREBRICK = new Color(com.badlogic.gdx.graphics.Color.FIREBRICK);
+	public static final Color RED = new Color(com.badlogic.gdx.graphics.Color.RED);
+	public static final Color SCARLET = new Color(com.badlogic.gdx.graphics.Color.SCARLET);
+	public static final Color CORAL = new Color(com.badlogic.gdx.graphics.Color.CORAL);
+	public static final Color SALMON = new Color(com.badlogic.gdx.graphics.Color.SALMON);
+	public static final Color PINK = new Color(com.badlogic.gdx.graphics.Color.PINK);
+	public static final Color MAGENTA = new Color(com.badlogic.gdx.graphics.Color.MAGENTA);
+	public static final Color PURPLE = new Color(com.badlogic.gdx.graphics.Color.PURPLE);
+	public static final Color VIOLET = new Color(com.badlogic.gdx.graphics.Color.VIOLET);
+	public static final Color MAROON = new Color(com.badlogic.gdx.graphics.Color.MAROON);
+
 	public Color() {super();}
 
 	public Color(int rgba8888) {
