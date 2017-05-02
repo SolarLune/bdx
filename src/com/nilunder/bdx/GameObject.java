@@ -1156,4 +1156,22 @@ public class GameObject implements Named{
 		return vecTo(other.position());
 	}
 
+	public PersistentManifold getManifoldForCollision(GameObject other){
+
+		for (PersistentManifold contact : contactManifolds) {
+
+			RigidBody rb = (RigidBody) contact.getBody0();
+
+			if (rb.getUserPointer() == this)
+				rb = (RigidBody) contact.getBody1();
+
+			if (rb.getUserPointer() == other)
+				return contact;
+
+		}
+
+		return null;
+
+	}
+
 }
