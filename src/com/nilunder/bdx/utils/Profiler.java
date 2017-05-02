@@ -242,7 +242,7 @@ public class Profiler{
 	private long totalStartTime;
 	private long totalDeltaTime;
 	private long lastStopTime;
-	private HashMap<String, Long> deltaTimes;
+	public HashMap<String, Long> deltaTimes;
 	private HashMap<String, Long> startTimes;
 	private ArrayList<Long> tickTimes;
 	private float counter;
@@ -327,6 +327,7 @@ public class Profiler{
 			"__scene",
 			"__physics",
 			"__outside",
+			"__gpu wait"
 		};
 		texts = new HashMap<String, Text>();
 		bars = new HashMap<String, GameObject>();
@@ -652,7 +653,7 @@ public class Profiler{
 		
 		addString(buffer, name, 14, false, ' ');
 		buffer.append(" ");
-		addFloat(buffer, avgTickTime, 4, 1, ' ');
+		addFloat(buffer, avgTickTime, 5, 1, ' ');
 		buffer.append(" ");
 		addString(buffer, timeUnits, 3, false, ' ');
 		buffer.append(" ");
