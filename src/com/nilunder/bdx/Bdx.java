@@ -214,11 +214,18 @@ public class Bdx{
 
 		availableTempBuffers = new HashMap<Float, RenderBuffer>();
 		requestedRestart = false;
+
+		profiler.start("__gpu wait");
+
 	}
 
 	public static void main(){
 
 		// --------- Auto reloading -------- //
+
+		profiler.stop("__gpu wait");
+
+		profiler.deltaTimes.put("__gpu wait", (long) Math.max(profiler.deltaTimes.get("__gpu wait") - (TICK_TIME * 1000000000), 0));
 
 		if (restartOnExport) {
 			FileHandle done = Gdx.files.internal("finishedExport");
@@ -440,6 +447,8 @@ public class Bdx{
 			init();
 			scenes.add(firstScene);
 		}
+
+		profiler.start("__gpu wait");
 
 	}
 
