@@ -29,6 +29,77 @@ class RunThread(threading.Thread):
         print("------------ BDX END ----------------------------------------------------")
         print(" ")
 
+
+def pre_export_fbx():
+
+    a = set(bpy.data.materials[:])
+    bpy.ops.material.new()              # Create a material to stand in for the default (FBX won't export without a mat)
+    added_mat = (set(bpy.data.materials) - a).pop()
+    added_mat.name = "__BDX_DEFAULT"
+
+    mesh_props = {}
+
+    for scene in bpy.data.scenes:
+
+        for o in scene.objects:
+
+            if o.type == "MESH":
+
+                mesh_props[o] = {"add_slot": len(o.material_slots) == 0, "prev_mat": None}
+
+                if mesh_props[o]['add_slot']:                                                    # Use a blank material, standing in for the default mat
+                    o.data.materials.append(added_mat)
+                else:
+                    mesh_props[o]['prev_mat'] = o.data.materials[0]
+                    if o.data.materials[0] is None:
+                        o.data.materials[0] = added_mat
+
+    return mesh_props, added_mat
+
+def post_export_fbx(mesh_props, added_mat):
+
+    for o in mesh_props.keys():
+
+        if mesh_props[o]['add_slot']:                                                    # Revert use of that material
+            o.data.materials.clear()
+        elif len(o.data.materials) > 0:
+            o.data.materials[0] = mesh_props[o]['prev_mat']
+
+    added_mat.user_clear()
+    bpy.data.materials.remove(added_mat)
+
+
+def export_fbx():
+
+    mesh_dir = os.path.join(ut.project_root(), "android", "assets", "bdx", "scenes")
+
+    saved_stdout = sys.stdout
+    sys.stdout = open(os.devnull, "w")
+
+    bpy.ops.export_scene.fbx(filepath=os.path.join(mesh_dir, ""), version="BIN7400", apply_unit_scale=False,
+                             object_types={"MESH", "ARMATURE"}, batch_mode="SCENE", use_batch_own_dir=False)
+    # Note that meshes with modifiers lose their names on export (for WHATEVER reason)
+
+    sys.stdout.close()
+    sys.stdout = saved_stdout
+
+    if sys.platform.startswith("linux"):
+        conv_exe = "fbx-conv-lin64"
+    elif sys.platform.startswith("darwin"):
+        conv_exe = "fbx-conv-mac"
+    else:
+        conv_exe = "fbx-conv-win32.exe"
+
+    for fbx_file in ut.listdir(mesh_dir, pattern="*.fbx"):
+
+        try:
+            subprocess.check_call([os.path.join(ut.gen_root(), "fbx-conv", conv_exe), "-o", "g3dj", fbx_file, "-f"], stdout=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            pass
+
+        os.remove(fbx_file)     # We don't need the FBX files anymore
+
+
 def export(self, context, multiBlend, diffExport):
 
     global runThread, export_time
@@ -121,6 +192,12 @@ def export(self, context, multiBlend, diffExport):
         sys.stdout.write("\rBDX - Exporting Scene: {0} ({1}/{2})                            ".format(scene.name, i+1, len(scenes_for_export)))
         sys.stdout.flush()
         bpy.ops.export_scene.bdx(filepath=file_path, scene_name=scene.name, exprun=True)
+
+    ml, mat = pre_export_fbx()
+
+    export_fbx()
+
+    post_export_fbx(ml, mat)
 
     sys.stdout.write("\rBDX - Export Finished                                 ")      # Erase earlier text with this print
     sys.stdout.flush()

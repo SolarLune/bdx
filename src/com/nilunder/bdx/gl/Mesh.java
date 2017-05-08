@@ -103,6 +103,16 @@ public class Mesh implements Named {
         return count;
     }
 
+    public float[] verts(int materialSlot) {
+    	float[] out = new float[vertNum(materialSlot)];
+    	model.meshes.get(materialSlot).getVertices(out);
+    	return out;
+	}
+
+	public void verts(float[] verts) {
+    	model.meshes.first().setVertices(verts);
+	}
+
     public void vertPos(int materialSlot, int index, float x, float y, float z){
         com.badlogic.gdx.graphics.Mesh mesh = model.meshes.first();
         float[] verts = new float[getVertexCount() * Bdx.VERT_STRIDE];
@@ -188,6 +198,39 @@ public class Mesh implements Named {
         com.badlogic.gdx.graphics.Mesh.transformUV(new Matrix3(vals), verts, Bdx.VERT_STRIDE, 6, mp.offset, mp.size);
         model.meshes.first().setVertices(verts);
     }
+
+    public int vertNum(int materialSlot) {
+    	return model.meshes.get(materialSlot).getNumVertices();
+	}
+
+	public int vertNum() {
+    	int n = 0;
+    	for (int i = 0; i < materials.size(); i++)
+    		n += vertNum(i);
+    	return n;
+	}
+
+	public int indexNum(int materialSlot) {
+		return model.meshes.get(materialSlot).getNumIndices();
+	}
+
+	public int indexNum() {
+		int n = 0;
+		for (int i = 0; i < materials.size(); i++)
+			n += indexNum(i);
+		return n;
+	}
+
+	public int polyNum(int materialSlot) {
+    	return model.meshes.get(materialSlot).getNumVertices() / 3;
+	}
+
+	public int polyNum() {
+		int n = 0;
+		for (int i = 0; i < materials.size(); i++)
+			n += polyNum(i);
+		return n;
+	}
 
 	public String serialized() {
 

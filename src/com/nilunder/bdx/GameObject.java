@@ -10,12 +10,14 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -69,7 +71,8 @@ public class GameObject implements Named{
 	public float logicCounter;
 	private Vector3f scale;
 	private Mesh mesh;
-	
+	public AnimationController animationController;
+
 	public enum BodyType {
 		NO_COLLISION,
 		STATIC,
@@ -727,8 +730,9 @@ public class GameObject implements Named{
 			if (m != null)
 				break;
 		}
-		if (m == null)
-			throw new RuntimeException("No model found with name '" + meshName + "' in an active scene.");
+		if (m == null) {
+			throw new RuntimeException("Object '" + name + "' attempting to replace mesh with nonexistent model '" + meshName + "' in scene '" + scene.name + "'.");
+		}
 
 		mesh(m);
 
@@ -774,6 +778,7 @@ public class GameObject implements Named{
 
 		modelInstance = mesh.getInstance();
 		modelInstance.transform.set(trans);
+		animationController = new AnimationController(modelInstance);
 
 	}
 
@@ -789,7 +794,7 @@ public class GameObject implements Named{
 		Vector3f scale = scale();
 
 		CollisionShape shape = body.getCollisionShape();
-		body.setCollisionShape(Bullet.makeShape(mesh.model.meshes.first(), currBoundsType, shape.getMargin(), shape.isCompound()));
+		body.setCollisionShape(Bullet.makeShape(mesh, currBoundsType, shape.getMargin(), shape.isCompound()));
 
 		Transform startTransform = new Transform();
 		body.getMotionState().getWorldTransform(startTransform);
@@ -984,7 +989,7 @@ public class GameObject implements Named{
 			mpb.vertex(tva);
 			
 			try{
-				for (short i = 0; i < len / VERT_STRIDE; i++){
+				for (short i = 0; i < len / Bdx.VERT_STRIDE; i++){
 					mpb.index(idx);
 					idx += 1;
 				}
@@ -1102,9 +1107,8 @@ public class GameObject implements Named{
 	}
 
 	public void boundsType(BoundsType boundsType){
-		com.badlogic.gdx.graphics.Mesh mesh = modelInstance.model.meshes.first();
 		CollisionShape shape = body.getCollisionShape();
-		shape = Bullet.makeShape(mesh, boundsType, shape.getMargin(), shape.isCompound());
+		shape = Bullet.makeShape(mesh(), boundsType, shape.getMargin(), shape.isCompound());
 		body.setCollisionShape(shape);
 		currBoundsType = boundsType;
 	}
