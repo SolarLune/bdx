@@ -58,7 +58,8 @@ public class GameObject implements Named{
 	public ArrayListNamed<Component> components;
 	
 	public Scene scene;
-	
+	private UpdateThread updateThread;
+
 	private GameObject parent;
 	private Matrix4f localTransform;
 	private Vector3f localScale;
@@ -1172,6 +1173,18 @@ public class GameObject implements Named{
 
 		return null;
 
+	}
+
+	public void updateThread(UpdateThread thread) {
+		if (updateThread != null)
+			updateThread.objects.remove(this);
+		if (thread != null)
+			thread.objects.add(this);
+		updateThread = thread;
+	}
+
+	public UpdateThread updateThread(){
+		return updateThread;
 	}
 
 }

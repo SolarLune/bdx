@@ -38,6 +38,7 @@ import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
 import com.nilunder.bdx.GameObject.ArrayListGameObject;
 import com.nilunder.bdx.utils.Color;
+import com.nilunder.bdx.utils.UpdateThread;
 
 public class Scene implements Named{
 
@@ -79,6 +80,7 @@ public class Scene implements Named{
 	static private ShapeRenderer shapeRenderer;
 	private ArrayList<ArrayList<Object>> drawCommands;
 	static public boolean clearColorDefaultSet;
+	public ArrayList<UpdateThread> updateThreads;
 
 	private Color fogColor;
 	private float fogStart;
@@ -145,6 +147,8 @@ public class Scene implements Named{
 		requestedEnd = false;
 		paused = false;
 		visible = true;
+
+		updateThreads = new ArrayList<UpdateThread>();
 
 		if (shapeRenderer == null)
 			shapeRenderer = new ShapeRenderer();
@@ -816,8 +820,32 @@ public class Scene implements Named{
 			}
 		}
 	}
+
+	public void updateGameObject(GameObject g) {
+
+		if(!g.valid())
+			return;
+		if (g instanceof Light)
+			((Light) g).updateLight();
+		for (Component c : g.components){
+			if (c.state != null) {
+				if (c.logicCounter >= 1) {
+					c.logicCounter -= 1;
+					c.state.main();
+				}
+				c.logicCounter += c.logicFrequency * Bdx.TICK_TIME;
+			}
+		}
+		if (g.logicCounter >= 1) {
+			g.logicCounter -= 1;
+			g.main();
+		}
+		g.logicCounter += g.logicFrequency * Bdx.TICK_TIME;
+
+	}
 	
-	private void runObjectLogic(){
+	private void runObjectLogic() {
+
 		if (requestedRestart){
 			for (GameObject g : objects){
 				g.endNoChildren();
@@ -832,25 +860,21 @@ public class Scene implements Named{
 			f.init(this);
 		}
 
-		for (GameObject g : objects){
-			if(!g.valid())
-				continue;
-			if (g instanceof Light)
-				((Light) g).updateLight();
-			for (Component c : g.components){
-				if (c.state != null) {
-					if (c.logicCounter >= 1) {
-						c.logicCounter -= 1;
-						c.state.main();
-					}
-					c.logicCounter += c.logicFrequency * Bdx.TICK_TIME;
-				}
+		if (updateThreads.size() > 0) {
+
+			for (GameObject g : objects) {
+
+				if (g.updateThread() == null)
+					updateGameObject(g);
+
 			}
-			if (g.logicCounter >= 1) {
-				g.logicCounter -= 1;
-				g.main();
-			}
-			g.logicCounter += g.logicFrequency * Bdx.TICK_TIME;
+
+			for (UpdateThread t : updateThreads)
+				t.frame();
+
+		} else {
+			for (GameObject g : objects)
+				updateGameObject(g);
 		}
 
 		for (GameObject g : toBeAdded) {
@@ -866,6 +890,8 @@ public class Scene implements Named{
 			objects.remove(g);
 			if (g instanceof Light)
 				lights.remove(g);
+			if (g.updateThread() != null)
+				g.updateThread().objects.remove(g);
 		}
 		toBeRemoved.clear();
 
