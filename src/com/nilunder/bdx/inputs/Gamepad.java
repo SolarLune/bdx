@@ -178,7 +178,9 @@ public static class Profile{
 		p.btnToCode.put("ls", 8);
 		p.btnToCode.put("rs", 9);
 
-		if (SharedLibraryLoader.isLinux) {
+		String os = System.getProperty("os.name");
+
+		if (os.contains("Linux")) {
 			p.btnToCode.put("ls", 9);
 			p.btnToCode.put("rs", 10);
 		}
@@ -186,7 +188,7 @@ public static class Profile{
 		p.axes.put("lx", new Axis(1));
 		p.axes.put("ly", new Axis(0));
 
-		if (SharedLibraryLoader.isLinux) {
+		if (os.contains("Linux")) {
 			p.axes.put("lx", new Axis(0));
 			p.axes.put("ly", new Axis(1));
 		}
@@ -194,7 +196,7 @@ public static class Profile{
 		p.axes.put("rx", new Axis(3));
 		p.axes.put("ry", new Axis(2));
 
-		if (SharedLibraryLoader.isLinux) {
+		if (os.contains("Linux")) {
 			p.axes.put("rx", new Axis(3));
 			p.axes.put("ry", new Axis(4));
 		}
@@ -202,7 +204,7 @@ public static class Profile{
 		p.axes.put("lt", new Axis(4));
 		p.axes.put("rt", new Axis(5));
 
-		if (SharedLibraryLoader.isLinux) {
+		if (os.contains("Linux")) {
 			p.axes.put("lt", new Axis(2));
 			p.axes.put("rt", new Axis(5));
 		}
@@ -233,13 +235,15 @@ public static class Profile{
 
 			public float[] eval(int axis, float value){
 
-				if (SharedLibraryLoader.isWindows) {
+				String os = System.getProperty("os.name");			// Gotta do it again here for HTML to build
+
+				if (os.contains("Windows")) {
 					if (axis == 4 && value < 0) {
 						axis = 5; // RT
 						value = -value;
 					}
 				}
-				else if ((SharedLibraryLoader.isLinux) && (axis == axes.get("lt").code || axis == axes.get("rt").code)) {		// On Linux, each trigger goes from -1 (released) to 1 (fully pressed)
+				else if ((os.contains("Linux")) && (axis == axes.get("lt").code || axis == axes.get("rt").code)) {		// On Linux, each trigger goes from -1 (released) to 1 (fully pressed)
 					value += 1;
 					value /= 2;
 					value = Math.min(Math.max(value, 0), 1);		// For some reason, the maximum range of the trigger grows when adding one to the value
