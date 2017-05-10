@@ -172,6 +172,8 @@ public class Bdx{
 	private static HashMap<Float, RenderBuffer> availableTempBuffers;
 	private static boolean requestedRestart;
 
+	private static long startMillis = System.currentTimeMillis();
+
 	public static void init(){
 		time = 0;
 		physicsSpeed = 1;
@@ -227,12 +229,9 @@ public class Bdx{
 
 		profiler.deltaTimes.put("__gpu wait", (long) Math.max(profiler.deltaTimes.get("__gpu wait") - (TICK_TIME * 1000000000), 0));
 
-		if (restartOnExport) {
-			FileHandle done = Gdx.files.internal("finishedExport");
-			if (done.exists()) {
-				done.file().delete();
-				restart();
-			}
+		if (restartOnExport && Gdx.files.internal("finishedExport").lastModified() > startMillis) {
+			startMillis = System.currentTimeMillis();
+			restart();
 		}
 
 		boolean screenShadersUsed = false;
