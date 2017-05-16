@@ -1174,4 +1174,70 @@ public class GameObject implements Named{
 
 	}
 
+	public boolean aabbContains(Vector3f point) {
+		Vector3f min = new Vector3f();
+		Vector3f max = new Vector3f();
+		body.getAabb(min, max);
+		min.plus(position());
+		max.plus(position());
+		return (point.x >= min.x && point.x <= max.x && point.y >= min.y && point.y <= max.y && point.z >= min.z && point.z <= max.z);
+	}
+
+	public boolean aabbContains(float[][] otherAABBPoints) {
+
+		Vector3f vec = new Vector3f();
+
+		for (float[] p : otherAABBPoints) {
+			vec.set(p);
+			if (!aabbContains(vec))
+				return false;
+		}
+
+		return true;
+
+	}
+
+	public boolean aabbContains(GameObject other) {
+		return aabbContains(other.getAABBPoints());
+	}
+
+	public boolean aabbContainsAny(float[][] otherAABBPoints) {
+
+		Vector3f vec = new Vector3f();
+
+		for (float[] p : otherAABBPoints) {
+			vec.set(p);
+			if (aabbContains(vec))
+				return true;
+		}
+		return false;
+
+	}
+
+	public boolean aabbContainsAny(GameObject other) {
+		return aabbContainsAny(other.getAABBPoints());
+	}
+
+	public float[][] getAABBPoints() {
+
+		float points[][] = new float[8][3];
+
+		Vector3f min = new Vector3f();
+		Vector3f max = new Vector3f();
+		body.getAabb(min, max);
+		min.plus(position());
+		max.plus(position());
+
+		points[0] = new float[]{min.x, min.y, min.z};
+		points[1] = new float[]{max.x, min.y, min.z};
+		points[2] = new float[]{min.x, max.y, min.z};
+		points[3] = new float[]{min.x, min.y, max.z};
+		points[4] = new float[]{max.x, max.y, min.z};
+		points[5] = new float[]{min.x, max.y, max.z};
+		points[6] = new float[]{max.x, min.y, max.z};
+		points[7] = new float[]{max.x, max.y, max.z};
+
+		return points;
+	}
+
 }
