@@ -85,7 +85,7 @@ def export(self, context, multiBlend, diffExport):
                             data_to.texts += data_from.texts
 
     # Check if profiler scene needs export:
-    prof_scene_export = context.scene.game_settings.show_framerate_profile and prof_scene_name + ".bdx" not in os.listdir(bdx_scenes_dir)
+    prof_scene_export = prof_scene_name + ".bdx" not in os.listdir(bdx_scenes_dir)
 
     if prof_scene_export:
         with bpy.data.libraries.load(j(ut.gen_root(), "profiler.blend")) as (data_from, data_to):
