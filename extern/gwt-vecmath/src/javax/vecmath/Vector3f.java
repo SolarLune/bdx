@@ -243,9 +243,21 @@ public class Vector3f extends Tuple3f implements java.io.Serializable {
 		return a;
 	}
 
+	public final Vector3f plus(float x, float y, float z) {
+		Vector3f a = new Vector3f(this);
+		a.add(x, y, z);
+		return a;
+	}
+
 	public final Vector3f minus(Vector3f b){
 		Vector3f a = new Vector3f(this);
 		a.sub(b);
+		return a;
+	}
+
+	public final Vector3f minus(float x, float y, float z) {
+		Vector3f a = new Vector3f(this);
+		a.sub(x, y, z);
 		return a;
 	}
 
