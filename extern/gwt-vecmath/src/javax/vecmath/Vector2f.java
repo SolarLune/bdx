@@ -228,10 +228,22 @@ public class Vector2f extends Tuple2f implements java.io.Serializable {
 	   return a;
    }
 
+	public final Vector2f plus(float x, float y) {
+		Vector2f a = new Vector2f(this);
+		a.add(x, y);
+		return a;
+	}
+
    public final Vector2f minus(Vector2f b){
 	   Vector2f a = new Vector2f(this);
 	   a.sub(b);
 	   return a;
+   }
+
+   public final Vector2f minus(float x, float y) {
+   		Vector2f a = new Vector2f(this);
+   		a.sub(x, y);
+   		return a;
    }
 
    public final void length(float n){

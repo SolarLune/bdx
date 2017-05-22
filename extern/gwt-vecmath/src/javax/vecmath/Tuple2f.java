@@ -187,6 +187,11 @@ public abstract class Tuple2f implements java.io.Serializable, Cloneable {
 		this.y += t1.y;
 	}
 
+	public final void add(float x, float y) {
+		this.x += x;
+		this.y += y;
+	}
+
 	/**
 	 * Sets the value of this tuple to the vector difference of tuple t1 and t2
 	 * (this = t1 - t2).
@@ -211,6 +216,11 @@ public abstract class Tuple2f implements java.io.Serializable, Cloneable {
 	public final void sub(Tuple2f t1) {
 		this.x -= t1.x;
 		this.y -= t1.y;
+	}
+
+	public final void sub(float x, float y) {
+		this.x -= x;
+		this.y -= y;
 	}
 
 	/**

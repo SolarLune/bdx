@@ -231,6 +231,12 @@ public abstract class Tuple3f implements java.io.Serializable, Cloneable {
 		this.z += t1.z;
 	}
 
+	public final void add(float x, float y, float z) {
+		this.x += x;
+		this.y += y;
+		this.z += z;
+	}
+
 	/**
 	 * Sets the value of this tuple to the vector difference of tuples t1 and t2
 	 * (this = t1 - t2).
@@ -257,6 +263,12 @@ public abstract class Tuple3f implements java.io.Serializable, Cloneable {
 		this.x -= t1.x;
 		this.y -= t1.y;
 		this.z -= t1.z;
+	}
+
+	public final void sub(float x, float y, float z) {
+		this.x -= x;
+		this.y -= y;
+		this.z -= z;
 	}
 
 	/**
