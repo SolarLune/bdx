@@ -227,7 +227,8 @@ public class Bdx{
 
 		profiler.stop("__gpu wait");
 
-		profiler.deltaTimes.put("__gpu wait", (long) Math.max(profiler.deltaTimes.get("__gpu wait") - (TICK_TIME * 1000000000), 0));
+		if (profiler.subsystemsVisible())
+			profiler.deltaTimes.put("__gpu wait", (long) Math.max(profiler.deltaTimes.get("__gpu wait") - (TICK_TIME * 1000000000), 0));
 
 		if (restartOnExport && Gdx.files.internal("finishedExport").lastModified() > startMillis) {
 			startMillis = System.currentTimeMillis();
