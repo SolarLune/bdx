@@ -569,7 +569,7 @@ public class Scene implements Named{
 	private void addToWorld(GameObject gobj){
 		if (gobj.currBodyType != GameObject.BodyType.NO_COLLISION){
 			world.addRigidBody(gobj.body, gobj.json.get("physics").get("group").asShort(), gobj.json.get("physics").get("mask").asShort());
-			if (gobj.currBodyType == GameObject.BodyType.STATIC || gobj.currBodyType == GameObject.BodyType.SENSOR)
+			if (gobj.currBodyType == GameObject.BodyType.STATIC)
 				gobj.deactivate();
 			if (gobj.parent() != null && gobj.parent().body.getCollisionShape().isCompound())
 				world.removeRigidBody(gobj.body);
@@ -833,6 +833,10 @@ public class Scene implements Named{
 		}
 
 		for (GameObject g : objects){
+
+			if (g.bodyType() == GameObject.BodyType.SENSOR)
+				g.body.activate(true);
+
 			if(!g.valid())
 				continue;
 			if (g instanceof Light)
