@@ -69,6 +69,7 @@ public class GameObject implements Named{
 	public float logicCounter;
 	private Vector3f scale;
 	private Mesh mesh;
+	private static java.util.Random logicCounterRandom;
 	
 	public enum BodyType {
 		NO_COLLISION,
@@ -138,7 +139,9 @@ public class GameObject implements Named{
 		valid = true;
 		scale = new Vector3f();
 		logicFrequency = Bdx.TICK_RATE;
-		logicCounter = 1 + Random.random();
+		if (logicCounterRandom == null)
+			logicCounterRandom = new java.util.Random();
+		logicCounter = 1 + logicCounterRandom.nextFloat();
 		frustumCulling = true;
 	}
 
