@@ -47,6 +47,7 @@ public class GameObject implements Named{
 	public RigidBody body;
 	public BodyType currBodyType;
 	public BoundsType currBoundsType;
+	public Matrix4f transform;
 	public Vector3f origin;
 	public Vector3f dimensionsNoScale;
 	
@@ -61,13 +62,11 @@ public class GameObject implements Named{
 	
 	private GameObject parent;
 	private Matrix4f localTransform;
-	private Vector3f localScale;
 	private boolean visible;
 	private boolean valid;
 	public boolean initialized;
 	public float logicFrequency;
 	public float logicCounter;
-	private Vector3f scale;
 	private Mesh mesh;
 	private static java.util.Random logicCounterRandom;
 	
@@ -136,8 +135,9 @@ public class GameObject implements Named{
 		contactManifolds = new ArrayList<PersistentManifold>();
 		components = new ArrayListNamed<Component>();
 		children = new ArrayListGameObject();
+		transform = new Matrix4f();
+		localTransform = Matrix4f.identity();
 		valid = true;
-		scale = new Vector3f();
 		logicFrequency = Bdx.TICK_RATE;
 		if (logicCounterRandom == null)
 			logicCounterRandom = new java.util.Random();
@@ -168,6 +168,7 @@ public class GameObject implements Named{
 
 		if (parent != null){
 			parent.children.remove(this);
+			localTransform.setIdentity();
 
 			if (compound){
 				compShapeOld = parent.compoundShape();
@@ -189,7 +190,6 @@ public class GameObject implements Named{
 			parent.children.add(this);
 
 			updateLocalTransform();
-			updateLocalScale();
 
 			if (compound){
 				CompoundShape compShape = parent.compoundShape();
@@ -225,25 +225,113 @@ public class GameObject implements Named{
 		return null;
 	}
 	
-	public Vector3f position(){
-		Transform t = new Transform();
-		body.getWorldTransform(t);
-		
-		return new Vector3f(t.origin);
+	public Matrix4f transform(){
+		return new Matrix4f(transform);
 	}
 	
-	public void position(Vector3f vec){
-		activate();
+	private void updateLocalTransform(){
+		localTransform = parent.transform();
+		localTransform.invert();
+		localTransform.mul(transform);
+	}
+	
+	public void updateChildTransforms(){
+		for (GameObject g : children){
+			g.transform(transform.mult(g.localTransform), false);
+		}
+	}
+	
+	private void updateTransform(boolean updateLocal){
 		
-		Matrix4f t = transform();
-		t.setTranslation(vec);
+		// get scale and unscaled transform
 		
-		transform(t);
+		Vector3f scale = new Vector3f();
+		Matrix4f transformNoScale = new Matrix4f();
+		transform.get(scale, transformNoScale);
 		
+		// apply unscaled transform to body and motion state
+		
+		Transform t = new Transform(transformNoScale);
+		body.setWorldTransform(t);
+		body.getMotionState().setWorldTransform(t);
+		
+		// apply scale to collision shape
+		
+		body.getCollisionShape().setLocalScaling(scale);
+		
+		// update Aabb
+		
+		if (!body.isInWorld()){ // hack for NO_COLLISION
+			scene.world.addRigidBody(body);
+			scene.world.updateSingleAabb(body);
+			scene.world.removeRigidBody(body);
+		}else{
+			scene.world.updateSingleAabb(body);
+			
+			// activate relevant objects
+			
+			if (body.isKinematicObject()){
+				for (GameObject g : touchingObjects){
+					g.activate();
+				}
+			}else if (body.isInWorld()){
+				body.activate();
+			}
+		}
+		
+		// update transforms of children
+		
+		updateChildTransforms();
+		
+		// update local transform
+		
+		if (updateLocal && parent != null){
+			updateLocalTransform();
+		}
+		
+	}
+	
+	private void updateTransform(){
+		updateTransform(true);
+	}
+	
+	public void transform(Matrix4f m, boolean updateLocal){
+		transform.set(m);
+		updateTransform(updateLocal);
+	}
+	
+	public void transform(Matrix4f m){
+		transform(m, true);
+	}
+	
+	public Vector3f position(){
+		return transform.position();
+	}
+	
+	public void position(Vector3f v){
+		transform.position(v);
+		updateTransform();
 	}
 	
 	public void position(float x, float y, float z){
 		position(new Vector3f(x, y, z));
+	}
+	
+	public Vector3f scale(){
+		return transform.scale();
+	}
+	
+	public void scale(Vector3f v){
+		transform.scale(v);
+		updateTransform();
+	}
+	
+	public void scale(float x, float y, float z){
+		scale(new Vector3f(x, y, z));
+	}
+	
+	public void scale(float s){
+		scale(s, s, s);
 	}
 	
 	public void move(Vector3f delta){
@@ -263,16 +351,12 @@ public class GameObject implements Named{
 	}
 	
 	public Matrix3f orientation(){
-		Matrix4f t = transform();
-		Matrix3f ori = new Matrix3f();
-		t.getRotationScale(ori);
-		return ori;
+		return transform.orientation();
 	}
 	
 	public void orientation(Matrix3f ori){
-		Matrix4f t = transform();
-		t.setRotation(ori);
-		transform(t);
+		transform.orientation(ori);
+		updateTransform();
 	}
 	
 	public void rotate(float x, float y, float z){
@@ -301,83 +385,6 @@ public class GameObject implements Named{
 		orientation(ori);
 	}
 	
-	public Matrix4f transform(){
-		Transform t = new Transform();
-		body.getWorldTransform(t);
-
-		Vector3f v = new Vector3f();
-		for (int i = 0; i < 3; ++i){
-		    t.basis.getColumn(i, v);
-		    v.normalize();
-		    t.basis.setColumn(i, v);
-		}
-		
-		Matrix4f m = new Matrix4f();
-		t.getMatrix(m);
-		
-		return m;
-	}
-	
-	public void transform(Matrix4f mat){
-		transform(mat, true);
-	}
-	
-	public void updateChildTransforms(){
-		Matrix4f pt = transform();
-		Matrix4f ct = new Matrix4f();
-		Matrix4f ms = new Matrix4f(); ms.setIdentity();
-		Vector3f ps = scale();
-		ms.m00 = ps.x; ms.m11 = ps.y; ms.m22 = ps.z;
-		pt.mul(ms);
-
-		for (GameObject c : children){
-			ct.mul(pt, c.localTransform);
-			c.transform(ct, false);
-		}
-
-	}
-
-	public void transform(Matrix4f mat, boolean updateLocal){
-		activate();
-		
-		Transform t = new Transform();
-		t.set(mat);
-		
-		Vector3f v = new Vector3f();
-		for (int i = 0; i < 3; ++i){
-		    t.basis.getColumn(i, v);
-		    v.normalize();
-		    t.basis.setColumn(i, v);
-		}
-
-		body.setWorldTransform(t);
-
-		// required for static objects:
-		body.getMotionState().setWorldTransform(t);
-		if (body.isInWorld() && body.isStaticOrKinematicObject()){
-			scene.world.updateSingleAabb(body);
-			for (GameObject g : touchingObjects)
-				g.activate();
-		}
-		//
-		
-		updateChildTransforms();
-
-		if (parent != null && updateLocal){
-			updateLocalTransform();
-		}
-	}
-
-	private void updateLocalTransform(){
-		localTransform = parent.transform();
-		Matrix4f ms = new Matrix4f(); ms.setIdentity();
-		Vector3f ps = parent.scale();
-		ms.m00 = ps.x; ms.m11 = ps.y; ms.m22 = ps.z;
-		localTransform.mul(ms);
-		localTransform.invert();
-		localTransform.mul(transform());
-	}
-
 	public void applyForce(Vector3f vec){
 		activate();
 		body.applyCentralForce(vec.mul(1f / Bdx.physicsSpeed));
@@ -630,71 +637,6 @@ public class GameObject implements Named{
 		return valid;
 	}
 	
-	public void scale(float x, float y, float z, boolean updateLocal){
-		activate();
-		// Set unit scale
-		Matrix4 t = modelInstance.transform;
-		Matrix4 mat_scale = new Matrix4();
-		Vector3 s = new Vector3();
-		t.getScale(s);
-		mat_scale.scl(1/s.x, 1/s.y, 1/s.z);
-		t.mul(mat_scale);
-		scale.set(x, y, z);
-
-		// Set target scale
-		mat_scale.idt(); mat_scale.scl(x, y, z);
-		t.mul(mat_scale);
-
-		// Relevant bullet body update
-		CollisionShape cs = body.getCollisionShape();
-		cs.setLocalScaling(new Vector3f(x, y, z));
-		if (body.isInWorld() && body.isStaticOrKinematicObject())
-			scene.world.updateSingleAabb(body);
-
-		// Child propagation
-		Vector3f ps = scale();
-		Matrix4f pt = transform();
-		Matrix4f ct = new Matrix4f();
-		Matrix4f ms = new Matrix4f(); ms.setIdentity();
-		ms.m00 = ps.x; ms.m11 = ps.y; ms.m22 = ps.z;
-		pt.mul(ms);
-
-		for (GameObject c : children){
-			c.scale(scale().mul(c.localScale), false);
-			ct.mul(pt, c.localTransform);
-			c.transform(ct, false);
-		}
-
-		if (parent != null && updateLocal){
-			updateLocalScale();
-		}
-
-	}
-
-	private void updateLocalScale(){
-		localScale = scale().div(parent.scale());
-	}
-
-	public void scale(Vector3f s, boolean updateLocal){
-		scale(s.x, s.y, s.z, updateLocal);
-	}
-
-	public void scale(float x, float y, float z){
-		scale(x, y, z, true);
-	}
-
-	public void scale(Vector3f s){
-		scale(s.x, s.y, s.z);
-	}
-
-	public void scale(float s){
-		scale(s, s, s);
-	}
-
-	public Vector3f scale(){
-		return new Vector3f(scale);
-	}
-
 	public Vector3f dimensions(){
 		return dimensionsNoScale.mul(scale());
 	}
@@ -800,37 +742,52 @@ public class GameObject implements Named{
 
 	public void updateBody(Mesh mesh){
 
+		// store and unparent compound children
+		
 		GameObject compParent = parent != null && parent.body.getCollisionShape().isCompound() ? parent : null;
 		boolean isCompChild = compParent != null && !(currBodyType == BodyType.NO_COLLISION || currBodyType == BodyType.SENSOR);
 		if (isCompChild){
 			parent(null);
 		}
 
-		Matrix4f transform = transform();
-		Vector3f scale = scale();
+		// get scale and unscaled transform
+		
+		Vector3f scale = new Vector3f();
+		Matrix4f t = new Matrix4f();
+		transform.get(scale, t);
+		Transform transformNoScale = new Transform(t);
+		
+		// update collision shape
 
 		CollisionShape shape = body.getCollisionShape();
-		body.setCollisionShape(Bullet.makeShape(mesh.model.meshes.first(), currBoundsType, shape.getMargin(), shape.isCompound()));
-
-		Transform startTransform = new Transform();
-		body.getMotionState().getWorldTransform(startTransform);
-		Matrix4f originMatrix = new Matrix4f();
-		originMatrix.set(origin);
-		Transform centerOfMassTransform = new Transform();
-		centerOfMassTransform.set(originMatrix);
-		centerOfMassTransform.mul(startTransform);
-		body.setCenterOfMassTransform(centerOfMassTransform);
-
-		transform(transform);
-		scale(scale);
-
-		if (body.isInWorld()){
-			scene.world.updateSingleAabb(body);
-		}else{ // update Aabb hack for when not in world
+		float margin = shape.getMargin();
+		boolean isCompound = shape.isCompound();
+		shape = Bullet.makeShape(mesh.model.meshes.first(), currBoundsType, margin, isCompound);
+		shape.setLocalScaling(scale);
+		body.setCollisionShape(shape);
+		
+		// update center of mass transform
+		
+		Matrix4f o = new Matrix4f();
+		o.set(origin);
+		t.mul(o);
+		body.setCenterOfMassTransform(new Transform(t));
+		
+		// update world transform
+		
+		body.setWorldTransform(transformNoScale);
+		
+		// update Aabb
+		
+		if (!body.isInWorld()){ // hack for NO_COLLISION
 			scene.world.addRigidBody(body);
 			scene.world.updateSingleAabb(body);
 			scene.world.removeRigidBody(body);
+		}else{
+			scene.world.updateSingleAabb(body);
 		}
+		
+		// restore compound children
 
 		if (isCompChild){
 			parent(compParent);
