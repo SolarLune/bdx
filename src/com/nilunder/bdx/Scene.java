@@ -569,8 +569,18 @@ public class Scene implements Named{
 	}
 
 	private void addToWorld(GameObject gobj){
-		if (gobj.currBodyType != BodyType.NO_COLLISION){
-			world.addRigidBody(gobj.body, gobj.json.get("physics").get("group").asShort(), gobj.json.get("physics").get("mask").asShort());
+		
+		// add all types, update Aabb and remove NO_COLLISION bodies (hack)
+		
+		JsonValue physics = gobj.json.get("physics");
+		world.addRigidBody(gobj.body, physics.get("group").asShort(), physics.get("mask").asShort());
+		world.updateSingleAabb(gobj.body);
+		if (gobj.currBodyType == BodyType.NO_COLLISION){
+			world.removeRigidBody(gobj.body);
+			
+		// deactivate STATIC bodies and remove compound children
+		
+		}else{
 			if (gobj.currBodyType == BodyType.STATIC)
 				gobj.deactivate();
 			if (gobj.parent() != null && gobj.parent().body.getCollisionShape().isCompound())
