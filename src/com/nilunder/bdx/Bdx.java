@@ -98,15 +98,15 @@ public class Bdx{
 		@Override
 		public boolean add(Scene scene){
 			boolean ret = super.add(scene);
-			if (scene.objects == null)
-				scene.init();
+			if (Scene.blockingLoad)
+				scene.finishLoading();
 			return ret;
 		}
 		@Override
 		public void add(int index, Scene scene){
 			super.add(index, scene);
-			if (scene.objects == null)
-				scene.init();
+			if (Scene.blockingLoad)
+				scene.finishLoading();
 		}
 		public Scene add(String name){
 			Scene scene = new Scene(name);
@@ -238,7 +238,7 @@ public class Bdx{
 		boolean screenShadersUsed = false;
 
 		for (Scene scene : scenes) {
-			if (scene.screenShaders.size() > 0) {
+			if (scene.assetManager.getProgress() >= 1 && scene.screenShaders.size() > 0) {
 				screenShadersUsed = true;
 				break;
 			}
@@ -282,135 +282,139 @@ public class Bdx{
 			boolean prevSceneRenderPassthrough = false;
 			boolean nextSceneRenderPassthrough = false;
 
-			if (i > 0)
-				prevSceneRenderPassthrough = newSceneList.get(i - 1).renderPassthrough;
+			if (scene.assetManager.update()) {
 
-			if (i < newSceneList.size() - 1)
-				nextSceneRenderPassthrough = newSceneList.get(i + 1).renderPassthrough;
+				if (i > 0)
+					prevSceneRenderPassthrough = newSceneList.get(i - 1).renderPassthrough;
 
-			if (!prevSceneRenderPassthrough) {
-				colorBufferCleared = false;
-				depthBufferCleared = false;
-			}
+				if (i < newSceneList.size() - 1)
+					nextSceneRenderPassthrough = newSceneList.get(i + 1).renderPassthrough;
 
-			scene.update();
-			profiler.stop("__scene");
-
-			if (!scene.valid() || !scene.visible)
-				continue;
-
-			// ------- Render Scene --------
-
-			vp = scene.viewport;
-			vp.apply();
-
-			depthShaderProvider.update(scene);
-			shaderProvider.update(scene);
-
-			boolean frameBufferInUse = false;
-
-			if (scene.screenShaders.size() > 0 || (screenShadersUsed && scene.renderPassthrough)) { // If the scene is passing its render output, and screen shaders are used, then it needs to use the framebuffer to pass the render on.
-																									// If screen shaders aren't used anywhere, there's no need to render to a framebuffer, as OpenGL will correctly blend normally.
-				frameBuffer.begin();
-				frameBufferInUse = true;
-				if (!colorBufferCleared) {            				// First rendering scene, or previous scene didn't pass a render, so it needs to clear the framebuffer.
-					Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);		// We only need to do this once - the rendered data can accumulate until the last scene renders or
-					colorBufferCleared = true;						// Another scene stops passing the render data up the stack
+				if (!prevSceneRenderPassthrough) {
+					colorBufferCleared = false;
+					depthBufferCleared = false;
 				}
-			}
 
-			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);				// We have to clear the depth buffer no matter what, because closer things on previous scenes should never
-																	// overlap further things on overlay scenes
+				scene.update();
+				profiler.stop("__scene");
 
-			renderWorld(modelBatch, scene, scene.camera);			// Render main view
+				if (!scene.valid() || !scene.visible)
+					continue;
 
-			for (Camera cam : scene.cameras){						// Render auxiliary cameras
-				if (cam.renderToTexture){
-					cam.update();
-					if (cam.renderBuffer == null){
-						cam.initRenderBuffer();
+				// ------- Render Scene --------
+
+				vp = scene.viewport;
+				vp.apply();
+
+				depthShaderProvider.update(scene);
+				shaderProvider.update(scene);
+
+				boolean frameBufferInUse = false;
+
+				if (scene.screenShaders.size() > 0 || (screenShadersUsed && scene.renderPassthrough)) { // If the scene is passing its render output, and screen shaders are used, then it needs to use the framebuffer to pass the render on.
+					// If screen shaders aren't used anywhere, there's no need to render to a framebuffer, as OpenGL will correctly blend normally.
+					frameBuffer.begin();
+					frameBufferInUse = true;
+					if (!colorBufferCleared) {                            // First rendering scene, or previous scene didn't pass a render, so it needs to clear the framebuffer.
+						Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);        // We only need to do this once - the rendered data can accumulate until the last scene renders or
+						colorBufferCleared = true;                        // Another scene stops passing the render data up the stack
 					}
-					cam.renderBuffer.begin();
-					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
-					renderWorld(modelBatch, scene, cam);
-					cam.renderBuffer.end();
-				}
-			}
-
-			if (frameBufferInUse) {
-
-				frameBuffer.end();
-
-				boolean usingDepth = false;
-
-				for (ScreenShader filter : scene.screenShaders) {
-					if (filter.usingDepthTexture())
-						usingDepth = true;
 				}
 
-				if (usingDepth || scene.renderPassthrough) {									// Render depth texture
-					Gdx.gl.glClearColor(1, 1, 1, 1);
-					depthBuffer.begin();
-					if (!depthBufferCleared) {
-						Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-						depthBufferCleared = true;
+				Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);                // We have to clear the depth buffer no matter what, because closer things on previous scenes should never
+																		 // overlap further things on overlay scenes
+
+				renderWorld(modelBatch, scene, scene.camera);            // Render main view
+
+				for (Camera cam : scene.cameras) {                        // Render auxiliary cameras
+					if (cam.renderToTexture) {
+						cam.update();
+						if (cam.renderBuffer == null) {
+							cam.initRenderBuffer();
+						}
+						cam.renderBuffer.begin();
+						Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
+						renderWorld(modelBatch, scene, cam);
+						cam.renderBuffer.end();
 					}
-					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT );
-					renderWorld(depthBatch, scene, scene.camera);
-					depthBuffer.end();
-					depthBuffer.getColorBufferTexture().bind(2);
 				}
 
-				scene.lastFrameBuffer.getColorBufferTexture().bind(1);
-				Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+				if (frameBufferInUse) {
 
-				Gdx.gl.glClearColor(0, 0, 0, 0);
+					frameBuffer.end();
 
-				for (ScreenShader filter : scene.screenShaders) {
+					boolean usingDepth = false;
 
-					if (!filter.active)
-						continue;
+					for (ScreenShader filter : scene.screenShaders) {
+						if (filter.usingDepthTexture())
+							usingDepth = true;
+					}
 
-					filter.begin();
-					filter.setUniformf("time", Bdx.time);
-					filter.setUniformi("lastFrame", 1);
-					filter.setUniformi("depthTexture", 2);
-					filter.setUniformf("screenWidth", vp.w);
-					filter.setUniformf("screenHeight", vp.h);
-					filter.setUniformf("near", scene.camera.near());
-					filter.setUniformf("far", scene.camera.far());
-					filter.end();
+					if (usingDepth || scene.renderPassthrough) {                                    // Render depth texture
+						Gdx.gl.glClearColor(1, 1, 1, 1);
+						depthBuffer.begin();
+						if (!depthBufferCleared) {
+							Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+							depthBufferCleared = true;
+						}
+						Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+						renderWorld(depthBatch, scene, scene.camera);
+						depthBuffer.end();
+						depthBuffer.getColorBufferTexture().bind(2);
+					}
 
-					if (!availableTempBuffers.containsKey(filter.renderScale.x))
-						availableTempBuffers.put(filter.renderScale.x, new RenderBuffer(spriteBatch, Math.round(vp.size().x * filter.renderScale.x), Math.round(vp.size().y * filter.renderScale.y)));
+					scene.lastFrameBuffer.getColorBufferTexture().bind(1);
+					Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
 
-					RenderBuffer tempBuffer = availableTempBuffers.get(filter.renderScale.x);
+					Gdx.gl.glClearColor(0, 0, 0, 0);
 
-					tempBuffer.clear();
+					for (ScreenShader filter : scene.screenShaders) {
 
-					frameBuffer.drawTo(tempBuffer, filter, 0, 0, frameBuffer.getWidth(), frameBuffer.getHeight());
+						if (!filter.active)
+							continue;
 
-					if (!filter.overlay)
-						frameBuffer.clear();
+						filter.begin();
+						filter.setUniformf("time", Bdx.time);
+						filter.setUniformi("lastFrame", 1);
+						filter.setUniformi("depthTexture", 2);
+						filter.setUniformf("screenWidth", vp.w);
+						filter.setUniformf("screenHeight", vp.h);
+						filter.setUniformf("near", scene.camera.near());
+						filter.setUniformf("far", scene.camera.far());
+						filter.end();
 
-					tempBuffer.drawTo(frameBuffer);
+						if (!availableTempBuffers.containsKey(filter.renderScale.x))
+							availableTempBuffers.put(filter.renderScale.x, new RenderBuffer(spriteBatch, Math.round(vp.size().x * filter.renderScale.x), Math.round(vp.size().y * filter.renderScale.y)));
 
+						RenderBuffer tempBuffer = availableTempBuffers.get(filter.renderScale.x);
+
+						tempBuffer.clear();
+
+						frameBuffer.drawTo(tempBuffer, filter, 0, 0, frameBuffer.getWidth(), frameBuffer.getHeight());
+
+						if (!filter.overlay)
+							frameBuffer.clear();
+
+						tempBuffer.drawTo(frameBuffer);
+
+					}
+
+					if (!scene.renderPassthrough || scene == newSceneList.get(newSceneList.size() - 1) || !nextSceneRenderPassthrough)
+						frameBuffer.drawTo(null, null, vp.x, vp.y, vp.w, vp.h); //  Draw to screen, but only if the scene's not passing the render, or if it's the last scene in the list
+					scene.lastFrameBuffer.clear();
+					frameBuffer.drawTo(scene.lastFrameBuffer);
 				}
 
-				if (!scene.renderPassthrough || scene == newSceneList.get(newSceneList.size() - 1) || !nextSceneRenderPassthrough)
-					frameBuffer.drawTo(null, null, vp.x, vp.y, vp.w, vp.h); //  Draw to screen, but only if the scene's not passing the render, or if it's the last scene in the list
-				scene.lastFrameBuffer.clear();
-				frameBuffer.drawTo(scene.lastFrameBuffer);
+				scene.executeDrawCommands();
+
+				// ------- Render physics debug view --------
+
+				Bullet.DebugDrawer debugDrawer = (Bullet.DebugDrawer) scene.world.getDebugDrawer();
+				debugDrawer.drawWorld(scene.world, scene.camera.data);
+
+				profiler.stop("__render");
+
 			}
-
-			scene.executeDrawCommands();
-
-			// ------- Render physics debug view --------
-
-			Bullet.DebugDrawer debugDrawer = (Bullet.DebugDrawer)scene.world.getDebugDrawer();
-			debugDrawer.drawWorld(scene.world, scene.camera.data);
-
-			profiler.stop("__render");
 		}
 		
 		mouse.wheelMove = 0;
@@ -424,6 +428,7 @@ public class Bdx{
 
 			// ------- Render profiler scene --------
 
+			profiler.scene.assetManager.update();
 			profiler.scene.update();
 			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 			renderWorld(modelBatch, profiler.scene, profiler.scene.camera);
@@ -502,6 +507,9 @@ public class Bdx{
 		availableTempBuffers.clear();
 
 		for (Scene scene : scenes) {
+
+			if (scene.assetManager.getProgress() < 1)
+				continue;
 
 			for (Camera cam : scene.cameras) {                // Have to do this, as the RenderBuffers need to be resized for the new window size
 				if (cam.renderBuffer != null)

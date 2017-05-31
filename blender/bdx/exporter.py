@@ -1,5 +1,6 @@
 import os
 import re
+import io
 import sys
 import json
 import math
@@ -9,6 +10,8 @@ import bpy
 import mathutils as mt
 import numpy
 from collections import OrderedDict
+import subprocess
+import time
 from bpy_extras.io_utils import ExportHelper
 from bpy.props import StringProperty, EnumProperty, BoolProperty
 from bpy.types import Operator
@@ -21,6 +24,7 @@ def poly_indices(poly):
 
     return [poly.vertices[i] for i in (0, 1, 2, 2, 3, 0)]
 
+
 def triform(loop_indices):
     indices = list(loop_indices)
 
@@ -29,32 +33,15 @@ def triform(loop_indices):
 
     return [indices[i] for i in (0, 1, 2, 2, 3, 0)]
 
+
 class EmptyUV:
     uv = (0.0, 0.0)
     def __getitem__(self, index):
         return self
 
+
 def flip_uv(uv):
     uv[1] = 1 - uv[1]
-
-def vertices(mesh):
-    uv_act = mesh.uv_layers.active
-    uv_layer = uv_act.data if uv_act is not None else EmptyUV()
-
-    loop_vert = {l.index: l.vertex_index for l in mesh.loops}
-
-    verts = []
-
-    for poly in mesh.polygons:
-        for li in triform(poly.loop_indices):
-            vert = mesh.vertices[loop_vert[li]]
-            vert_co = list(vert.co)
-            vert_normal = list(vert.normal) if poly.use_smooth else list(poly.normal)
-            vert_uv = list(uv_layer[li].uv)
-            flip_uv(vert_uv)
-            verts += vert_co + vert_normal + vert_uv
-
-    return verts
 
 
 def in_active_layer(obj):
@@ -77,63 +64,6 @@ def instance(dupli_group):
             raise Exception("Group \"" + dupli_group.name + "\" doesn't have a top-level (un-parented) object.")
         return g[0]
 
-def mat_tris(mesh):
-    """Returns dict: mat_name -> list_of_triangle_indices"""
-
-    m_ps = {}
-
-    idx_tri = 0
-    for p in mesh.polygons:
-        mat = mesh.materials[p.material_index] if mesh.materials else None
-        mat_name = mat.name if mat else "__BDX_DEFAULT"
-        if not mat_name in m_ps:
-            m_ps[mat_name] = []
-
-        m_ps[mat_name].append(idx_tri)
-        idx_tri += 1
-
-        if len(p.loop_indices) > 3:
-            m_ps[mat_name].append(idx_tri)
-            idx_tri += 1
-
-    return m_ps
-
-def srl_models(objects, use_mesh_modifiers):
-    name_model = {}
-
-    tfs = 3 * 8 # triangle float size: 3 verts at 8 floats each
-
-    for o in objects:
-        if o.type != "MESH":
-            continue
-
-        hasModifiers = len(o.modifiers) > 0
-
-        mesh = o.data
-        if hasModifiers:                    # Create a new mesh that applies the modifiers if the mesh is using them
-            mesh = o.to_mesh(bpy.context.scene, use_mesh_modifiers, "PREVIEW")
-
-        m_tris = mat_tris(mesh)
-        verts = vertices(mesh)
-        m_verts = OrderedDict()
-
-        materials = []
-        for m in mesh.materials:
-            if m is not None:
-                materials.append(m.name)
-        if len(materials) == 0:
-            materials.append("__BDX_DEFAULT")
-
-        for mat in materials:
-            if mat in m_tris.keys():
-                m, tris = mat, m_tris[mat]
-                m_verts[m] = numpy.concatenate([verts[i * tfs : i * tfs + tfs] for i in tris]).tolist()
-        name_model[o.data.name] = m_verts
-
-        if hasModifiers:                                                            # Remove the extra mesh if it was created
-            bpy.data.meshes.remove(mesh)
-
-    return name_model
 
 def srl_origins(objects):
     name_origin = {}
@@ -147,6 +77,7 @@ def srl_origins(objects):
 
     return name_origin
 
+
 def srl_dimensions(objects):
     name_dimensions = {}
 
@@ -157,6 +88,7 @@ def srl_dimensions(objects):
                 name_dimensions[data_name] = [d / s for d, s in zip(o.dimensions, o.scale)]
 
     return name_dimensions
+
 
 def char_uvs(char, angel_code):
     """
@@ -239,6 +171,7 @@ def vertices_text(text, angel_code):
 
     return verts
 
+
 def srl_models_text(texts, fntx_dir):
     j = os.path.join
 
@@ -256,6 +189,7 @@ def srl_models_text(texts, fntx_dir):
     return {"__FNT_"+t.name:
                 {"__FNT_"+mat_name(t)+t.font.name: vertices_text(t, fntx(t))}
             for t in texts}
+
 
 def srl_materials_text(texts):
 
@@ -463,6 +397,10 @@ def srl_objects(objects):
         return t
 
     for obj in objects:
+
+        if obj.type == "ARMATURE":
+            continue
+
         matrix = obj.matrix_world
 
         if obj.type == "MESH":
@@ -474,13 +412,20 @@ def srl_objects(objects):
 
         transform = sum([list(v) for v in matrix.col], [])
 
+        p = obj.parent
+        while p is not None and p.type == "ARMATURE":
+            p = p.parent
+
+        if p is not None:
+            p = p.name
+
         name_object[obj.name] = {
             "class": get_cls_name(obj),
             "use_priority": obj.bdx.cls_use_priority,
             "type": obj.type,
             "properties": {n: p.value for n, p in obj.game.properties.items()},
             "transform": transform,
-            "parent": obj.parent.name if obj.parent else None,
+            "parent": p,
             "mesh_name": mesh_name,
             "active": in_active_layer(obj),
             "visible": not obj.hide_render,
@@ -572,6 +517,7 @@ def srl_objects(objects):
 def used_materials(objects):
     return sum([[m for m in o.data.materials if m] for o in objects
                 if o.type == "MESH"], [])
+
 
 def srl_materials(materials):
     def texture_name(m):
@@ -692,8 +638,10 @@ def srl_actions(actions):
 def used_fonts(texts):
     return {t.font for t in texts}
 
+
 def texts(objects):
     return [o.data for o in objects if o.type == "FONT"]
+
 
 def generate_bitmap_fonts(fonts, fontgen_dir, fonts_dir, textures_dir):
     j = os.path.join
@@ -785,9 +733,28 @@ def generate_bitmap_fonts(fonts, fontgen_dir, fonts_dir, textures_dir):
 scene = None
 
 
+def meshes_to_armatures(objects):
+
+    meshes_to_armatures = {}
+
+    for o in objects:
+
+        o.select = False
+
+        if o.type == "MESH" and o.parent is not None and o.parent.type == "ARMATURE":
+                meshes_to_armatures[o.data.name] = o.parent.name                      # We need to make note of which meshes are influenced by which armatures
+
+    return meshes_to_armatures
+
+
 def export(context, filepath, scene_name, exprun, apply_modifier):
     global scene
+
+    t = time.time()
+
     scene = bpy.data.scenes[scene_name] if scene_name else context.scene
+
+    cams = camera_names(scene)      # Get the camera names here; if it's gonna fail because you're on the wrong layer, fail quick
 
     objects = list(scene.objects)
 
@@ -826,17 +793,17 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         "mistOn": mist_on,
         "mistStart": mist_start,
         "mistDepth": mist_depth,
-        "models": srl_models(objects, apply_modifier),
         "origins": srl_origins(objects),
         "dimensions": srl_dimensions(objects),
         "objects": srl_objects(objects),
         "materials": srl_materials(used_materials(objects)),
-        "cameras": camera_names(scene),
+        "cameras": cams,
         "actions": srl_actions(bpy.data.actions),
         "fonts": [f.name for f in fonts],
         "clearColor": clear_color,
         "resolution": [scene.render.resolution_x, scene.render.resolution_y],
         "frame_type": scene.game_settings.frame_type,
+        "meshes_to_armatures": meshes_to_armatures(objects)
     }
 
     if exprun:
@@ -849,7 +816,7 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
 
         generate_bitmap_fonts(fonts, fontgen_dir, fonts_dir, textures_dir);
 
-        bdx["models"].update(srl_models_text(ts, fonts_dir))
+        bdx["text_models"] = srl_models_text(ts, fonts_dir)
         bdx["materials"].update(srl_materials_text(ts))
 
         # Generate instantiators
@@ -869,6 +836,8 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
 
     with open(filepath, "w") as f:
         json.dump(bdx, f)
+
+    print(time.time() - t)
 
     return {'FINISHED'}
 

@@ -7,6 +7,8 @@ import java.util.HashMap;
 import javax.vecmath.*;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Texture.TextureWrap;
@@ -14,6 +16,8 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
+import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -41,6 +45,8 @@ import com.nilunder.bdx.utils.Color;
 
 public class Scene implements Named{
 
+	static public boolean blockingLoad = false;
+
 	public static HashMap<String, Instantiator> instantiators;
 
 	public JsonValue json;
@@ -67,10 +73,11 @@ public class Scene implements Named{
 
 	private boolean requestedRestart;
 	public boolean paused;
-	
+
 	private Instantiator instantiator;
 	
 	public Viewport viewport;
+	public AssetManager assetManager;
 	public HashMap<String, GameObject> templates;
 	public ArrayList<ScreenShader> screenShaders;
 	public boolean renderPassthrough = true;
@@ -87,6 +94,15 @@ public class Scene implements Named{
 	private boolean valid;
 	private boolean requestedEnd;
 
+	public static class BDXResolver extends InternalFileHandleResolver {
+		public FileHandle resolve(String fileName) {
+			if (!fileName.contains(".g3dj"))
+				return Gdx.files.internal("badlogic.jpg");		// We can swap in the correct texture with the correct material later
+
+			return Gdx.files.internal(fileName);
+		}
+	}
+
 	public Scene(String name){
 		this(Gdx.files.internal("bdx/scenes/" + name + ".bdx"), instantiators.get(name));
 	}
@@ -98,6 +114,8 @@ public class Scene implements Named{
 		}else{
 			this.instantiator = new Instantiator();
 		}
+		assetManager = new AssetManager(new BDXResolver());
+		load();
 	}
 
 	public Vector3f gravity(){
@@ -140,7 +158,23 @@ public class Scene implements Named{
 
 	}
 
+	public void load() {
+
+		if (json == null)
+			json = new JsonReader().parse(scene);
+
+		assetManager.load("bdx/scenes/" + json.get("name").asString() + ".g3dj", Model.class);		// Queue up the models for loading
+
+	}
+
+	public void finishLoading(){
+		assetManager.finishLoading();
+		if (objects == null)
+			init();
+	}
+
 	public void init(){
+
 		requestedRestart = false;
 		requestedEnd = false;
 		paused = false;
@@ -181,8 +215,7 @@ public class Scene implements Named{
 		objects = new LinkedListNamed<GameObject>();
 		lights = new LinkedListNamed<Light>();
 		templates = new HashMap<String, GameObject>();
-		
-		json = new JsonReader().parse(scene);
+
 		name = json.get("name").asString();
 		
 		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
@@ -266,10 +299,11 @@ public class Scene implements Named{
 
 			materials.put(mat.name, material);
 		}
-		
-		for (JsonValue model: json.get("models")){
-			meshes.put(model.name, new Mesh(createModel(model), this, model.name));
-		}
+
+		readMeshes();
+
+		for (JsonValue model: json.get("text_models"))
+			meshes.put(model.name, new Mesh(createModel(model), this, model.name, null));
 
 		HashMap<String, JsonValue> fonts = new HashMap<>();
 		for (JsonValue fontj: json.get("fonts")){
@@ -298,7 +332,6 @@ public class Scene implements Named{
 				g.mesh(defaultMesh);
 			}
 
-			com.badlogic.gdx.graphics.Mesh mesh = g.modelInstance.model.meshes.first();
 			float[] trans = gobj.get("transform").asFloatArray();
 			JsonValue origin = json.get("origins").get(meshName);
 			JsonValue dimensions = json.get("dimensions").get(meshName);
@@ -308,7 +341,7 @@ public class Scene implements Named{
 			
 			g.currBodyType = GameObject.BodyType.valueOf(physics.get("body_type").asString());
 			g.currBoundsType = GameObject.BoundsType.valueOf(physics.get("bounds_type").asString());
-			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
+			g.body = Bullet.makeBody(g.mesh(), trans, g.origin, g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
 			g.scale(getGLMatrixScale(trans));
 
@@ -400,7 +433,65 @@ public class Scene implements Named{
 		valid = true;
 	}
 
+	private void readMeshes() {
+
+		HashMap<String, String> bdxMeshName = new HashMap<String, String>();
+
+		// This is because the FBX exporter appears to strip the mesh name
+		// if modifiers are applied (probably it makes a brand new mesh)
+
+		for (JsonValue o : json.get("objects"))
+			bdxMeshName.put(o.name, o.get("mesh_name").asString());
+
+		Model library = assetManager.get("bdx/scenes/" + name + ".g3dj", Model.class);
+
+		ArrayList<Node> nodesToCheck = new ArrayList<Node>();
+
+		for (Node n : library.nodes)
+			nodesToCheck.add(n);
+
+		while (nodesToCheck.size() > 0) {
+
+			Node n = nodesToCheck.remove(0);
+
+			Node children[] = new Node[n.getChildCount()];
+
+			for (int i = 0; i < children.length; i++) {
+				children[i] = n.getChild(i);
+				nodesToCheck.add(children[i]);
+				library.nodes.add(children[i]);
+			}
+
+			for (Node child : children) {
+				if (child.parts.size > 0)
+					child.detach();        // Unparent "children" meshes, as meshes aren't parented
+			}
+
+			if (n.parts.size > 0) {
+
+				String meshName = bdxMeshName.get(n.id);
+				System.out.println(bdxMeshName);
+				System.out.println(n.id);
+				System.out.println(meshName);
+				if (!meshName.endsWith("_L_Lib")) {        // Done because linked lib meshes can show up; if they have this, then that mesh doesn't exist
+					Mesh m = new Mesh(library, this, meshName, n.copy());
+					for (NodePart nodePart : m.modelRoot.parts)
+						nodePart.meshPart.mesh = nodePart.meshPart.mesh.copy(false);
+					meshes.put(meshName, m);
+				}
+
+			}
+
+		}
+
+	}
+
 	public void dispose(){
+
+		if (assetManager.getProgress() < 1)
+			assetManager.finishLoading();
+
+		assetManager.dispose();
 
 		valid = false;
 
@@ -854,6 +945,10 @@ public class Scene implements Named{
 				g.logicCounter -= 1;
 				g.main();
 			}
+
+			if (g.animationController != null)
+				g.animationController.update(Bdx.TICK_TIME * Bdx.timeSpeed);
+
 			g.logicCounter += g.logicFrequency * Bdx.TICK_TIME;
 		}
 
@@ -904,7 +999,10 @@ public class Scene implements Named{
 	}
 
 	public void update(){
-		
+
+		if (objects == null)		// Initialize the scene if it hasn't been already; we have to do this here because
+			init();					// AssetManager loads asynchronously
+
 		if (!paused){
 
 			Bdx.profiler.start("__logic");
