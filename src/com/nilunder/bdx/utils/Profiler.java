@@ -191,26 +191,6 @@ public class Profiler{
 			return value;
 		}
 
-		public String put(String key, int value) {
-			return put(key, String.valueOf(value));
-		}
-
-		public String put(String key, float value) {
-			return put(key, String.valueOf(value));
-		}
-
-		public String put(String key, double value) {
-			return put(key, String.valueOf(value));
-		}
-
-		public String put(String key, char value) {
-			return put(key, String.valueOf(value));
-		}
-
-		public String put(String key, long value) {
-			return put(key, String.valueOf(value));
-		}
-
 		public String put(String key, Object value) {
 			return put(key, String.valueOf(value));
 		}
@@ -630,6 +610,7 @@ public class Profiler{
 	
 	private static String formatForProps(String key, String value){
 		StringBuffer buffer = new StringBuffer();
+		value = value.replaceAll("\n", " ");
 		addString(buffer, key, 14, false, ' ');
 		buffer.append(" ");
 		int len = value.length();
