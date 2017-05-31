@@ -817,7 +817,7 @@ public class GameObject implements Named{
 		updateBody(mesh);
 	}
 	
-	public void join(ArrayList<GameObject> objects, boolean endObjects){
+	public HashMap<Mesh, ArrayList<Matrix4f>> join(ArrayList<GameObject> objects, boolean endObjects){
 		
 		// collect scaled transforms per mesh
 		
@@ -832,10 +832,7 @@ public class GameObject implements Named{
 				l = new ArrayList<Matrix4f>();
 				map.put(m, l);
 			}
-			Matrix4f t = g.transform();
-			Vector3f s = g.scale();
-			t.setRow(3, s.x, s.y, s.z, 0);
-			l.add(t);
+			l.add(g.transform());
 			if (endObjects){
 				g.end();
 			}
@@ -844,10 +841,12 @@ public class GameObject implements Named{
 		// join
 		
 		join(map);
+		
+		return map;
 	}
 	
-	public void join(ArrayList<GameObject> objects){
-		join(objects, true);
+	public HashMap<Mesh, ArrayList<Matrix4f>> join(ArrayList<GameObject> objects){
+		return join(objects, true);
 	}
 	
 	public void join(HashMap<Mesh, ArrayList<Matrix4f>> map){
@@ -866,32 +865,26 @@ public class GameObject implements Named{
 		float[] va, tva;
 		int numIndices, numVertices, offset, j, len;
 		
-		Vector3f p = new Vector3f();
-		Vector3f s = new Vector3f();
-		Matrix3f o = new Matrix3f();
-		Vector3f vP = new Vector3f();
-		Vector3f nP = new Vector3f();
-		Vector3f vPT = new Vector3f();
-		Vector3f nPT = new Vector3f();
+		Matrix4f transTemp = Matrix4f.identity();
+		Vector3f vecTemp = new Vector3f();
+		Matrix4f trans = new Matrix4f();
+		Matrix4f vertTrans = new Matrix4f();
+		Matrix4f normTrans = new Matrix4f();
+		Matrix4f transZeroPos = new Matrix4f();
 		
-		Vector3f pos = position();
-		Vector3f sca = scale();
-		Matrix3f oriInv = orientation().inverted();
+		Matrix4f transInv = transform();
+		transInv.invert();
+		Vector3f zeroPos = new Vector3f();
 		
 		for (Map.Entry<Mesh, ArrayList<Matrix4f>> e : map.entrySet()){
 			m = e.getKey();
 			node = m.model.nodes.get(0);
 			for (Matrix4f t : e.getValue()){
-				t.get(p);
-				p.sub(pos);
-				p = oriInv.mult(p.div(sca));
-				t.getRotationScale(o);
-				o = oriInv.mult(o);
-				s.set(t.m30, t.m31, t.m32);
-				if (s.length() == 0){
-					s.set(1, 1, 1);
-				}
-				s = s.div(sca);
+				
+				trans.set(transInv);
+				trans.mul(t);
+				transZeroPos.set(trans);
+				transZeroPos.position(zeroPos);
 				
 				for (NodePart nodePart : node.parts){
 					meshPart = nodePart.meshPart;
@@ -903,18 +896,22 @@ public class GameObject implements Named{
 					j = 0;
 					
 					for (int i = 0; i < numIndices; i++){
-						vP.set(va[j], va[j+1], va[j+2]);
-						nP.set(va[j+3], va[j+4], va[j+5]);
-						vPT.set(o.mult(vP.mul(s)));
-						vPT.add(p);
-						nPT.set(o.mult(vP.plus(nP)));
-						nPT.sub(o.mult(vP));
-						tva[j] = vPT.x;
-						tva[j+1] = vPT.y;
-						tva[j+2] = vPT.z;
-						tva[j+3] = nPT.x;
-						tva[j+4] = nPT.y;
-						tva[j+5] = nPT.z;
+						vertTrans.set(trans);
+						vecTemp.set(va[j], va[j+1], va[j+2]);
+						transTemp.position(vecTemp);
+						vertTrans.mul(transTemp);
+						
+						normTrans.set(transZeroPos);
+						vecTemp.set(va[j+3], va[j+4], va[j+5]);
+						transTemp.position(vecTemp);
+						normTrans.mul(transTemp);
+						
+						tva[j] = vertTrans.m03;
+						tva[j+1] = vertTrans.m13;
+						tva[j+2] = vertTrans.m23;
+						tva[j+3] = normTrans.m03;
+						tva[j+4] = normTrans.m13;
+						tva[j+5] = normTrans.m23;
 						tva[j+6] = va[j+6];
 						tva[j+7] = va[j+7];
 						j += VERT_STRIDE;
