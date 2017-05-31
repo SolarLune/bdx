@@ -152,30 +152,46 @@ public static class DebugDrawer extends IDebugDraw{
 	}
 	
 	public static RigidBody makeBody(Mesh mesh, float[] glTransform, Vector3f origin, BodyType bodyType, BoundsType boundsType, JsonValue physics){
-		CollisionShape shape = makeShape(mesh, boundsType, physics.get("margin").asFloat(), physics.get("compound").asBoolean());
 		
+		// get scale and unscaled transform
+		
+		Matrix4f m = new Matrix4f(glTransform);
+		Vector3f scale = new Vector3f();
+		Matrix4f t = new Matrix4f();
+		m.get(scale, t);
+		Transform transformNoScale = new Transform(t);
+		
+		// collect physics properties
+		
+		float margin = physics.get("margin").asFloat();
+		boolean isCompound = physics.get("compound").asBoolean();
 		float mass = physics.get("mass").asFloat();
 		
+		// create new scaled shape and get inertia
+		
+		CollisionShape shape = makeShape(mesh, boundsType, margin, isCompound);
+		shape.setLocalScaling(scale);
 		Vector3f inertia = new Vector3f();
 		shape.calculateLocalInertia(mass, inertia);
+
+		// create new motion state
+
+		Matrix4f originMatrix = new Matrix4f();
+		originMatrix.set(origin);
+		t.mul(originMatrix);
+		Transform centerOfMassTransform = new Transform(t);
+		MotionState motionState = new DefaultMotionState(transformNoScale, centerOfMassTransform);
 		
-		Transform startTransform = new Transform();
-		startTransform.setFromOpenGLMatrix(glTransform);
-		MotionState motionState;
-		if (boundsType == BoundsType.CONVEX_HULL){
-			Transform centerOfMassOffset = new Transform();
-			Matrix4f originMatrix = new Matrix4f();
-			originMatrix.set(origin);
-			centerOfMassOffset.set(originMatrix);
-			startTransform.mul(centerOfMassOffset);
-			motionState = new DefaultMotionState(startTransform, centerOfMassOffset);
-		}else{
-			motionState = new DefaultMotionState(startTransform);
-		}
+		// create new body
 		
 		RigidBodyConstructionInfo ci = new RigidBodyConstructionInfo(mass, motionState, shape, inertia);
-		
 		RigidBody body = new RigidBody(ci);
+		
+		// set transform
+		
+		body.setWorldTransform(transformNoScale);
+		
+		// set collision flags
 		
 		int flags = 0;
 		if (bodyType == BodyType.SENSOR){
@@ -192,6 +208,8 @@ public static class DebugDrawer extends IDebugDraw{
 		}
 		body.setCollisionFlags(flags);
 		
+		// set restitution and friction
+		
 		body.setRestitution(physics.get("restitution").asFloat());
 		body.setFriction(physics.get("friction").asFloat());
 
@@ -199,24 +217,39 @@ public static class DebugDrawer extends IDebugDraw{
 	}
 
 	public static RigidBody cloneBody(RigidBody body){
-		GameObject gobj = (GameObject)body.getUserPointer();
-		JsonValue physics = gobj.json.get("physics");
+		
+		// get gobj and shape
+		
+		GameObject gobj = (GameObject) body.getUserPointer();
+		CollisionShape shape = body.getCollisionShape();
+		
+		// collect physics properties
+		
+		Vector3f origin = gobj.origin;
+		float margin = shape.getMargin();
+		boolean isCompound = shape.isCompound();
+		BoundsType boundsType = gobj.boundsType();
 		float mass = gobj.mass();
-		
 		Vector3f inertia = new Vector3f();
-		body.getCollisionShape().calculateLocalInertia(mass, inertia);
+		shape.calculateLocalInertia(mass, inertia);
 		
-		CollisionShape shape;
-
+		// create new shape
+		
 		if (gobj.modelInstance != null){
-			shape = makeShape(gobj.modelInstance.model.meshes.first(), BoundsType.valueOf(physics.get("bounds_type").asString()), physics.get("margin").asFloat(), physics.get("compound").asBoolean());
+			shape = makeShape(gobj.modelInstance.model.meshes.first(), boundsType, margin, isCompound);
 		}else{
 			shape = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
 		}
 		
-		RigidBody b = new RigidBody(mass, new DefaultMotionState(new Transform(gobj.transform())),
-								shape,
-								inertia);
+		// create new motion state
+		
+		Transform startTransform = body.getMotionState().getWorldTransform(new Transform());
+		Transform centerOfMassTransform = body.getCenterOfMassTransform(new Transform());
+		MotionState motionState = new DefaultMotionState(startTransform, centerOfMassTransform);
+		
+		// create new body
+		
+		RigidBody b = new RigidBody(mass, motionState, shape, inertia);
 		
 		b.setCollisionFlags(gobj.body.getCollisionFlags());
 		b.setAngularFactor(gobj.body.getAngularFactor());
