@@ -18,6 +18,8 @@ import com.bulletphysics.linearmath.*;
 import com.bulletphysics.util.*;
 
 import com.nilunder.bdx.*;
+import com.nilunder.bdx.GameObject.BodyType;
+import com.nilunder.bdx.GameObject.BoundsType;
 
 public class Bullet {
 
@@ -98,15 +100,15 @@ public static class DebugDrawer extends IDebugDraw{
 		return m;
 	}
 
-	public static CollisionShape makeShape(Mesh mesh, GameObject.BoundsType bounds, float margin, boolean compound){
+	public static CollisionShape makeShape(Mesh mesh, BoundsType bounds, float margin, boolean compound){
 
 		CollisionShape shape;
 	
-		if (bounds == GameObject.BoundsType.TRIANGLE_MESH){
+		if (bounds == BoundsType.TRIANGLE_MESH){
 			TriangleIndexVertexArray mi = new TriangleIndexVertexArray();
 			mi.addIndexedMesh(Bullet.makeMesh(mesh), ScalarType.SHORT);
 			shape = new BvhTriangleMeshShape(mi, false);
-		}else if (bounds == GameObject.BoundsType.CONVEX_HULL){
+		}else if (bounds == BoundsType.CONVEX_HULL){
 			float[] verts = new float[mesh.getNumVertices() * mesh.getVertexSize()];
 			mesh.getVertices(verts);
 			ObjectArrayList<Vector3f> vertList = new ObjectArrayList<Vector3f>();
@@ -117,14 +119,14 @@ public static class DebugDrawer extends IDebugDraw{
 			margin *= 0.5f;
 		}else{
 			Vector3 d = mesh.calculateBoundingBox().getDimensions(new Vector3()).scl(0.5f);
-			if (bounds == GameObject.BoundsType.SPHERE){
+			if (bounds == BoundsType.SPHERE){
 				float radius = Math.max(Math.max(d.x, d.y), d.z);
 				shape = new SphereShape(radius);
-			}else if (bounds == GameObject.BoundsType.BOX){
+			}else if (bounds == BoundsType.BOX){
 				shape = new BoxShape(new Vector3f(d.x, d.y, d.z));
-			}else if (bounds == GameObject.BoundsType.CYLINDER){
+			}else if (bounds == BoundsType.CYLINDER){
 				shape = new CylinderShapeZ(new Vector3f(d.x, d.y, d.z));
-			}else if (bounds == GameObject.BoundsType.CAPSULE){
+			}else if (bounds == BoundsType.CAPSULE){
 				float radius = Math.max(d.x, d.y);
 				float height = (d.z - radius) * 2;
 				shape = new CapsuleShapeZ(radius, height);
@@ -149,7 +151,7 @@ public static class DebugDrawer extends IDebugDraw{
 
 	}
 	
-	public static RigidBody makeBody(Mesh mesh, float[] glTransform, Vector3f origin, GameObject.BodyType bodyType, GameObject.BoundsType boundsType, JsonValue physics){
+	public static RigidBody makeBody(Mesh mesh, float[] glTransform, Vector3f origin, BodyType bodyType, BoundsType boundsType, JsonValue physics){
 		CollisionShape shape = makeShape(mesh, boundsType, physics.get("margin").asFloat(), physics.get("compound").asBoolean());
 		
 		float mass = physics.get("mass").asFloat();
@@ -160,7 +162,7 @@ public static class DebugDrawer extends IDebugDraw{
 		Transform startTransform = new Transform();
 		startTransform.setFromOpenGLMatrix(glTransform);
 		MotionState motionState;
-		if (boundsType == GameObject.BoundsType.CONVEX_HULL){
+		if (boundsType == BoundsType.CONVEX_HULL){
 			Transform centerOfMassOffset = new Transform();
 			Matrix4f originMatrix = new Matrix4f();
 			originMatrix.set(origin);
@@ -176,13 +178,13 @@ public static class DebugDrawer extends IDebugDraw{
 		RigidBody body = new RigidBody(ci);
 		
 		int flags = 0;
-		if (bodyType == GameObject.BodyType.SENSOR){
+		if (bodyType == BodyType.SENSOR){
 			flags = CollisionFlags.KINEMATIC_OBJECT | CollisionFlags.NO_CONTACT_RESPONSE;
 		}else{
-			if (bodyType == GameObject.BodyType.STATIC){
+			if (bodyType == BodyType.STATIC){
 				flags = CollisionFlags.KINEMATIC_OBJECT;
 				//body.setActivationState(CollisionObject.DISABLE_DEACTIVATION);
-			}else if (bodyType == GameObject.BodyType.DYNAMIC){
+			}else if (bodyType == BodyType.DYNAMIC){
 				body.setAngularFactor(0);
 			}
 			if (physics.get("ghost").asBoolean())
@@ -207,7 +209,7 @@ public static class DebugDrawer extends IDebugDraw{
 		CollisionShape shape;
 
 		if (gobj.modelInstance != null){
-			shape = makeShape(gobj.modelInstance.model.meshes.first(), GameObject.BoundsType.valueOf(physics.get("bounds_type").asString()), physics.get("margin").asFloat(), physics.get("compound").asBoolean());
+			shape = makeShape(gobj.modelInstance.model.meshes.first(), BoundsType.valueOf(physics.get("bounds_type").asString()), physics.get("margin").asFloat(), physics.get("compound").asBoolean());
 		}else{
 			shape = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
 		}

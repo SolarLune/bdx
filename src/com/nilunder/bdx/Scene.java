@@ -37,6 +37,8 @@ import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
 import com.nilunder.bdx.GameObject.ArrayListGameObject;
+import com.nilunder.bdx.GameObject.BodyType;
+import com.nilunder.bdx.GameObject.BoundsType;
 import com.nilunder.bdx.utils.Color;
 
 public class Scene implements Named{
@@ -307,8 +309,8 @@ public class Scene implements Named{
 			g.dimensionsNoScale = dimensions == null ? new Vector3f(1, 1, 1) : new Vector3f(dimensions.asFloatArray());
 			JsonValue physics = gobj.get("physics");
 			
-			g.currBodyType = GameObject.BodyType.valueOf(physics.get("body_type").asString());
-			g.currBoundsType = GameObject.BoundsType.valueOf(physics.get("bounds_type").asString());
+			g.currBodyType = BodyType.valueOf(physics.get("body_type").asString());
+			g.currBoundsType = BoundsType.valueOf(physics.get("bounds_type").asString());
 			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
 
@@ -567,9 +569,9 @@ public class Scene implements Named{
 	}
 
 	private void addToWorld(GameObject gobj){
-		if (gobj.currBodyType != GameObject.BodyType.NO_COLLISION){
+		if (gobj.currBodyType != BodyType.NO_COLLISION){
 			world.addRigidBody(gobj.body, gobj.json.get("physics").get("group").asShort(), gobj.json.get("physics").get("mask").asShort());
-			if (gobj.currBodyType == GameObject.BodyType.STATIC)
+			if (gobj.currBodyType == BodyType.STATIC)
 				gobj.deactivate();
 			if (gobj.parent() != null && gobj.parent().body.getCollisionShape().isCompound())
 				world.removeRigidBody(gobj.body);
@@ -804,7 +806,7 @@ public class Scene implements Named{
 
 		for (GameObject g : objects){
 
-			if (g.bodyType() == GameObject.BodyType.SENSOR)
+			if (g.bodyType() == BodyType.SENSOR)
 				g.body.activate(true);
 
 			if(!g.valid())
