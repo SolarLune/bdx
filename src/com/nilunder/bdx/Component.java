@@ -10,12 +10,15 @@ public class Component<T extends GameObject> implements Named {
 	protected T g;
 	public float logicFrequency;
 	public float logicCounter;
+	private static java.util.Random logicCounterRandom;
 
 	public Component(T g){
 		this.g = g;
 		name = this.getClass().getSimpleName();
 		logicFrequency = Bdx.TICK_RATE;
-		logicCounter = 1 + Random.random();
+		if (logicCounterRandom == null)
+			logicCounterRandom = new java.util.Random();
+		logicCounter = 1 + logicCounterRandom.nextFloat();
 	}
 
 	@Override
