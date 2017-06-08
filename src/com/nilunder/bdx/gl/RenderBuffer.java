@@ -38,10 +38,14 @@ public class RenderBuffer extends FrameBuffer{
 		if (dest != null)
 			dest.begin();
 
+		batch.setShader(filter);		// Set shader BEFORE calling begin() (avoids shader switching)
 		batch.begin();
+		if (filter != null) {
+			for (UniformSet uniformSet : filter.uniformSets)
+				uniformSet.set(filter);
+		}
 		batch.enableBlending();
 		batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
-		batch.setShader(filter);
 		batch.draw(region, x, y, w, h);
 		batch.end();
 		

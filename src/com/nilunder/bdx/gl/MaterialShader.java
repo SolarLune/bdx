@@ -5,18 +5,22 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.Disposable;
 
+import java.util.ArrayList;
+
 public class MaterialShader implements Disposable{
 
 	public String vertexShader;
 	public String fragmentShader;
 	private String prefix;
 	public boolean active = true;
+	public ArrayList<UniformSet> uniformSets;
 
 	public com.badlogic.gdx.graphics.glutils.ShaderProgram programData;
 
 	public MaterialShader(String vertexShader, String fragmentShader) {
 		this.vertexShader = vertexShader;
 		this.fragmentShader = fragmentShader;
+		uniformSets = new ArrayList<UniformSet>();
 	}
 
 	public MaterialShader(FileHandle vertexShader, FileHandle fragmentShader) {

@@ -5,6 +5,8 @@ import javax.vecmath.Vector2f;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 
+import java.util.ArrayList;
+
 public class ScreenShader extends com.badlogic.gdx.graphics.glutils.ShaderProgram {
 
 	public Vector2f renderScale;
@@ -15,6 +17,7 @@ public class ScreenShader extends com.badlogic.gdx.graphics.glutils.ShaderProgra
 	public boolean active = true;
 	public String vertexShaderPath;
 	public String fragmentShaderPath;
+	public ArrayList<UniformSet> uniformSets;
 	
 	public ScreenShader(String vertexShader, String fragmentShader) {
 		super(vertexShader, fragmentShader);
@@ -39,6 +42,7 @@ public class ScreenShader extends com.badlogic.gdx.graphics.glutils.ShaderProgra
 
 		renderScale = new Vector2f(1, 1);
 		overlay = false;
+		uniformSets = new ArrayList<UniformSet>();
 	}
 	
 	public static ScreenShader load(String vertexPath, String fragmentPath) {
