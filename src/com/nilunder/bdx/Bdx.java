@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.nilunder.bdx.audio.Audio;
 import com.nilunder.bdx.gl.*;
 import com.nilunder.bdx.inputs.*;
@@ -173,6 +174,7 @@ public class Bdx{
 	private static boolean requestedRestart;
 
 	private static long startMillis = System.currentTimeMillis();
+	private static UniformSet defaultScreenShaderUniformSet;
 
 	public static void init(){
 		time = 0;
@@ -276,6 +278,24 @@ public class Bdx{
 		boolean depthBufferCleared = false;
 		boolean colorBufferCleared = false;
 
+		ArrayList<Scene> depthRenderScenes = new ArrayList<Scene>();
+
+		for (int s = 0; s < scenes.size(); s++) {
+			Scene scene = scenes.get(s);
+			for (ScreenShader filter : scene.screenShaders) {
+				if (filter.usingDepthTexture()) {
+					depthRenderScenes.add(scene);
+					for (int ns = s; ns >= 0; ns--) {
+						if (scenes.get(ns).renderPassthrough)
+							depthRenderScenes.add(scenes.get(ns));
+						else
+							break;
+					}
+					break;
+				}
+			}
+		}
+
 		for (int i = 0; i < newSceneList.size(); i++){
 
 			Scene scene = newSceneList.get(i);
@@ -304,8 +324,41 @@ public class Bdx{
 			vp = scene.viewport;
 			vp.apply();
 
+			final float vpw = vp.w;
+			final float vph = vp.h;
+
+			if (defaultScreenShaderUniformSet == null) {
+
+				defaultScreenShaderUniformSet = new UniformSet() {
+					@Override
+					public void set(ShaderProgram program) {
+						program.setUniformf("time", Bdx.time);
+						program.setUniformi("lastFrame", 1);
+						program.setUniformi("depthTexture", 2);
+						program.setUniformf("screenWidth", vpw);
+						program.setUniformf("screenHeight", vph);
+						program.setUniformf("near", scene.camera.near());
+						program.setUniformf("far", scene.camera.far());
+					}
+				};
+
+			}
+
 			depthShaderProvider.update(scene);
 			shaderProvider.update(scene);
+
+			for (Camera cam : scene.cameras){						// Render auxiliary cameras
+				if (cam.renderToTexture){
+					cam.update();
+					if (cam.renderBuffer == null){
+						cam.initRenderBuffer();
+					}
+					cam.renderBuffer.begin();
+					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
+					renderWorld(modelBatch, scene, cam);
+					cam.renderBuffer.end();
+				}
+			}
 
 			boolean frameBufferInUse = false;
 
@@ -324,31 +377,11 @@ public class Bdx{
 
 			renderWorld(modelBatch, scene, scene.camera);			// Render main view
 
-			for (Camera cam : scene.cameras){						// Render auxiliary cameras
-				if (cam.renderToTexture){
-					cam.update();
-					if (cam.renderBuffer == null){
-						cam.initRenderBuffer();
-					}
-					cam.renderBuffer.begin();
-					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
-					renderWorld(modelBatch, scene, cam);
-					cam.renderBuffer.end();
-				}
-			}
-
 			if (frameBufferInUse) {
 
 				frameBuffer.end();
 
-				boolean usingDepth = false;
-
-				for (ScreenShader filter : scene.screenShaders) {
-					if (filter.usingDepthTexture())
-						usingDepth = true;
-				}
-
-				if (usingDepth || scene.renderPassthrough) {									// Render depth texture
+				if (depthRenderScenes.contains(scene)) {			// Render depth texture
 					Gdx.gl.glClearColor(1, 1, 1, 1);
 					depthBuffer.begin();
 					if (!depthBufferCleared) {
@@ -371,15 +404,8 @@ public class Bdx{
 					if (!filter.active)
 						continue;
 
-					filter.begin();
-					filter.setUniformf("time", Bdx.time);
-					filter.setUniformi("lastFrame", 1);
-					filter.setUniformi("depthTexture", 2);
-					filter.setUniformf("screenWidth", vp.w);
-					filter.setUniformf("screenHeight", vp.h);
-					filter.setUniformf("near", scene.camera.near());
-					filter.setUniformf("far", scene.camera.far());
-					filter.end();
+					if (!filter.uniformSets.contains(defaultScreenShaderUniformSet))
+						filter.uniformSets.add(defaultScreenShaderUniformSet);
 
 					if (!availableTempBuffers.containsKey(filter.renderScale.x))
 						availableTempBuffers.put(filter.renderScale.x, new RenderBuffer(spriteBatch, Math.round(vp.size().x * filter.renderScale.x), Math.round(vp.size().y * filter.renderScale.y)));
