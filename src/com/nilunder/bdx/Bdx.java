@@ -298,7 +298,7 @@ public class Bdx{
 
 		for (int i = 0; i < newSceneList.size(); i++){
 
-			Scene scene = newSceneList.get(i);
+			final Scene scene = newSceneList.get(i);
 			boolean prevSceneRenderPassthrough = false;
 			boolean nextSceneRenderPassthrough = false;
 
