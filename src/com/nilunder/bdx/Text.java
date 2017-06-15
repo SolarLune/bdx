@@ -11,7 +11,7 @@ public class Text extends GameObject{
 		RIGHT
 	}
 
-	private String text;
+	private String text = "";
 	private Alignment alignment;
 
 	public JsonValue font;
@@ -28,7 +28,12 @@ public class Text extends GameObject{
 
 		int capacity = (numVertices / 3) / 2; // number of quads
 
-		text = txt.substring(0, Math.min(txt.length(), capacity));
+		String target = txt.substring(0, Math.min(txt.length(), capacity));
+
+		if (text.equals(target))
+			return;
+
+		text = target;
 
 		JsonValue cm = font.get("common");
 		float su = 1.f / cm.get("scaleW").asInt();
