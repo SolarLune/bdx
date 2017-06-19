@@ -23,7 +23,15 @@ public class Bdx{
 	public static class Display{
 		public boolean changed;
 		public Color clearColor = new Color(0, 0, 0, 0);
-		
+		private boolean vsync;
+
+		public void vsync(boolean on) {
+			Gdx.graphics.setVSync(on);
+			vsync = on;
+		}
+		public boolean vsync(){
+			return vsync;
+		}
 		public int width(){
 			return Gdx.graphics.getWidth();
 		}
