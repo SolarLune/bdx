@@ -13,6 +13,7 @@ public class Text extends GameObject{
 
 	private String text = "";
 	private Alignment alignment;
+	private Alignment setAlignment;
 
 	public JsonValue font;
 	public int capacity;
@@ -30,10 +31,11 @@ public class Text extends GameObject{
 
 		String target = txt.substring(0, Math.min(txt.length(), capacity));
 
-		if (text.equals(target))
+		if (text.equals(target) && alignment == setAlignment)
 			return;
 
 		text = target;
+		setAlignment = alignment;
 
 		JsonValue cm = font.get("common");
 		float su = 1.f / cm.get("scaleW").asInt();
