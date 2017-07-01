@@ -26,23 +26,25 @@ public class RenderBuffer extends FrameBuffer{
 	
 	public void drawTo(RenderBuffer dest, ScreenShader filter, float x, float y, float w, float h){
 
-		if (ScreenShader.nearestFiltering) {
-			if (dest != null)
+		if (dest != null) {
+
+			if (ScreenShader.nearestFiltering)
 				dest.getColorBufferTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
-		}
-		else {
-			if (dest != null)
+			else
 				dest.getColorBufferTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
-		}
-			
-		if (dest != null)
+
 			dest.begin();
 
-		batch.setShader(filter);		// Set shader BEFORE calling begin() (avoids shader switching)
+		}
+
+		if (filter != null)
+			batch.setShader(filter.program);		// Set shader BEFORE calling begin() (avoids shader switching)
+		else
+			batch.setShader(null);
 		batch.begin();
-		if (filter != null) {
+		if (filter != null && filter.program != null) {
 			for (UniformSet uniformSet : filter.uniformSets)
-				uniformSet.set(filter);
+				uniformSet.set(filter.program);
 		}
 		batch.enableBlending();
 		batch.setBlendFunction(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);

@@ -409,6 +409,8 @@ public class Bdx{
 
 				for (ScreenShader filter : scene.screenShaders) {
 
+					filter.compile();
+
 					if (!filter.active)
 						continue;
 
@@ -481,6 +483,8 @@ public class Bdx{
 			init();
 			scenes.add(firstScene);
 		}
+
+		shaderProvider.handleMaterialShaderChanges();
 
 		profiler.start("__gpu wait");
 
