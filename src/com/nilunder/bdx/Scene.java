@@ -818,13 +818,6 @@ public class Scene implements Named{
 	}
 	
 	private void runObjectLogic(){
-		if (requestedRestart){
-			for (GameObject g : objects){
-				g.endNoChildren();
-			}
-			dispose();
-			init();
-		}
 
 		Bdx.mouse.init(this);
 
@@ -873,16 +866,6 @@ public class Scene implements Named{
 		}
 		toBeRemoved.clear();
 
-		if (requestedEnd) {
-			valid = false;
-
-			dispose();
-
-			if (Bdx.scenes.contains(this))
-				Bdx.scenes.remove(this);
-
-		}
-
 	}
 	
 	private void updateChildBodies(){
@@ -904,8 +887,26 @@ public class Scene implements Named{
 	}
 
 	public void update(){
+
+		if (requestedRestart){
+			for (GameObject g : objects){
+				g.endNoChildren();
+			}
+			dispose();
+			init();
+		}
+
+		if (requestedEnd) {
+			valid = false;
+
+			dispose();
+
+			if (Bdx.scenes.contains(this))
+				Bdx.scenes.remove(this);
+
+		}
 		
-		if (!paused){
+		else if (!paused){
 
 			Bdx.profiler.start("__logic");
 			runObjectLogic();			
