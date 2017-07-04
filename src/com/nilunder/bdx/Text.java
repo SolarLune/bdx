@@ -3,6 +3,8 @@ package com.nilunder.bdx;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.graphics.*;
 
+import javax.vecmath.Vector3f;
+
 public class Text extends GameObject{
 
 	public enum Alignment {
@@ -18,8 +20,11 @@ public class Text extends GameObject{
 	public JsonValue font;
 	public int capacity;
 	private float lineHeight = 1.0f;
+	Vector3f originalScale = null;
+	Vector3f min;
+	Vector3f max;
 
-	public void text(String txt){
+	public void text(String txt) {
 		// Reform quads according to Angel Code font format
 		Mesh mesh = modelInstance.model.meshes.first();
 		int vertexSize = mesh.getVertexSize() / 4;
@@ -44,12 +49,10 @@ public class Text extends GameObject{
 		JsonValue char_data = font.get("char");
 
 		JsonValue at_c = char_data.get(Integer.toString('O'));
-		boolean builtin = font.get("info").get("face").asString().equals("Bfont");
-		float scale = 0.0225f * (builtin ? 1.4f : 1f);
-		float unit_height = at_c.get("height").asInt() * scale;
+		float scale = 0.0225f;
 
 		int posX = 0;
-		int posY = 0;
+		int posY = at_c.get("height").asInt() + at_c.get("yoffset").asInt();
 		float z = 0;
 		int totalWidth = 0;
 
@@ -96,13 +99,22 @@ public class Text extends GameObject{
 				for (float[] vert : quad) {
 					vert[0] *= scale;
 					vert[1] *= scale;
-					vert[0] -= 0.05 + (builtin ? 0.03 : 0);
-					vert[1] += unit_height * (0.76 - (builtin ? 0.05 : 0));
+					vert[0] -= 0.05;
 					vert[6] *= su;
 					vert[7] *= sv;
-					for (float f : vert) {
+
+					if (min == null)
+						min = new Vector3f(vert[0], vert[1], 0);
+					else
+						min.set(Math.min(min.x, vert[0]), Math.min(min.y, vert[1]), 0);
+
+					if (max == null)
+						max = new Vector3f(vert[0], vert[1], 0);
+					else
+						max.set(Math.max(max.x, vert[0]), Math.max(max.y, vert[1]), 0);
+
+					for (float f : vert)
 						verts[vi++] = f;
-					}
 
 				}
 
@@ -127,7 +139,37 @@ public class Text extends GameObject{
 		}
 
 		mesh.setVertices(verts, 0, verts.length);
+	}
 
+	public void applyScalingDifference() {
+
+		Vector3f scaleDiff = new Vector3f();
+
+		scaleDiff.sub(min);
+		scaleDiff.add(max);
+
+		if (scaleDiff.x == 0)
+			scaleDiff.x = 1;
+
+		if (scaleDiff.y == 0)
+			scaleDiff.y = 1;
+
+		if (scaleDiff.z == 0)
+			scaleDiff.z = 1;
+
+		Vector3f ns = dimensionsNoScale.div(scaleDiff);
+
+		scaleDiff.set(ns.x, ns.y, scaleDiff.z);
+
+		originalScale = scale();
+
+		scale(originalScale.mul(scaleDiff));
+
+	}
+
+	public void resetScalingDifference() {
+		scale(originalScale);
+		originalScale = null;
 	}
 
 	public String text(){

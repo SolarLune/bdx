@@ -199,7 +199,7 @@ def vertices_text(text, angel_code):
     ac = angel_code
     o_c = ac["char"][str(ord('O'))]
     builtin = ac["info"]["face"] == "Bfont"
-    scale = 0.0225 * (1.4 if builtin else 1)
+    scale = 0.0225
     unit_height = o_c["height"] * scale
 
     verts = []

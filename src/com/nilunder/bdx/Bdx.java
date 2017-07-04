@@ -511,8 +511,13 @@ public class Bdx{
 	private static void renderWorld(ModelBatch batch, Scene scene, Camera camera){
 		batch.begin(camera.data);
 		for (GameObject g : scene.objects){
-			if (g.visible() && (!g.frustumCulling || g.insideFrustum()) && !camera.ignoreObjects.contains(g))
+			if (g.visible() && (!g.frustumCulling || g.insideFrustum()) && !camera.ignoreObjects.contains(g)) {
+				if (g instanceof Text)
+					((Text) g).applyScalingDifference();
 				batch.render(g.modelInstance, scene.environment);
+				if (g instanceof Text)
+					((Text) g).resetScalingDifference();
+			}
 		}
 		batch.end();
 	}
