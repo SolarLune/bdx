@@ -478,7 +478,7 @@ def srl_objects(objects):
         else:
             mesh_name = None
 
-        transform = sum([list(v) for v in matrix.col], [])
+        transform = sum([list(v) for v in matrix.row], [])
 
         name_object[obj.name] = {
             "class": get_cls_name(obj),
@@ -532,7 +532,7 @@ def srl_objects(objects):
     if r3d:
 
         view_type = r3d.view_perspective
-        view_matrix = sum([list(v) for v in r3d.view_matrix.inverted().col], [])
+        view_matrix = sum([list(v) for v in r3d.view_matrix.inverted().row], [])
         view_projection = sum([list(v) for v in r3d.window_matrix.col], [])
         r = bpy.context.scene.render.resolution_x / bpy.context.scene.render.resolution_y
 
