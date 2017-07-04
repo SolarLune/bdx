@@ -48,6 +48,7 @@ public class GameObject implements Named{
 	public BodyType currBodyType;
 	public BoundsType currBoundsType;
 	public Matrix4f transform;
+	public Vector3f flipState;
 	public Vector3f origin;
 	public Vector3f dimensionsNoScale;
 	
@@ -137,6 +138,7 @@ public class GameObject implements Named{
 		children = new ArrayListGameObject();
 		transform = new Matrix4f();
 		localTransform = Matrix4f.identity();
+		flipState = new Vector3f();
 		valid = true;
 		logicFrequency = Bdx.TICK_RATE;
 		if (logicCounterRandom == null)
@@ -318,8 +320,27 @@ public class GameObject implements Named{
 		return transform.scale();
 	}
 	
+	public void flipState(Vector3f v){
+		flipState.x = (float) (Math.abs(v.x) / v.x);
+		flipState.y = (float) (Math.abs(v.y) / v.y);
+		flipState.z = (float) (Math.abs(v.z) / v.z);
+	}
+	
+	public void flipX(){
+		flipState.x *= -1;
+	}
+	
+	public void flipY(){
+		flipState.y *= -1;
+	}
+	
+	public void flipZ(){
+		flipState.z *= -1;
+	}
+	
 	public void scale(Vector3f v){
 		transform.scale(v);
+		flipState(v);
 		updateTransform(false, true, true);
 	}
 	
