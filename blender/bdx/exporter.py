@@ -480,6 +480,7 @@ def srl_objects(objects):
             "type": obj.type,
             "properties": {n: p.value for n, p in obj.game.properties.items()},
             "transform": transform,
+            "scale": list(obj.scale),
             "parent": obj.parent.name if obj.parent else None,
             "mesh_name": mesh_name,
             "active": in_active_layer(obj),

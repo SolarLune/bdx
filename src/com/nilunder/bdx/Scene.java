@@ -301,7 +301,9 @@ public class Scene implements Named{
 			}
 
 			com.badlogic.gdx.graphics.Mesh mesh = g.modelInstance.model.meshes.first();
-			float[] trans = gobj.get("transform").asFloatArray();
+			g.flipState(new Vector3f(gobj.get("scale").asFloatArray()));
+			Matrix4f trans = new Matrix4f(gobj.get("transform").asFloatArray());
+			trans.mul(g.flipState);
 			JsonValue origin = json.get("origins").get(meshName);
 			JsonValue dimensions = json.get("dimensions").get(meshName);
 			g.transform.set(trans);
@@ -486,6 +488,7 @@ public class Scene implements Named{
 		g.dimensionsNoScale = gobj.dimensionsNoScale;
 		g.body.setUserPointer(g);
 		g.transform(gobj.transform);
+		g.flipState.set(gobj.flipState);
 		
 		g.props = new HashMap<String, JsonValue>(gobj.props);
 
@@ -548,6 +551,7 @@ public class Scene implements Named{
 			Matrix4f t = inst.transform.mult(g.transform);
 			t.position(inst.position());
 			g.transform(t);
+			g.flipState.scale(inst.flipState);
 			
 			g.props.putAll(inst.props);
 
@@ -782,6 +786,7 @@ public class Scene implements Named{
 		for (GameObject g : objects){
 			if (g.visible()){
 				m.set(g.transform);
+				m.mul(g.flipState);
 				m.transpose();
 				m.get(fa);
 				g.modelInstance.transform.set(fa);

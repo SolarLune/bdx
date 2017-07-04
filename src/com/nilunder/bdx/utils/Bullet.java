@@ -151,11 +151,10 @@ public static class DebugDrawer extends IDebugDraw{
 
 	}
 	
-	public static RigidBody makeBody(Mesh mesh, float[] glTransform, Vector3f origin, BodyType bodyType, BoundsType boundsType, JsonValue physics){
+	public static RigidBody makeBody(Mesh mesh, Matrix4f m, Vector3f origin, BodyType bodyType, BoundsType boundsType, JsonValue physics){
 		
 		// get scale and unscaled transform
 		
-		Matrix4f m = new Matrix4f(glTransform);
 		Vector3f scale = new Vector3f();
 		Matrix4f t = new Matrix4f();
 		m.get(scale, t);
