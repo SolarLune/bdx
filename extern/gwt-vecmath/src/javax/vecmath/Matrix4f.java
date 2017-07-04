@@ -4015,6 +4015,12 @@ public class Matrix4f implements java.io.Serializable, Cloneable {
 		m20 = m.m20 * sca.z; m21 = m.m21 * sca.z; m22 = m.m22 * sca.z;
 	}
 	
+	public final void mul(Vector3f sca){
+		m00 *= sca.x; m01 *= sca.x; m02 *= sca.x;
+		m10 *= sca.y; m11 *= sca.y; m12 *= sca.y;
+		m20 *= sca.z; m21 *= sca.z; m22 *= sca.z;
+	}
+	
 	public final Matrix4f mult(Matrix4f t){
 		Matrix4f m = new Matrix4f(this);
 		m.mul(t);
