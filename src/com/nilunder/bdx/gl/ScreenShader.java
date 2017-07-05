@@ -4,47 +4,31 @@ import javax.vecmath.Vector2f;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
-import java.util.ArrayList;
-
-public class ScreenShader extends com.badlogic.gdx.graphics.glutils.ShaderProgram {
+public class ScreenShader extends Shader {
 
 	public Vector2f renderScale;
 	public boolean overlay;
 	static public boolean nearestFiltering = false;
+
 	private boolean usingDepthTexture = false;
 	private boolean checkedShaderProgram = false;
-	public boolean active = true;
-	public String vertexShaderPath;
-	public String fragmentShaderPath;
-	public ArrayList<UniformSet> uniformSets;
-	
+
 	public ScreenShader(String vertexShader, String fragmentShader) {
 		super(vertexShader, fragmentShader);
-		vertexShaderPath = vertexShader;
-		fragmentShaderPath = fragmentShader;
-		check();
 	}
 
 	public ScreenShader(FileHandle vertexShader, FileHandle fragmentShader) {
 		super(vertexShader, fragmentShader);
-		vertexShaderPath = vertexShader.path();
-		fragmentShaderPath = fragmentShader.path();
-		check();
 	}
 
-	private void check(){
-
-		if (!isCompiled()) {
-			String msg = "Shader compilation error in ScreenShader at:\n" + getLog() + "\n\n\n< Vertex Shader >\n\n" + vertexShaderPath + "\n\n< Fragment Shader >\n\n" + fragmentShaderPath + "\n\n";
-			throw new RuntimeException(msg);
-		}
-
+	public void init() {
+		super.init();
 		renderScale = new Vector2f(1, 1);
 		overlay = false;
-		uniformSets = new ArrayList<UniformSet>();
 	}
-	
+
 	public static ScreenShader load(String vertexPath, String fragmentPath) {
 		return new ScreenShader(Gdx.files.internal("bdx/shaders/2d/" + vertexPath), Gdx.files.internal("bdx/shaders/2d/" + fragmentPath));
 	}
@@ -53,17 +37,21 @@ public class ScreenShader extends com.badlogic.gdx.graphics.glutils.ShaderProgra
 		return load("default.vert", fragmentPath);
 	}
 
-	public boolean usingDepthTexture(){
+	public ShaderProgram compile() {
+		ShaderProgram out = super.compile();
+		if (out != null)
+			checkedShaderProgram = false;
+		return out;
+	}
+
+	public boolean usingDepthTexture() {
 		checkBuffers();
 		return usingDepthTexture;
 	}
 
-	public void checkBuffers(){
-		if (!checkedShaderProgram) {
-
-			if (getFragmentShaderSource().contains("depthTexture"))
-				usingDepthTexture = true;
-
+	private void checkBuffers() {
+		if (!checkedShaderProgram && compiled()) {
+			usingDepthTexture = program.getFragmentShaderSource().contains("depthTexture");
 			checkedShaderProgram = true;
 		}
 	}

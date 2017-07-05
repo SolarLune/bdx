@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
+import com.badlogic.gdx.utils.Array;
 import com.nilunder.bdx.Bdx;
 import com.nilunder.bdx.Scene;
 
@@ -29,10 +30,10 @@ class BDXDefaultShader extends DefaultShader {
 		super(renderable, config);
 	}
 
-	public BDXDefaultShader(Renderable renderable, DefaultShader.Config config, MaterialShader materialShader) {
+	public BDXDefaultShader(Renderable renderable, DefaultShader.Config config, com.nilunder.bdx.gl.Shader materialShader) {
 		super(renderable,
 				config,
-				materialShader.setPrefix(createPrefix(renderable, config)).compile().programData);
+				materialShader.setPrefix(createPrefix(renderable, config)).compile());
 	}
 
 	public void render(Renderable renderable, Attributes combinedAttributes)
@@ -94,7 +95,7 @@ class BDXDefaultShader extends DefaultShader {
 
 		if (bdxMat != null) {
 			if (bdxMat.shader != null && bdxMat.shader.active)				    // Is there a custom shader specified for the rendered material? If so,
-				return bdxMat.shader.programData == program;					// Use this shader only if this is the shader for the material.
+				return bdxMat.shader.program == program;						// Use this shader only if this is the shader for the material.
 			else															    // Otherwise, the rendered material doesn't have a custom shader specified, so
 				return applyingMaterial == null && super.canRender(renderable);	// Use this shader only if it's not a custom shader
 		}
@@ -121,16 +122,17 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 
 	public Shader createShader(Renderable renderable) {
 
-		BDXDefaultShader bdxDefaultShader;
+		BDXDefaultShader bdxDefaultShader = null;
 		Material bdxMat = null;
 		if (renderable.material instanceof Material)
 			bdxMat = (Material) renderable.material;
 
-		if (bdxMat != null && bdxMat.shader != null && bdxMat.shader.active) {
+		if (bdxMat != null && bdxMat.shader != null) {
 			bdxDefaultShader = new BDXDefaultShader(renderable, config, bdxMat.shader);
-            bdxDefaultShader.applyingMaterial = bdxMat;
+			bdxDefaultShader.applyingMaterial = bdxMat;
 		}
-		else {
+
+		if (bdxDefaultShader == null) {
 			if (Bdx.Display.advancedLighting())
 				bdxDefaultShader = new BDXDefaultShader(renderable, config);
 			else {
@@ -156,11 +158,23 @@ public class BDXShaderProvider extends DefaultShaderProvider {
 		for (Shader s : shaders){
 			BDXDefaultShader bdxDefaultShader = (BDXDefaultShader) s;
 			if (bdxDefaultShader.applyingMaterial != null && bdxDefaultShader.applyingMaterial.shader != null)
-				bdxDefaultShader.applyingMaterial.shader.dispose();	// "Empty" (dispose()) the MaterialShader.
+				bdxDefaultShader.applyingMaterial.shader.dispose();	// "Empty" (dispose()) the Shader for the material.
 			else
 				s.dispose();
 		}
 		shaders.clear();
+	}
+
+	public void handleMaterialShaderChanges() {
+
+		for (Shader s : new Array<Shader>(shaders)) {
+
+			BDXDefaultShader bdxds = (BDXDefaultShader) s;
+			if (bdxds.applyingMaterial != null && bdxds.applyingMaterial.shader != null && bdxds.applyingMaterial.shader.hotloadable())        // A shader has been updated
+				shaders.removeValue(bdxds, true);
+
+		}
+
 	}
 
 }

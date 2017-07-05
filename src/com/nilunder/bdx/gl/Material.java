@@ -13,7 +13,7 @@ import com.nilunder.bdx.utils.Named;
 public class Material extends com.badlogic.gdx.graphics.g3d.Material implements Named {
 
 	public Texture currentTexture;
-	public MaterialShader shader;
+	public Shader shader;
 	public String texturePath;
 
 	public Material() {
