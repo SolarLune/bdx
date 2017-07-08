@@ -168,7 +168,7 @@ def export(self, context, multiBlend, diffExport):
     if first_scene == "":
         first_scene = current_scene.name
 
-    ut.replace_line_containing(bdx_app, "scenes.add", '\t\tBdx.scenes.add(new Scene("'+first_scene+'"));');
+    ut.replace_line_containing(bdx_app, "scenes.add", '\t\tBdx.scenes.add(new Scene("'+first_scene+'"));')
 
     ut.remove_lines_containing(bdx_app, "Bdx.firstScene = ")
     ut.insert_lines_after(bdx_app, "scenes.add", ['\t\tBdx.firstScene = "'+first_scene+'";'])
@@ -228,7 +228,7 @@ class BdxExp(bpy.types.Operator):
 
 
 class BdxRun(bpy.types.Operator):
-    """Runs the BDX simulation"""
+    """Runs BDX using exported scene data"""
     bl_idname = "object.bdxrun"
     bl_label = "Run BDX"
 
