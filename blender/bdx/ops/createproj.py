@@ -64,7 +64,10 @@ class CreateBdxProject(bpy.types.Operator):
         os.mkdir(shaders3D)
 
         for png in ut.listdir(ut.gen_root(), pattern="*.png"):
-            shutil.copy(png, textures)
+            if "icon" in png:
+                shutil.copy(png, bdx)
+            else:
+                shutil.copy(png, textures)
             
         for frag in ut.listdir(j(ut.gen_root(), "shaders", "2d"), pattern="*.frag"):
             shutil.copy(frag, shaders2D)  
@@ -178,7 +181,7 @@ class CreateBdxProject(bpy.types.Operator):
         ut.set_file_line(gdx_dl, 1,
                          "package " + sc_bdx.java_pack + '.desktop;')
 
-        ut.set_file_line(gdx_dl, 5,
+        ut.set_file_line(gdx_dl, 6,
                          "import " + sc_bdx.java_pack + ".BdxApp;")
 
     def replace_android_launcher(self):
