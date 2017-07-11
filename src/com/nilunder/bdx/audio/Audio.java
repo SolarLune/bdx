@@ -6,8 +6,8 @@ public class Audio {
     private float pan = 0;
     // There's no pitch controls for music, so it doesn't make sense to have it at the audio level, either
 
-    public static Music music;
-    public static Sounds sounds;
+    public Music music;
+    public Sounds sounds;
 
     public Audio(){
         music = new Music();
