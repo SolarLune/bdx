@@ -243,7 +243,7 @@ def srl_models_text(texts, fntx_dir):
     j = os.path.join
 
     def fntx(t):
-        with open(j(fntx_dir, t.font.name + ".fntx"), 'r') as f:
+        with open(j(fntx_dir, t.font.filepath.split("\\")[-1].split(".")[0] + ".fntx"), 'r') as f:
             data = json.load(f)
         return data
 
