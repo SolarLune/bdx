@@ -239,11 +239,16 @@ def vertices_text(text, angel_code):
 
     return verts
 
+def font_name(font):
+    if font.filepath == "<builtin>":
+        return "bfont"
+    return os.path.splitext(os.path.basename(font.filepath))[0]
+
 def srl_models_text(texts, fntx_dir):
     j = os.path.join
 
     def fntx(t):
-        with open(j(fntx_dir, t.font.filepath.split("\\")[-1].split(".")[0] + ".fntx"), 'r') as f:
+        with open(j(fntx_dir, font_name(t.font) + ".fntx"), 'r') as f:
             data = json.load(f)
         return data
 
@@ -253,8 +258,8 @@ def srl_models_text(texts, fntx_dir):
                 return m.name
         return ""
 
-    return {"__FNT_"+t.name:
-                {"__FNT_"+mat_name(t)+t.font.name: vertices_text(t, fntx(t))}
+    return {"__FNT_" + t.name:
+                {"__FNT_" + mat_name(t) + font_name(t.font): vertices_text(t, fntx(t))}
             for t in texts}
 
 def srl_materials_text(texts):
@@ -270,8 +275,9 @@ def srl_materials_text(texts):
 
     for t in texts:
         m = mat(t)
+        fnt_name = font_name(t.font)
 
-        gmat = {"texture": "__FNT_"+t.font.name+".png",
+        gmat = {"texture": "__FNT_"+ fnt_name +".png",
                 "alpha_blend": "ALPHA",
                 "color": list(m.diffuse_color) if m else [1, 1, 1],
                 "spec_color": list(m.specular_color) if m else [0, 0, 0],
@@ -281,7 +287,7 @@ def srl_materials_text(texts):
                 "emit": m.emit if m else 0.0,
                 "backface_culling": m.game_settings.use_backface_culling if m else True}
 
-        name_gmat["__FNT_"+mat_name(m)+t.font.name] = gmat
+        name_gmat["__FNT_"+ mat_name(m) + fnt_name] = gmat
 
     return name_gmat
 
@@ -508,7 +514,7 @@ def srl_objects(objects):
             }
 
         elif obj.type == "FONT":
-            d["font"] = obj.data.font.name
+            d["font"] = font_name(obj.data.font)
             d["text"] = obj.data.body
             d["alignment"] = obj.data.align_x
 
@@ -700,7 +706,7 @@ def generate_bitmap_fonts(fonts, fontgen_dir, fonts_dir, textures_dir):
 
     # list of fonts to export
     existing = os.listdir(fonts_dir)
-    fonts_to_export = [f for f in fonts if f.name + ".fntx" not in existing]
+    fonts_to_export = [f for f in fonts if font_name(f) + ".fntx" not in existing]
 
     if bpy.context.scene.bdx.always_export_fonts:
         fonts_to_export = [f for f in fonts]
@@ -762,7 +768,7 @@ def generate_bitmap_fonts(fonts, fontgen_dir, fonts_dir, textures_dir):
         outa = font.bdx.font_outline_alpha
         outr = font.bdx.font_outline_rounded
 
-        command += '"{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}" '.format(ttf, j(fonts_dir, font.name), \
+        command += '"{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}---{}" '.format(ttf, j(fonts_dir, font_name(font)), \
         size, shdo[0], shdo[1], shdc[0], shdc[1], shdc[2], shda, outt, outc[0], outc[1], outc[2], outa, outr, col[0], col[1], col[2], alpha)
 
     os.system(command)
@@ -833,7 +839,7 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         "materials": srl_materials(used_materials(objects)),
         "cameras": camera_names(scene),
         "actions": srl_actions(bpy.data.actions),
-        "fonts": [f.name for f in fonts],
+        "fonts": [font_name(f) for f in fonts],
         "clearColor": clear_color,
         "resolution": [scene.render.resolution_x, scene.render.resolution_y],
         "frame_type": scene.game_settings.frame_type,
