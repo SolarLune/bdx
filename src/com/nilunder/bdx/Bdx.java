@@ -237,9 +237,6 @@ public class Bdx{
 
 		profiler.stop("__gpu wait");
 
-		if (profiler.subsystemsVisible())
-			profiler.deltaTimes.put("__gpu wait", (long) Math.max(profiler.deltaTimes.get("__gpu wait") - (TICK_TIME * 1000000000), 0));
-
 		if (restartOnExport && Gdx.files.internal("finishedExport").lastModified() > startMillis) {
 			startMillis = System.currentTimeMillis();
 			restart();
@@ -454,21 +451,31 @@ public class Bdx{
 		
 		profiler.stop("__scene");
 		
-		profiler.updateVariables();
-		if (profiler.visible()){
-			profiler.updateVisible();
+		if (profiler.active()){
+			if (profiler.gl.active()){
+				profiler.gl.updateStats();
+			}
+			
+			profiler.updateVariables();
+			profiler.updateSubsystems();
+			
+			if (profiler.visible()){
+				profiler.updateVisible();
 
-			// ------- Render profiler scene --------
+				// ------- Render profiler scene --------
 
-			profiler.scene.update();
-			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-			renderWorld(modelBatch, profiler.scene, profiler.scene.camera);
-			profiler.scene.executeDrawCommands();
+				profiler.scene.update();
+				Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+				renderWorld(modelBatch, profiler.scene, profiler.scene.camera);
+				profiler.scene.executeDrawCommands();
+			}
+
+			if (profiler.gl.active()){
+				profiler.gl.reset();
+				profiler.gl.updateFields();
+			}
 		}
-		if (profiler.gl.isEnabled()){
-			profiler.gl.updateFields();
-		}
-
+		
 		if (requestedRestart) {
 			requestedRestart = false;
 			Scene.clearColorDefaultSet = false;
@@ -477,9 +484,7 @@ public class Bdx{
 				scenes.remove(scene);
 				scene.end();
 			}
-			if (profiler.visible()){
-				profiler.scene.end();
-			}
+			profiler.end();
 			init();
 			scenes.add(firstScene);
 		}
@@ -517,9 +522,7 @@ public class Bdx{
 	}
 
 	public static void end(){
-		if (profiler.visible())
-			profiler.gl.disable();
-
+		profiler.end();
 		Gdx.app.exit();
 	}
 

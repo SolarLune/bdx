@@ -206,6 +206,7 @@ def export(self, context, multiBlend, diffExport):
         export_time = None
 
     if prof_scene_export:
+        bpy.data.objects.remove(bpy.data.objects["__PBars"]);
         bpy.data.objects.remove(bpy.data.objects["__PBar"]);
         bpy.data.objects.remove(bpy.data.objects["__PCam"]);
         bpy.data.objects.remove(bpy.data.objects["__PDisplay"]);

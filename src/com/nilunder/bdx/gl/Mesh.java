@@ -83,7 +83,23 @@ public class Mesh implements Named {
 			materials.add((Material) part.material);
 		instances = new ArrayList<ModelInstance>();
 	}
-
+	
+	public int numIndices(){
+		return model.meshes.first().getNumIndices();
+	}
+	
+	public int numVertices(){
+		return numIndices() * Bdx.VERT_STRIDE;
+	}
+	
+	public float[] vertices(){
+		return model.meshes.first().getVertices(new float[numVertices()]);
+	}
+	
+	public void vertices(float[] va){
+		model.meshes.first().setVertices(va);
+	}
+	
 	public Mesh(Model model, Scene scene){
 		this(model, scene, model.meshParts.first().id);
 	}
