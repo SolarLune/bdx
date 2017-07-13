@@ -205,6 +205,17 @@ def export(self, context, multiBlend, diffExport):
     if not multiBlend:
         export_time = None
 
+    if prof_scene_export:
+        bpy.data.objects.remove(bpy.data.objects["__PBar"]);
+        bpy.data.objects.remove(bpy.data.objects["__PCam"]);
+        bpy.data.objects.remove(bpy.data.objects["__PDisplay"]);
+        bpy.data.objects.remove(bpy.data.objects["__PBackground"]);
+        bpy.data.objects.remove(bpy.data.objects["__PText"]);
+        bpy.data.curves.remove(bpy.data.curves["__PText"]);
+        bpy.data.meshes.remove(bpy.data.meshes["__PBar"]);
+        bpy.data.meshes.remove(bpy.data.meshes["__PBackground"]);
+        bpy.data.fonts.remove(bpy.data.fonts["BDXFontMono"]);
+
 def run(self, context):
 
     global runThread
