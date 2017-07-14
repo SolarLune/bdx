@@ -888,25 +888,7 @@ public class Scene implements Named{
 
 	public void update(){
 
-		if (requestedRestart){
-			for (GameObject g : objects){
-				g.endNoChildren();
-			}
-			dispose();
-			init();
-		}
-
-		if (requestedEnd) {
-			valid = false;
-
-			dispose();
-
-			if (Bdx.scenes.contains(this))
-				Bdx.scenes.remove(this);
-
-		}
-		
-		else if (!paused){
+		if (!paused){
 
 			Bdx.profiler.start("__logic");
 			runObjectLogic();			
@@ -932,6 +914,18 @@ public class Scene implements Named{
 			detectCollisions();
 			Bdx.profiler.stop("__physics");
 			
+		}
+
+		if (requestedEnd) {
+			valid = false;
+			dispose();
+
+			if (Bdx.scenes.contains(this))
+				Bdx.scenes.remove(this);
+
+		} else if (requestedRestart) {
+			dispose();
+			init();
 		}
 
 	}
