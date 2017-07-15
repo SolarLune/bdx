@@ -15,6 +15,7 @@ class BdxSceneProps(bpy.types.PropertyGroup):
     multi_blend_export = P.BoolProperty(name = "Multi-blend Export", description="If BDX should export data from multiple blend files, or just the current one", default=False)
     diff_export = P.BoolProperty(name="Differential Export", description="If BDX should export just newly-changed blend files, or all project blend files", default=True)
     main_scene = P.StringProperty(name="Starting Scene", description="Starting game scene; if blank, the current scene is used")
+    pre_export_program = P.StringProperty(name="Pre-Export Program", description="A file to execute before exporting; if blank, nothing is run")
 
 class BdxObjectProps(bpy.types.PropertyGroup):
     cls_use_custom = P.BoolProperty(name="", description="Use custom Java class for this object")
@@ -73,7 +74,9 @@ class BdxProject(bpy.types.Panel):
             row.prop(sc_bdx, "multi_blend_export")
             row.prop(sc_bdx, "diff_export")
             row.prop(sc_bdx, "auto_export")
-            r().prop(sc_bdx, "main_scene")
+            row = r()
+            row.prop(sc_bdx, "main_scene")
+            row.prop(sc_bdx, "pre_export_program")
             r().operator("object.packproj")
 
         else:
