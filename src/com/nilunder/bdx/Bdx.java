@@ -141,13 +141,6 @@ public class Bdx{
 			int index = indexOf(get(name));
 			return remove(index);
 		}
-		public ArrayList<String> available(){
-			ArrayList<String> scenes = new ArrayList<String>();
-			FileHandle[] files = Gdx.files.internal("bdx/scenes/").list("bdx");
-			for (FileHandle file : files)
-				scenes.add(file.nameWithoutExtension());
-			return scenes;
-		}
 	}
 
 	public static final int TICK_RATE = 60;
