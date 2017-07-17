@@ -1,6 +1,7 @@
 package com.nilunder.bdx.utils;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,46 +13,54 @@ import com.nilunder.bdx.Scene;
 import com.nilunder.bdx.GameObject;
 import com.nilunder.bdx.Text;
 import com.nilunder.bdx.gl.Viewport;
+import com.nilunder.bdx.gl.Mesh;
 
-import javax.vecmath.Vector2f;
-import javax.vecmath.Vector3f;
-
+import javax.vecmath.Matrix4f;
 
 public class Profiler{
 	
 	public class Gl extends com.badlogic.gdx.graphics.profiling.GLProfiler{
 		
-		private HashMap<String, Text> texts;
-		private HashMap<String, Integer> stats;
+		protected LinkedHashMap<String, Integer> stats;
 		private HashMap<String, Integer> fields;
-		private String[] names;
 		
-		{
-			names = new String[]{
-				"calls",
-				"drawCalls",
-				"shaderSwitches",
-				"textureBindings",
-				"vertexCount"
-			};
-			
-			stats = new HashMap<String, Integer>();
+		public Gl(){
+			listener = GLErrorListener.THROWING_LISTENER;
+			stats = new LinkedHashMap<String, Integer>();
 			fields = new HashMap<String, Integer>();
-			for (String name : names){
-				stats.put(name, 0);
-				fields.put(name, 0);
+			updateFields();
+		}
+		
+		public boolean active(){
+			return isEnabled();
+		}
+		
+		public void active(boolean active){
+			if (active){
+				enable();
+				reset();
+				updateFields();
+			}else{
+				disable();
 			}
 		}
 		
-		protected void initTexts(){
-			texts = new HashMap<String, Text>();
-			Vector3f position = new Vector3f(SPACING, verticalOffset(0.5f), 0);
-			for (String name : names){
-				position.y = verticalOffset(1);
-				texts.put(name, (Text)add("__PText", position));
-			}
-			position.y = verticalOffset(1);
-			texts.put("triangleCount", (Text)add("__PText", position));
+		public void updateFields(){
+			fields.put("calls", calls);
+			fields.put("draw calls", drawCalls);
+			fields.put("shader switches", shaderSwitches);
+			fields.put("texture bindings", textureBindings);
+			fields.put("vertex count", (int)vertexCount.total);
+			fields.put("triangle count", (int)vertexCount.total / 3);
+		}
+		
+		public void updateStats(){
+			stats.put("calls", calls - fields.get("calls"));
+			stats.put("draw calls", drawCalls - fields.get("draw calls"));
+			stats.put("shader switches", shaderSwitches - fields.get("shader switches"));
+			stats.put("texture bindings", textureBindings - fields.get("texture bindings"));
+			stats.put("vertex count", (int)vertexCount.total - fields.get("vertex count"));
+			stats.put("triangle count", (int)vertexCount.total / 3 - fields.get("triangle count"));
 		}
 		
 		public int calls(){
@@ -59,455 +68,237 @@ public class Profiler{
 		}
 		
 		public int drawCalls(){
-			return stats.get("drawCalls");
+			return stats.get("draw calls");
 		}
 		
 		public int shaderSwitches(){
-			return stats.get("shaderSwitches");
+			return stats.get("shader switches");
 		}
 		
 		public int textureBindings(){
-			return stats.get("textureBindings");
+			return stats.get("texture bindings");
 		}
 		
 		public int vertexCount(){
-			return stats.get("vertexCount");
+			return stats.get("vertex count");
 		}
 		
 		public int triangleCount(){
-			return vertexCount() / 3;
-		}
-		
-		public void print(){
-			StringBuffer buffer = new StringBuffer("\n");
-			buffer.append(formatForGl("gl calls", calls()) + "\n");
-			buffer.append(formatForGl("gl draw calls", drawCalls()) + "\n");
-			buffer.append(formatForGl("gl shader switches", shaderSwitches()) + "\n");
-			buffer.append(formatForGl("gl texture bindings", textureBindings()) + "\n");
-			buffer.append(formatForGl("gl vertex count", vertexCount()) + "\n");
-			buffer.append(formatForGl("gl triangle count", triangleCount()) + "\n");
-			System.out.println(buffer.toString());
-		}
-		
-		protected void updateTexts(){
-			texts.get("calls").text(formatForGl("gl calls", calls()));
-			texts.get("drawCalls").text(formatForGl("gl draw calls", drawCalls()));
-			texts.get("shaderSwitches").text(formatForGl("gl shader switches", shaderSwitches()));
-			texts.get("textureBindings").text(formatForGl("gl texture bindings", textureBindings()));
-			texts.get("vertexCount").text(formatForGl("gl vertex count", vertexCount()));
-			texts.get("triangleCount").text(formatForGl("gl triangle count", triangleCount()));
-		}
-		
-		protected void updateStats(){
-			stats.put("calls", calls - fields.get("calls"));
-			stats.put("drawCalls", drawCalls - fields.get("drawCalls"));
-			stats.put("shaderSwitches", shaderSwitches - fields.get("shaderSwitches"));
-			stats.put("textureBindings", textureBindings - fields.get("textureBindings"));
-			stats.put("vertexCount", (int)vertexCount.total - fields.get("vertexCount"));
-		}
-		
-		public void updateFields(){
-			fields.put("calls", calls);
-			fields.put("drawCalls", drawCalls);
-			fields.put("shaderSwitches", shaderSwitches);
-			fields.put("textureBindings", textureBindings);
-			fields.put("vertexCount", (int)vertexCount.total);
+			return stats.get("triangle count");
 		}
 		
 	}
 	
-	public class Props extends HashMap<String, String>{
-		
-		protected HashMap<String, Text> texts = new HashMap<String, Text>();
-		
-		protected boolean updateHorizontalOffset(){
-			int maxLen = 0;
-			int len;
-			for (Text text : texts.values()){
-				len = text.text().length();
-				if (maxLen < len){
-					maxLen = len;
-				}
-			}
-			float maxOffset = maxLen * FONT_SIZE + 1;
-			if (maxOffset == horizontalOffset){
-				return false;
-			}else if (maxOffset <= HORIZONTAL_OFFSET_DEFAULT){
-				if (horizontalOffset == HORIZONTAL_OFFSET_DEFAULT){
-					return false;
-				}else{
-					horizontalOffset = HORIZONTAL_OFFSET_DEFAULT;
-				}
-			}else{
-				horizontalOffset = maxOffset;
-			}
-			return true;
-		}
-		
-		protected void initTexts(){
-			if (isEmpty()){
-				return;
-			}
-			Vector3f position = new Vector3f(SPACING, verticalOffset(0.5f), 0);
-			Text text;
-			String key;
-			for (Map.Entry<String, String> e : entrySet()){
-				position.y = verticalOffset(1);
-				text = (Text)add("__PText", position);
-				key = e.getKey();
-				text.text(formatForProps(key, e.getValue()));
-				texts.put(key, text);
-			}
-			updateHorizontalOffset();
-		}
-		
-		@Override
-		public void putAll(Map<? extends String, ? extends String> map){
-			super.putAll(map);
-			for (Map.Entry<String, String> e : entrySet()){
-				String key = e.getKey();
-				if (!texts.containsKey(key)){
-					reinitialize();
-					return;
-				}
-				texts.get(key).text(formatForProps(key, e.getValue()));
-			}
-			if (updateHorizontalOffset()){
-				scaleBackground();
-			}
-		}
-		
-		@Override
-		public String put(String key, String value) {
-			super.put(key, value);
-			if (texts.containsKey(key)){
-				texts.get(key).text(formatForProps(key, value));
-				if (updateHorizontalOffset()){
-					scaleBackground();
-				}
-			}else{
-				reinitialize();
-			}
-			return value;
-		}
-
-		public String put(String key, Object value) {
-			return put(key, String.valueOf(value));
-		}
-		
-		@Override
-		public String remove(Object key){
-			String value = super.remove(key);
-			reinitialize();
-			return value;
-		}
-		
-		@Override
-		public void clear(){
-			super.clear();
-			reinitialize();
-		}
-		
-	}
-	
-	private final Color BG_COLOR = new Color(0.125f, 0.125f, 0.125f, 0.75f);
-	private final float SPACING = 0.6f;
-	private final float BAR_HEIGHT = 0.4f;
-	private final float BAR_WIDTH = SPACING * 4;
-	private final float BAR_POSITION = SPACING * 18;
-	private final float HORIZONTAL_OFFSET_DEFAULT = BAR_POSITION + SPACING + BAR_WIDTH;
-	private final float FONT_SIZE = 0.315f;
 	private final String EXC_MSG = "User created subsystem names should not start with: \"__\"";
+	private final Color BG_COLOR = new Color(0.125f, 0.125f, 0.125f, 0.75f);
+	private final String SPACE = "  ";
+	private final int MARGIN = 2;
+	private final int OFFSET_RIGHT = 22;
+	private final int BAR_WIDTH = 5;
+	private final float CTE = 0.0225f;
+	
+	private float fontWidth;
+	private float fontHeight;
+	
+	private int offsetLeft;
 	
 	private long totalStartTime;
 	private long totalDeltaTime;
 	private long lastStopTime;
-	public HashMap<String, Long> deltaTimes;
+	private HashMap<String, Long> deltaTimes;
 	private HashMap<String, Long> startTimes;
 	private ArrayList<Long> tickTimes;
 	private float counter;
+	private float scale;
 	
-	private GameObject display;
-	private GameObject background;
-	private Text tickInfo;
-	private HashMap<String, Text> texts;
-	private HashMap<String, GameObject> bars;
-	
+	private boolean active;
 	private boolean visible;
 	private boolean tickInfoVisible;
 	private boolean subsystemsVisible;
 	private boolean glVisible;
 	private boolean propsVisible;
-	private float verticalOffset;
-	private float horizontalOffset;
 	
-	public HashMap<String, Long> nanos;
-	public HashMap<String, Float> percents;
+	private StringBuffer textBuffer;
+	private StringBuffer subsystemsBuffer;
+	private StringBuffer propsBuffer;
+	private StringBuffer glBuffer;
 	
-	public Scene scene;
+	private GameObject display;
+	private Text text;
+	private GameObject bars;
+	private GameObject background;
+	
+	public LinkedHashMap<String, Long> nanos;
+	public LinkedHashMap<String, Float> percents;
 	
 	public int frequency;
 	public float avgTickRate;
 	public float avgTickTime;
-	public Gl gl;
-	public Props props;
 	
-	{
+	public Gl gl;
+	public HashMap<String, Object> props;
+	
+	public Scene scene;
+	
+	public Profiler(){
 		totalStartTime = TimeUtils.nanoTime();
 		deltaTimes = new HashMap<String, Long>();
 		startTimes = new HashMap<String, Long>();
-		nanos = new HashMap<String, Long>();
-		percents = new HashMap<String, Float>();
 		tickTimes = new ArrayList<Long>();
-		for (int i=0; i < Bdx.TICK_RATE; i++){
+		for (int i = 0; i < Bdx.TICK_RATE; i++){
 			tickTimes.add((long) Bdx.TICK_TIME);
 		}
-		
-		frequency = Bdx.TICK_RATE;
 		counter = 1;
-		avgTickRate = Bdx.TICK_RATE;
-		avgTickTime = Bdx.TICK_TIME;
+		scale = 1;
 		
 		tickInfoVisible = true;
-		propsVisible = true;
 		subsystemsVisible = true;
+		glVisible = false;
+		propsVisible = true;
 		
-		scene = null;
-
-		gl = new Gl();
-		gl.listener = GLErrorListener.THROWING_LISTENER;
+		textBuffer = new StringBuffer();
+		subsystemsBuffer = new StringBuffer();
+		propsBuffer = new StringBuffer();
+		glBuffer = new StringBuffer();
 		
-		props = new Props();
-	}
-	
-	private float verticalOffset(float factor){
-		verticalOffset -= SPACING * factor;
-		return verticalOffset;
-	}
-	
-	private void addTextAndBar(String name){
-		Vector3f position = new Vector3f(SPACING, verticalOffset, 0);
-		texts.put(name, (Text)add("__PText", position));
-		position.x = BAR_POSITION;
-		bars.put(name, add("__PBar", position));
-	}
-	
-	private void scaleBackground(){
-		background.scale(horizontalOffset, SPACING - verticalOffset, 1);
-	}
-	
-	private void initTickInfo(){
-		tickInfo = (Text)add("__PText", new Vector3f(SPACING, verticalOffset(1.5f), 0));
-	}
-	
-	private void initSubsystems(){
-		String[] names = {
+		nanos = new LinkedHashMap<String, Long>();
+		percents = new LinkedHashMap<String, Float>();
+		String[] subsystems = {
 			"__render",
 			"__logic",
 			"__scene",
 			"__physics",
-			"__outside",
-			"__gpu wait"
+			"__gpu wait",
+			"__outside"
 		};
-		texts = new HashMap<String, Text>();
-		bars = new HashMap<String, GameObject>();
-		verticalOffset(0.5f);
-		for (String name : names){
-			verticalOffset(1);
-			addTextAndBar(name);
-		}
-	}
-	
-	private void initialize(){
-		horizontalOffset = HORIZONTAL_OFFSET_DEFAULT;
-		verticalOffset = 0;
-		
-		if (tickInfoVisible){
-			initTickInfo();
+		for (String name : subsystems){
+			nanos.put(name, 0L);
+			percents.put(name, 0f);
 		}
 		
-		if (propsVisible){
-			props.initTexts();
-		}
+		frequency = Bdx.TICK_RATE;
+		avgTickRate = Bdx.TICK_RATE;
+		avgTickTime = Bdx.TICK_TIME;
 		
-		if (glVisible){
-			gl.enable();
-			gl.initTexts();
-		}
+		gl = new Gl();
+		props = new HashMap<String, Object>();
 		
-		if (subsystemsVisible){
-			initSubsystems();
-		}
-		
-		scaleBackground();
+		scene = null;
 	}
 	
 	public void init(){
-		visible = true;
-		
+		if (Bdx.profiler.scene != null){
+			return;
+		}
 		scene = new Scene("__Profiler");
 		scene.init();
 		
-		display = scene.add("__PDisplay");
-		background = display.children.get("__PBackground");
-		background.mesh().materials.color(BG_COLOR);
+		display = scene.objects.get("__PDisplay");
+		
+		text = (Text) display.children.get("__PText");
+		text.text("");
+		
+		fontWidth = CTE * text.font.get("char").get("0").get("xadvance").asInt();
+		fontHeight = CTE * text.font.get("common").get("lineHeight").asInt();
+		updateOffsetLeft();
+		
+		bars = display.children.get("__PBars");
+		initBars();
 
+		background = scene.objects.get("__PBackground");
+		background.mesh().materials.color(BG_COLOR);
+		
 		scene.viewport.type(Viewport.Type.SCREEN);
 		updateViewport();
-		
-		initialize();
 	}
 	
-	private void reinitialize(){
-		if (!visible){
+	private void initBars(){
+		if (!subsystemsVisible){
 			return;
+		}
+		HashMap<Mesh, ArrayList<Matrix4f>> data = new HashMap<Mesh, ArrayList<Matrix4f>>();
+		ArrayList<Matrix4f> transforms = new ArrayList<Matrix4f>();
+		
+		Matrix4f m = Matrix4f.identity();
+		float fontHeightScaled = fontHeight * scale;
+		float offsetX = (MARGIN + offsetLeft + OFFSET_RIGHT) * fontWidth * scale;
+		float offsetY = -2 * fontHeightScaled;
+		if (tickInfoVisible()){
+			offsetY -= 2 * fontHeightScaled;
 		}
 		
-		tickInfo.end();
-		
-		for (Text text : texts.values()){
-			text.end();
-		}
-		texts.clear();
-		
-		for (GameObject bar : bars.values()){
-			bar.end();
-		}
-		bars.clear();
-		
-		for (Text text : props.texts.values()){
-			text.end();
-		}
-		props.texts.clear();
-		
-		initialize();
-	}
-	
-	public boolean visible(){
-		return visible;
-	}
-
-	public void visible(boolean visible) {
-		if (scene == null && visible)
-			init();
-		this.visible = visible;
-	}
-
-	public boolean tickInfoVisible(){
-		return tickInfoVisible;
-	}
-
-	public void tickInfoVisible(boolean visible){
-		if (!this.visible){
-			return;
-		}
-		if (tickInfoVisible == visible){
-			return;
-		}
-		tickInfoVisible = visible;
-		reinitialize();
-	}
-
-	public boolean subsystemsVisible(){
-		return subsystemsVisible;
-	}
-	
-	public void subsystemsVisible(boolean visible){
-		if (!this.visible){
-			return;
-		}
-		if (subsystemsVisible == visible){
-			return;
-		}
-		subsystemsVisible = visible;
-		reinitialize();
-	}
-
-	public boolean glVisible(){
-		return glVisible;
-	}
-	
-	public void glVisible(boolean visible){
-		if (!this.visible){
-			return;
-		}
-		if (glVisible == visible){
-			return;
-		}
-		glVisible = visible;
-		reinitialize();
-	}
-
-	public boolean propsVisible(){
-		return propsVisible;
-	}
-	
-	public void propsVisible(boolean visible){
-		if (!this.visible){
-			return;
-		}
-		if (propsVisible == visible){
-			return;
-		}
-		propsVisible = visible;
-		reinitialize();
-	}
-		
-	public void start(String name){
-		startTimes.put(name, TimeUtils.nanoTime());
-	}
-	
-	public float stop(String name){
-		long stopTime = TimeUtils.nanoTime();
-		long startTime;
-		if (startTimes.containsKey(name)){
-			startTime = startTimes.get(name);
-			startTimes.remove(name);
-		}else{
-			startTime = lastStopTime;
-		}
-		long deltaTime = stopTime - startTime;
-		
-		if (subsystemsVisible){
-			long storedDeltaTime = (long) (deltaTime * (float) frequency / Bdx.TICK_RATE);
-			if (deltaTimes.containsKey(name)){
-				storedDeltaTime += deltaTimes.get(name);
+		int i = 0;
+		boolean separated = false;
+		for (String name : nanos.keySet()){
+			if (!separated && !name.startsWith("__")){
+				i--;
+				separated = true;
 			}
-			deltaTimes.put(name, storedDeltaTime);
-			lastStopTime = stopTime;
+			m.setM00(fontHeightScaled);
+			m.setM11(fontHeightScaled);
+			m.setM22(fontHeightScaled);
+			m.setM03(offsetX);
+			m.setM13(offsetY + fontHeightScaled * i--);
+			transforms.add(new Matrix4f(m));
 		}
-		return deltaTime * 0.000001f;
-	}
-	
-	public void remove(String name){
-		if (name.startsWith("__")){
-			throw new RuntimeException(EXC_MSG);
-		}
-		deltaTimes.remove(name);
-		startTimes.remove(name);
-		nanos.remove(name);
-		percents.remove(name);
 		
-		if (visible && subsystemsVisible){
-			texts.get(name).end();
-			texts.remove(name);
-			bars.get(name).end();
-			bars.remove(name);
-			verticalOffset(-1);
-			scaleBackground();
-		}
+		data.put(scene.meshes.get("__PBar"), transforms);
+		bars.join(data);
 	}
 	
-	public float scale(){
-		return scene.viewport.sizeNormalized().x;
-	}
-	
-	public void scale(float f){
-		if (!visible){
+	private void updateBars(){
+		if (!subsystemsVisible){
 			return;
 		}
-		scene.viewport.sizeNormalized(f, f);
-		updateViewport();
+		Mesh mesh = bars.mesh();
+		float[] va = mesh.vertices();
+		float f = fontWidth * BAR_WIDTH * 0.01f;
+		int i = 0;
+		for (float p : percents.values()){
+			float offset = va[i] + p * f;
+			i += Bdx.VERT_STRIDE;
+			for (int j = 0; j < 3; j++){
+				va[i] = offset;
+				i += Bdx.VERT_STRIDE;
+			}
+			i += Bdx.VERT_STRIDE * 2;
+		}
+		mesh.vertices(va);
+	}
+	
+	private void updateBackground(){
+		int x = 0;
+		int y = 0;
+		String[] lines = text.text().split("\n");
+		for (String line : lines){
+			x = Math.max(x, line.length());
+			y++;
+		}
+		if (subsystemsVisible){
+			x = Math.max(x, MARGIN + offsetLeft + OFFSET_RIGHT + BAR_WIDTH);
+		}
+		float width = (x + MARGIN) * fontWidth * scale;
+		float height = y * fontHeight * scale;
+		background.scale(width, height, 1);
+	}
+	
+	private void updateOffsetLeft(String name){
+		offsetLeft = (int) Math.max(offsetLeft, name.length());
+	}
+	
+	private void updateOffsetLeft(){
+		offsetLeft = 0;
+		for (String name : nanos.keySet()){
+			updateOffsetLeft(name);
+		}
+	}
+	
+	public void updateViewport(float width, float height){
+		scene.viewport.positionNormalized(0, 1 - scene.viewport.resolution().y * scene.viewport.sizeNormalized().y / height);
+	}
+	
+	public void updateViewport(){
+		updateViewport(Bdx.display.width(), Bdx.display.height());
 	}
 	
 	public void updateVariables(){
@@ -522,30 +313,18 @@ public class Profiler{
 		}
 		avgTickRate = Bdx.TICK_RATE * 1000000000f / sumTickTimes;
 		avgTickTime = 1000 / avgTickRate;
-		
-		if (gl.isEnabled()){
-			gl.updateStats();
-		}
 	}
 	
-	private GameObject add(String name, Vector3f position){
-		GameObject obj = scene.add(name);
-		obj.position(position);
-		obj.parent(display);
-		return obj;
-	}
-	
-	private void updateTickInfo(){
-		tickInfo.text(formatForSubsystems("tick info", avgTickTime, "ms", avgTickRate, "fps"));
-	}
-	
-	private void updateSubsystems(){
+	public void updateSubsystems(){
 		long sumDeltaTimes = 0;
 		HashMap<String, Long> userNanos = new HashMap<String, Long>();
 		HashMap<String, Float> userPercents = new HashMap<String, Float>();
 		for (Map.Entry<String, Long> e : deltaTimes.entrySet()){
 			long deltaTime = e.getValue();
 			String name = e.getKey();
+			if (name.equals("__gpu wait")){
+				deltaTime = (long) Math.max(deltaTime - (Bdx.TICK_TIME * 1000000000), 0);
+			}
 			float deltaTimePercent = 100f * deltaTime / totalDeltaTime;
 			if (name.startsWith("__")){
 				sumDeltaTimes += deltaTime;
@@ -564,95 +343,310 @@ public class Profiler{
 		percents.putAll(userPercents);
 		startTimes.clear();
 		deltaTimes.clear();
-		
-		for (String name : nanos.keySet()){
-			if (!texts.containsKey(name)){
-				verticalOffset(1);
-				addTextAndBar(name);
-				scaleBackground();
-			}
-			String n = name.startsWith("__") ? name.split("__")[1] : name;
-			float m = nanos.get(name) * 0.000001f;
-			float p = percents.get(name);
-			bars.get(name).scale(new Vector3f(BAR_WIDTH * p * 0.01f, BAR_HEIGHT, 1));
-			texts.get(name).text(formatForSubsystems(n, m, "ms", p, "%"));
+	}
+	
+	private void updateText(){
+		textBuffer.setLength(0);
+		textBuffer.append("\n");
+		if (tickInfoVisible){
+			textBuffer.append("\n" + tickInfoAsString());
 		}
-	}
-	
-	public void updateViewport(float width, float height){
-		scene.viewport.positionNormalized(0, 1 - scene.viewport.resolution().y * scene.viewport.sizeNormalized().y / height);
-	}
-	
-	public void updateViewport(){
-		updateViewport(Bdx.display.width(), Bdx.display.height());
+		if (subsystemsVisible){
+			textBuffer.append("\n" + subsystemsAsString());
+		}
+		if (glVisible){
+			textBuffer.append("\n" + glAsString());
+		}
+		if (propsVisible){
+			textBuffer.append("\n" + propsAsString());
+		}
+		text.text(textBuffer.toString());
 	}
 	
 	public void updateVisible(){
 		if (counter >= 1){
 			counter -= 1;
-			
-			if (tickInfoVisible){
-				updateTickInfo();
-			}
-
-			if (subsystemsVisible){
-				updateSubsystems();
-			}
-			
-			if (glVisible){
-				gl.updateTexts();
-			}
+			updateText();
+			updateBars();
+			updateBackground();
 		}
 		counter += frequency * Bdx.TICK_TIME;
-		
 		scene.viewport.apply();
 	}
 	
-	private static String formatForProps(String key, String value){
+	private void addCustomSubsystem(String name){
+		if (name.startsWith("__")){
+			throw new RuntimeException(EXC_MSG);
+		}
+		nanos.put(name, 0L);
+		updateOffsetLeft(name);
+		initBars();
+	}
+	
+	public void start(String name){
+		if (!active){
+			return;
+		}
+		if (!nanos.containsKey(name)){
+			addCustomSubsystem(name);
+		}
+		startTimes.put(name, TimeUtils.nanoTime());
+	}
+	
+	public float stop(String name){
+		if (!active){
+			return 0;
+		}
+		long stopTime = TimeUtils.nanoTime();
+		long startTime;
+		if (!startTimes.containsKey(name)){
+			if (!nanos.containsKey(name)){
+				addCustomSubsystem(name);
+			}
+			startTime = lastStopTime;
+		}else{
+			startTime = startTimes.get(name);
+			startTimes.remove(name);
+		}
+		long deltaTime = stopTime - startTime;
+		
+		long storedDeltaTime = (long) (deltaTime * (float) frequency / Bdx.TICK_RATE);
+		if (deltaTimes.containsKey(name)){
+			storedDeltaTime += deltaTimes.get(name);
+		}
+		deltaTimes.put(name, storedDeltaTime);
+		lastStopTime = stopTime;
+		
+		return deltaTime * 0.000001f;
+	}
+	
+	public void remove(String name){
+		if (!active){
+			return;
+		}
+		if (name.startsWith("__")){
+			throw new RuntimeException(EXC_MSG);
+		}
+		deltaTimes.remove(name);
+		startTimes.remove(name);
+		nanos.remove(name);
+		percents.remove(name);
+		updateOffsetLeft();
+		initBars();
+	}
+	
+	public boolean active(){
+		return active;
+	}
+
+	public void active(boolean active){
+		if (this.active == active){
+			return;
+		}
+		this.active = active;
+		if (active && Bdx.profiler.scene == null){
+			init();
+		}
+	}
+	
+	public boolean visible(){
+		return visible;
+	}
+
+	public void visible(boolean visible){
+		if (this.visible == visible){
+			return;
+		}
+		this.visible = visible;
+		active(visible);
+		text.visible(visible);
+		if (subsystemsVisible){
+			bars.visible(visible);
+		}
+		background.visible(visible);
+	}
+
+	public boolean tickInfoVisible(){
+		return tickInfoVisible;
+	}
+
+	public void tickInfoVisible(boolean tickInfoVisible){
+		if (!visible){
+			return;
+		}
+		if (this.tickInfoVisible == tickInfoVisible){
+			return;
+		}
+		this.tickInfoVisible = tickInfoVisible;
+		initBars();
+	}
+
+	public boolean subsystemsVisible(){
+		return subsystemsVisible;
+	}
+	
+	public void subsystemsVisible(boolean subsystemsVisible){
+		if (!visible){
+			return;
+		}
+		if (this.subsystemsVisible == subsystemsVisible){
+			return;
+		}
+		this.subsystemsVisible = subsystemsVisible;
+		bars.visible(subsystemsVisible);
+		initBars();
+	}
+
+	public boolean glVisible(){
+		return glVisible;
+	}
+	
+	public void glVisible(boolean glVisible){
+		if (!visible){
+			return;
+		}
+		if (this.glVisible == glVisible){
+			return;
+		}
+		this.glVisible = glVisible;
+		gl.active(glVisible);
+	}
+
+	public boolean propsVisible(){
+		return propsVisible;
+	}
+	
+	public void propsVisible(boolean propsVisible){
+		if (!visible){
+			return;
+		}
+		if (this.propsVisible == propsVisible){
+			return;
+		}
+		this.propsVisible = propsVisible;
+	}
+	
+	public float scale(){
+		return scale;
+	}
+	
+	public void scale(float scale){
+		if (!visible){
+			return;
+		}
+		if (this.scale == scale){
+			return;
+		}
+		this.scale = scale;
+		display.scale(scale);
+		initBars();
+	}
+	
+	public void end(){
+		if (gl.active()){
+			gl.active(false);
+		}
+		scene.end();
+	}
+	
+	public String tickInfoAsString(){
+		return format("tick info", avgTickTime, "ms", avgTickRate, "fps") + "\n";
+	}
+	
+	public String subsystemsAsString(){
+		subsystemsBuffer.setLength(0);
+		boolean separated = false;
+		for (String name : nanos.keySet()){
+			String n = name;
+			if (name.startsWith("__")){
+				n = n.split("__")[1];
+			}else if (!separated){
+				subsystemsBuffer.append("\n");
+				separated = true;
+			}
+			float m = nanos.get(name) * 0.000001f;
+			float p = percents.get(name);
+			subsystemsBuffer.append(format(n, m, "ms", p, "%") + "\n");
+		}
+		return subsystemsBuffer.toString();
+	}
+	
+	public String glAsString(){
+		glBuffer.setLength(0);
+		for (Map.Entry<String, Integer> e : gl.stats.entrySet()){
+			glBuffer.append(format("gl " + e.getKey(), e.getValue()) + "\n");
+		}
+		return glBuffer.toString();
+	}
+	
+	public String propsAsString(){
+		propsBuffer.setLength(0);
+		int padding = 0;
+		for (String name : props.keySet()){
+			padding = (int) Math.max(padding, name.length());
+		}
+		for (Map.Entry<String, Object> e : props.entrySet()){
+			String s = e.getKey();
+			propsBuffer.append(format(s, padding, String.valueOf(e.getValue())) + "\n");
+		}
+		return propsBuffer.toString();
+	}
+	
+	private String format(String key, int padding, String value){
 		StringBuffer buffer = new StringBuffer();
-		value = value.replaceAll("\n", " ");
-		addString(buffer, key, 14, false, ' ');
-		buffer.append(" ");
-		int len = value.length();
-		len = len < 150 ? len : 150;
-		addString(buffer, value, len, false, ' ');
+		if (!value.contains("\n")){
+			buffer.append(SPACE);
+			addString(buffer, key, padding + MARGIN, false, ' ');
+			addString(buffer, value, value.length(), false, ' ');
+		}else{
+			String[] l = value.split("\n");
+			int len = l.length;
+			for (int i = 0; i < len; i++){
+				buffer.append(SPACE);
+				if (i == 0){
+					addString(buffer, key, padding + MARGIN, false, ' ');
+				}else{
+					addString(buffer, "", padding + MARGIN, false, ' ');
+				}
+				String s = l[i];
+				addString(buffer, s, s.length(), false, ' ');
+				if (i != len - 1){
+					buffer.append("\n");
+				}
+			}
+		}
 		return buffer.toString();
 	}
 	
-	private static String formatForGl(String name, int value){
-		// "%-21s %7f"
-		StringBuffer buffer = new StringBuffer();
-		addString(buffer, name, 21, false, ' ');
-		buffer.append(" ");
+	private String format(String name, int value){
+		StringBuffer buffer = new StringBuffer(SPACE);
+		addString(buffer, name, offsetLeft + 9, false, ' ');
+		buffer.append(SPACE);
 		addInt(buffer, value, 7, ' ');
 		return buffer.toString();
 	}
 	
-	private static String formatForSubsystems(String name, float avgTickTime, String timeUnits, float avgTickRate, String valueUnits){
-		// "%-14s %4.1f %-3s %4.1f %s"
-		StringBuffer buffer = new StringBuffer();
-		
-		addString(buffer, name, 14, false, ' ');
-		buffer.append(" ");
-		addFloat(buffer, avgTickTime, 5, 1, ' ');
-		buffer.append(" ");
+	private String format(String name, float avgTickTime, String timeUnits, float avgTickRate, String valueUnits){
+		StringBuffer buffer = new StringBuffer(SPACE);
+		addString(buffer, name, offsetLeft, false, ' ');
+		buffer.append(SPACE);
+		addFloat(buffer, avgTickTime, 4, 1, ' ');
+		buffer.append(SPACE);
 		addString(buffer, timeUnits, 3, false, ' ');
-		buffer.append(" ");
+		buffer.append(SPACE);
 		addFloat(buffer, avgTickRate, 4, 1, ' ');
-		buffer.append(" ");
+		buffer.append(SPACE);
 		buffer.append(valueUnits);
-		
 		return buffer.toString();
 	}
 	
-	private static void addInt(StringBuffer buffer, int value, int fieldPadding, char character){
+	private void addInt(StringBuffer buffer, int value, int fieldPadding, char character){
 		addString(buffer, Integer.toString(value), fieldPadding - 1, true, character);
 	}
 	
-	private static void addFloat(StringBuffer buffer, float value, int fieldPadding, int fractionPadding, char character){
+	private void addFloat(StringBuffer buffer, float value, int fieldPadding, int fractionPadding, char character){
 		String converted = Float.toString(value);
 		String [] split = converted.split("\\.");
-		
 		addString(buffer, split.length > 0 ? split[0] : "0", fieldPadding - (fractionPadding + 1), true, character);
 		if (fractionPadding > 0){
 			buffer.append(".");
@@ -660,7 +654,7 @@ public class Profiler{
 		}
 	}
 	
-	private static void addString(StringBuffer buffer, String value, int padding, boolean padLeft, char character){
+	private void addString(StringBuffer buffer, String value, int padding, boolean padLeft, char character){
 		if (value != null){
 			if (value.length() > padding){
 				buffer.append(value.substring(0, padding));
@@ -676,8 +670,8 @@ public class Profiler{
 		}
 	}
 	
-	private static void padWithCharacter(StringBuffer buffer, int padding, char character){
-		for (int i=0; i < padding; i++){
+	private void padWithCharacter(StringBuffer buffer, int padding, char character){
+		for (int i = 0; i < padding; i++){
 			buffer.append(character);
 		}
 	}

@@ -199,7 +199,7 @@ public class Scene implements Named{
 		}
 
 		if (json.get("framerateProfile").asBoolean()){
-			Bdx.profiler.init();
+			Bdx.profiler.visible(true);
 		}
 
 		float[] fc = json.get("clearColor").asFloatArray();
