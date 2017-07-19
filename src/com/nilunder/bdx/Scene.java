@@ -1031,4 +1031,12 @@ public class Scene implements Named{
 		return valid;
 	}
 
+	public void debugPhysicsVisualization(boolean on){
+		((Bullet.DebugDrawer) world.getDebugDrawer()).debug = on;
+	}
+
+	public boolean debugPhysicsVisualization(){
+		return ((Bullet.DebugDrawer) world.getDebugDrawer()).debug;
+	}
+
 }

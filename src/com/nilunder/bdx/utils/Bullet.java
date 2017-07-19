@@ -28,7 +28,7 @@ public static class DebugDrawer extends IDebugDraw{
 	private static Vector3 to;
 
 	private boolean canDraw;
-	private boolean debug;
+	public boolean debug;
 
 	public DebugDrawer(boolean debug){
 		if (shapeRenderer == null){
