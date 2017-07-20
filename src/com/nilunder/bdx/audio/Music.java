@@ -26,16 +26,6 @@ public class Music extends AudioStore<BDXMusic> implements Disposable {
 			m.dispose();
 	}
 
-	public ArrayList<String> available(){
-		ArrayList<String> tracks = new ArrayList<String>();
-
-		FileHandle[] files = Gdx.files.internal("bdx/audio/music/").list("");
-		for (FileHandle file : files)
-			tracks.add(file.nameWithoutExtension());
-
-		return tracks;
-	}
-
 	public void volume(float volume){
 		this.volume = volume;
 		for (BDXMusic music : values())
