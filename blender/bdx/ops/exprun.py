@@ -35,13 +35,6 @@ def export(self, context, multiBlend, diffExport):
 
     # Set the mouse cursor to "WAIT" as soon as exporting starts
     context.window.cursor_set("WAIT")
-
-    if context.scene.bdx.pre_export_program != "":
-        cmd = context.scene.bdx.pre_export_program
-        old_cwd = os.getcwd()
-        os.chdir(ut.project_root())
-        subprocess.check_call(os.path.join(ut.project_root(), cmd))
-        os.chdir(old_cwd)
     
     j = os.path.join
 
@@ -198,6 +191,13 @@ def export(self, context, multiBlend, diffExport):
 
         f = open(j(ut.project_root(), "android", "assets", "finishedExport"), "w")
         f.close()
+
+    if context.scene.bdx.post_export_program != "":
+        cmd = context.scene.bdx.post_export_program
+        old_cwd = os.getcwd()
+        os.chdir(ut.project_root())
+        subprocess.check_call(os.path.join(ut.project_root(), cmd))
+        os.chdir(old_cwd)
 
     context.window.cursor_set("DEFAULT")
 
