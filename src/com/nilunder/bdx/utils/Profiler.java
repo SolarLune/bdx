@@ -543,10 +543,10 @@ public class Profiler{
 	}
 	
 	public void end(){
-		if (gl.active()){
+		if (gl.active())
 			gl.active(false);
-		}
-		scene.end();
+		if (scene != null)
+			scene.end();
 	}
 	
 	public String tickInfoAsString(){
