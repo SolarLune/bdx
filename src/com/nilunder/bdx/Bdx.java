@@ -129,7 +129,7 @@ public class Bdx{
 		}
 		public Scene set(int index, Scene scene){
 			Scene old = remove(index);
-			add(index, scene);
+			add(index, scene);  						// We have to call add() to initialize the Scene
 			return old;
 		}
 		public Scene set(int index, String name){
