@@ -4,7 +4,6 @@ import java.util.*;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.controllers.Controllers;
-import com.badlogic.gdx.files.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g3d.*;
@@ -24,6 +23,7 @@ public class Bdx{
 		public boolean changed;
 		public Color clearColor = new Color(0, 0, 0, 0);
 		private boolean vsync;
+		private float downsample = 1;
 
 		public void vsync(boolean on) {
 			Gdx.graphics.setVSync(on);
@@ -91,6 +91,15 @@ public class Bdx{
 				return config.numDirectionalLights;
 			else
 				return config.numSpotLights;
+		}
+		public float downsample() {
+			return downsample;
+		}
+		public void downsample(float percentage) {
+			if (downsample != percentage) {
+				downsample = percentage;
+				resize(width(), height());		// Just call resize() to destroy and re-create new RenderBuffers
+			}
 		}
 	}
 
@@ -360,7 +369,7 @@ public class Bdx{
 
 			boolean frameBufferInUse = false;
 
-			if (scene.screenShaders.size() > 0 || (screenShadersUsed && scene.renderPassthrough)) { // If the scene is passing its render output, and screen shaders are used, then it needs to use the framebuffer to pass the render on.
+			if (display.downsample != 1 || scene.screenShaders.size() > 0 || (screenShadersUsed && scene.renderPassthrough)) { // If the scene is passing its render output, and screen shaders are used, then it needs to use the framebuffer to pass the render on.
 																									// If screen shaders aren't used anywhere, there's no need to render to a framebuffer, as OpenGL will correctly blend normally.
 				frameBuffer.begin();
 				frameBufferInUse = true;
@@ -407,14 +416,17 @@ public class Bdx{
 					if (!filter.uniformSets.contains(defaultScreenShaderUniformSet))
 						filter.uniformSets.add(defaultScreenShaderUniformSet);
 
-					if (!availableTempBuffers.containsKey(filter.renderScale.x))
-						availableTempBuffers.put(filter.renderScale.x, new RenderBuffer(spriteBatch, Math.round(vp.size().x * filter.renderScale.x), Math.round(vp.size().y * filter.renderScale.y)));
+					if (!availableTempBuffers.containsKey(filter.renderScale.x * display.downsample())) {
+						int fx = Math.max(1, (int) (Gdx.graphics.getWidth() * display.downsample()));
+						int fy = Math.max(1, (int) (Gdx.graphics.getHeight() * display.downsample()));
+						availableTempBuffers.put(filter.renderScale.x * display.downsample(), new RenderBuffer(spriteBatch, fx, fy));
+					}
 
-					RenderBuffer tempBuffer = availableTempBuffers.get(filter.renderScale.x);
+					RenderBuffer tempBuffer = availableTempBuffers.get(filter.renderScale.x * display.downsample);
 
 					tempBuffer.clear();
 
-					frameBuffer.drawTo(tempBuffer, filter, 0, 0, frameBuffer.getWidth(), frameBuffer.getHeight());
+					frameBuffer.drawTo(tempBuffer, filter, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 					if (!filter.overlay)
 						frameBuffer.clear();
@@ -527,8 +539,11 @@ public class Bdx{
 		if (depthBuffer != null)
 			depthBuffer.dispose();
 
-		frameBuffer = new RenderBuffer(spriteBatch);		// Have to recreate all render buffers and adjust the projection matrix as the window size has changed
-		depthBuffer = new RenderBuffer(spriteBatch);
+		int fx = Math.max(1, (int) (Gdx.graphics.getWidth() * display.downsample()));
+		int fy = Math.max(1, (int) (Gdx.graphics.getHeight() * display.downsample()));
+
+		frameBuffer = new RenderBuffer(spriteBatch, fx, fy);		// Have to recreate all render buffers and adjust the projection matrix as the window size has changed
+		depthBuffer = new RenderBuffer(spriteBatch, fx, fy);
 
 		for (RenderBuffer b : availableTempBuffers.values())
 			b.dispose();
@@ -545,8 +560,7 @@ public class Bdx{
 
 			if (scene.lastFrameBuffer != null)
 				scene.lastFrameBuffer.dispose();
-			scene.lastFrameBuffer = new RenderBuffer(null);
-
+			scene.lastFrameBuffer = new RenderBuffer(spriteBatch, fx, fy);
 			scene.viewport.update(width, height);
 		}
 

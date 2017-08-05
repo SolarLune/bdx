@@ -27,15 +27,14 @@ public class RenderBuffer extends FrameBuffer{
 	public void drawTo(RenderBuffer dest, ScreenShader filter, float x, float y, float w, float h){
 
 		if (dest != null) {
-
 			if (ScreenShader.nearestFiltering)
-				dest.getColorBufferTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+				getColorBufferTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 			else
-				dest.getColorBufferTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+				getColorBufferTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
 			dest.begin();
-
-		}
+		} else										// Rendering to the screen, so nearest is good to keep things sharp
+				getColorBufferTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
 		if (filter != null)
 			batch.setShader(filter.program);		// Set shader BEFORE calling begin() (avoids shader switching)
