@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
 import com.nilunder.bdx.Bdx;
@@ -21,13 +22,14 @@ import javax.vecmath.Vector3f;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Mesh implements Named {
+public class Mesh implements Named, Disposable {
 
 	public Model model;
 	public String name;
 	public Scene scene;
 	public ArrayListMaterials materials;
 	public ArrayList<ModelInstance> instances;
+	public boolean autoDispose;
 
 	public class ArrayListMaterials extends ArrayListNamed<Material> {
 
@@ -82,6 +84,7 @@ public class Mesh implements Named {
 		for (NodePart part : model.nodes.get(0).parts)
 			materials.add((Material) part.material);
 		instances = new ArrayList<ModelInstance>();
+		autoDispose = true;
 	}
 	
 	public int numIndices(){
@@ -102,10 +105,6 @@ public class Mesh implements Named {
 	
 	public Mesh(Model model, Scene scene){
 		this(model, scene, model.meshParts.first().id);
-	}
-
-	protected void finalize() throws Throwable {
-		model.dispose();
 	}
 
     public int getVertexCount(int materialSlot){
@@ -249,6 +248,8 @@ public class Mesh implements Named {
 			part.material = newMat;
 		}
 
+		scene.meshCopies.add(newMesh);
+
 		return newMesh;
 	}
 
@@ -269,5 +270,16 @@ public class Mesh implements Named {
 	}
 
 	// Also UV, Normal, and Transforms (and possibly "do this to all" versions that don't use transforms?)
+
+	public void dispose() {
+		scene.meshCopies.remove(this);
+		if (model != null)
+			model.dispose();
+		model = null;
+	}
+
+	public boolean valid() {
+		return model != null;
+	}
 
 }

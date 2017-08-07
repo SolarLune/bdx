@@ -509,6 +509,10 @@ public class Bdx{
 	}
 
 	public static void dispose(){
+
+		for (Scene s : scenes)
+			s.dispose();
+
 		modelBatch.dispose();
 		depthBatch.dispose();
 		spriteBatch.dispose();
@@ -519,9 +523,6 @@ public class Bdx{
 
 		for (RenderBuffer b : availableTempBuffers.values())
 			b.dispose();
-		for (Scene s : scenes) {
-			s.dispose();
-		}
 
 	}
 
