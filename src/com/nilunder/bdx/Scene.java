@@ -56,6 +56,7 @@ public class Scene implements Named{
 	private FileHandle scene;
 
 	public HashMap<String, Mesh> meshes;
+	public ArrayList<Mesh> meshCopies;
 	public HashMap<String,Texture> textures;
 	public HashMap<String,Material> materials;
 	public Material defaultMaterial;
@@ -165,6 +166,7 @@ public class Scene implements Named{
 		defaultMesh = new Mesh(new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates), this);
 
 		meshes = new HashMap<String, Mesh>();
+		meshCopies = new ArrayList<Mesh>();
 		textures = new HashMap<String,Texture>();
 		materials = new HashMap<String,Material>();
 		modelToFrame = new HashMap<>();
@@ -257,7 +259,7 @@ public class Scene implements Named{
 				ba.opacity = opacity;
 				material.set(ba);
 				material.set(FloatAttribute.createAlphaTest(0.01f));	// Discard pixels that fail this alpha test (sub-1% alpha)
-				material.backToFrontSorting(true);					// Turn on back-to-front sorting for alpha-enabled objects by default
+				material.backToFrontSorting(true);						// Turn on back-to-front sorting for alpha-enabled objects by default
 			}else{
 				BlendingAttribute ba = new BlendingAttribute();
 				ba.blended = false;
@@ -268,7 +270,9 @@ public class Scene implements Named{
 		}
 		
 		for (JsonValue model: json.get("models")){
-			meshes.put(model.name, new Mesh(createModel(model), this, model.name));
+			Mesh m = new Mesh(createModel(model), this, model.name);
+			m.autoDispose = false;
+			meshes.put(model.name, m);
 		}
 
 		HashMap<String, JsonValue> fonts = new HashMap<>();
@@ -408,26 +412,36 @@ public class Scene implements Named{
 			g.end();
 
 		lastFrameBuffer.dispose();
+		lastFrameBuffer = null;
+
+		defaultMesh.dispose();
 		defaultMesh = null;
-		meshes = null;
 
 		for (Texture t : textures.values())
 			t.dispose();
+		textures.clear();
 
 		for (ScreenShader s : screenShaders)
 			s.dispose();
+		screenShaders.clear();
 
 		for (Camera c : cameras) {
 			if (c.renderBuffer != null)
 				c.renderBuffer.dispose();
+			c.renderBuffer = null;
 		}
 
-		for (Material m : materials.values()) {
-			if (m.shader != null)
-				m.shader.dispose();
-			if (m.currentTexture != null)
-				m.currentTexture.dispose();
-		}
+		for (Material m : materials.values())
+			m.dispose();
+		materials.clear();
+
+		for (Mesh m : meshes.values())
+			m.dispose();
+		meshes.clear();
+
+		for (Mesh m : new ArrayList<Mesh>(meshCopies))
+			m.dispose();
+		meshCopies.clear();
 
 	}
 	
@@ -917,7 +931,6 @@ public class Scene implements Named{
 		}
 
 		if (requestedEnd) {
-			valid = false;
 			dispose();
 
 			if (Bdx.scenes.contains(this))

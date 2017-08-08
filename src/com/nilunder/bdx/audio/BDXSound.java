@@ -68,6 +68,7 @@ public class BDXSound {
 
     public void dispose() {
         data.dispose();
+        data = null;
     }
 
     public void pause(long handleID) {

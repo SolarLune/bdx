@@ -342,8 +342,8 @@ public class Bdx{
 						program.setUniformf("time", Bdx.time);
 						program.setUniformi("lastFrame", 1);
 						program.setUniformi("depthTexture", 2);
-						program.setUniformf("screenWidth", vpw);
-						program.setUniformf("screenHeight", vph);
+						program.setUniformf("screenWidth", vpw * display.downsample());
+						program.setUniformf("screenHeight", vph * display.downsample());
 						program.setUniformf("near", scene.camera.near());
 						program.setUniformf("far", scene.camera.far());
 					}
@@ -357,9 +357,8 @@ public class Bdx{
 			for (Camera cam : scene.cameras){						// Render auxiliary cameras
 				if (cam.renderToTexture){
 					cam.update();
-					if (cam.renderBuffer == null){
-						cam.initRenderBuffer();
-					}
+					if (cam.renderBuffer == null)
+						cam.updateRenderBuffer();
 					cam.renderBuffer.begin();
 					Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 					renderWorld(modelBatch, scene, cam);
@@ -416,13 +415,13 @@ public class Bdx{
 					if (!filter.uniformSets.contains(defaultScreenShaderUniformSet))
 						filter.uniformSets.add(defaultScreenShaderUniformSet);
 
-					if (!availableTempBuffers.containsKey(filter.renderScale.x * display.downsample())) {
-						int fx = Math.max(1, (int) (Gdx.graphics.getWidth() * display.downsample()));
-						int fy = Math.max(1, (int) (Gdx.graphics.getHeight() * display.downsample()));
-						availableTempBuffers.put(filter.renderScale.x * display.downsample(), new RenderBuffer(spriteBatch, fx, fy));
+					if (!availableTempBuffers.containsKey(filter.renderScale.x)) {
+						int fx = Math.max(1, (int) (vp.size().x * filter.renderScale.x * display.downsample()));
+						int fy = Math.max(1, (int) (vp.size().y * filter.renderScale.y * display.downsample()));
+						availableTempBuffers.put(filter.renderScale.x, new RenderBuffer(spriteBatch, fx, fy));
 					}
 
-					RenderBuffer tempBuffer = availableTempBuffers.get(filter.renderScale.x * display.downsample);
+					RenderBuffer tempBuffer = availableTempBuffers.get(filter.renderScale.x);
 
 					tempBuffer.clear();
 
@@ -510,6 +509,10 @@ public class Bdx{
 	}
 
 	public static void dispose(){
+
+		for (Scene s : scenes)
+			s.dispose();
+
 		modelBatch.dispose();
 		depthBatch.dispose();
 		spriteBatch.dispose();
@@ -520,9 +523,6 @@ public class Bdx{
 
 		for (RenderBuffer b : availableTempBuffers.values())
 			b.dispose();
-		for (Scene s : scenes) {
-			s.dispose();
-		}
 
 	}
 
@@ -552,11 +552,8 @@ public class Bdx{
 
 		for (Scene scene : scenes) {
 
-			for (Camera cam : scene.cameras) {                // Have to do this, as the RenderBuffers need to be resized for the new window size
-				if (cam.renderBuffer != null)
-					cam.renderBuffer.dispose();
-				cam.renderBuffer = null;
-			}
+			for (Camera cam : scene.cameras)
+				cam.updateRenderBuffer();
 
 			if (scene.lastFrameBuffer != null)
 				scene.lastFrameBuffer.dispose();

@@ -17,6 +17,8 @@ public class Audio {
     public void dispose(){
         music.dispose();
         sounds.dispose();
+        music = null;
+        sounds = null;
     }
 
     public void volume(float volume){

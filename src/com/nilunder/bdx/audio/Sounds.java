@@ -25,6 +25,7 @@ public class Sounds extends AudioStore<BDXSound> implements Disposable{
 	public void dispose(){
 		for (BDXSound s : values())
 			s.dispose();
+		clear();
 	}
 
 	public void volume(float volume) {

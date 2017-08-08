@@ -24,6 +24,7 @@ public class Music extends AudioStore<BDXMusic> implements Disposable {
 	public void dispose(){
 		for (BDXMusic m : values())
 			m.dispose();
+		clear();
 	}
 
 	public void volume(float volume){

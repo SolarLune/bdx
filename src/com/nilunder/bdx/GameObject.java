@@ -624,6 +624,11 @@ public class GameObject implements Named{
 
 		if (modelInstance != null)
 			mesh.instances.remove(modelInstance);
+
+		if (mesh.instances.size() == 0 && mesh.autoDispose)
+			mesh.dispose();
+
+		mesh = null;
 	}
 
 	public boolean valid(){
@@ -861,13 +866,15 @@ public class GameObject implements Named{
 	}
 	
 	public void join(ArrayList<GameObject> objects, boolean endObjects){
-		
+
 		// collect scaled transforms per mesh
 		
 		HashMap<Mesh, ArrayList<Matrix4f>> map = new HashMap<Mesh, ArrayList<Matrix4f>>();
 		Mesh m;
 		for (GameObject g : objects){
 			m = g.mesh();
+			if (!g.valid() || !m.valid())
+				continue;
 			ArrayList<Matrix4f> l;
 			if (map.containsKey(m)){
 				l = map.get(m);
@@ -879,9 +886,8 @@ public class GameObject implements Named{
 			Vector3f s = g.scale();
 			t.setRow(3, s.x, s.y, s.z, 0);
 			l.add(t);
-			if (endObjects){
-				g.end();
-			}
+			if (endObjects)
+				g.endNoChildren();
 		}
 		
 		// join

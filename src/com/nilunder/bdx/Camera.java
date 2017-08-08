@@ -169,15 +169,17 @@ public class Camera extends GameObject{
 		data.up.set(axis.x, axis.y, axis.z);
 		data.update();
 	}
-	
-	public void initRenderBuffer(){
-		renderBuffer = new RenderBuffer(null, Math.round(resolution.x), Math.round(resolution.y));
-	}
-	
+
 	public void updateRenderBuffer(){
-		if (renderBuffer != null)
-			renderBuffer.dispose();
-		initRenderBuffer();
+
+		int targetX = Math.max(1, Math.round(resolution.x * Bdx.display.downsample()));
+		int targetY = Math.max(1, Math.round(resolution.y * Bdx.display.downsample()));
+
+		if (renderBuffer == null || (renderBuffer.getWidth() != targetX || renderBuffer.getHeight() != targetY)) {
+			if (renderBuffer != null)
+				renderBuffer.dispose();
+			renderBuffer = new RenderBuffer(null, targetX, targetY);
+		}
 	}
 	
 	public TextureRegion texture(){

@@ -97,6 +97,7 @@ public class BDXMusic {
 
     public void dispose() {
         data.dispose();
+        data = null;
     }
 
 }

@@ -6,11 +6,12 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Disposable;
 import com.nilunder.bdx.Scene;
 import com.nilunder.bdx.utils.Color;
 import com.nilunder.bdx.utils.Named;
 
-public class Material extends com.badlogic.gdx.graphics.g3d.Material implements Named {
+public class Material extends com.badlogic.gdx.graphics.g3d.Material implements Named, Disposable {
 
 	public Texture currentTexture;
 	public Shader shader;
@@ -162,6 +163,15 @@ public class Material extends com.badlogic.gdx.graphics.g3d.Material implements 
 			this.set(TextureAttribute.createDiffuse(texRegion));
 			texturePath = null;
 		}
+	}
+
+	public void dispose() {
+		if (shader != null)
+			shader.dispose();
+		shader = null;
+		if (currentTexture != null)
+			currentTexture.dispose();
+		currentTexture = null;
 	}
 
 }
