@@ -205,7 +205,7 @@ public class GameObject implements Named{
 			if (compound && compShapeOld != null)
 				scene.world.addRigidBody(body);
 
-		}else{
+		}else if (valid()) {
 			dynamics(true);
 		}
 	}
@@ -604,9 +604,8 @@ public class GameObject implements Named{
 
 	public void end(){
 		endNoChildren();
-		for (GameObject g : new ArrayList<GameObject>(children)){
+		for (GameObject g : new ArrayList<GameObject>(children))
 			g.end();
-		}
 	}
 	
 	public void endNoChildren(){
@@ -625,10 +624,6 @@ public class GameObject implements Named{
 		if (modelInstance != null)
 			mesh.instances.remove(modelInstance);
 
-		if (mesh.instances.size() == 0 && mesh.autoDispose)
-			mesh.dispose();
-
-		mesh = null;
 	}
 
 	public boolean valid(){

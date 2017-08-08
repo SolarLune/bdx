@@ -164,6 +164,7 @@ public class Scene implements Named{
 		defaultMaterial.set(new BlendingAttribute());
 		defaultMaterial.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
 		defaultMesh = new Mesh(new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates), this);
+		defaultMesh.autoDispose = false;
 
 		meshes = new HashMap<String, Mesh>();
 		meshCopies = new ArrayList<Mesh>();
@@ -409,7 +410,9 @@ public class Scene implements Named{
 		valid = false;
 
 		for (GameObject g : objects)
-			g.end();
+			g.endNoChildren();
+
+		removeObjects();
 
 		lastFrameBuffer.dispose();
 		lastFrameBuffer = null;
@@ -871,12 +874,24 @@ public class Scene implements Named{
 		}
 		toBeAdded.clear();
 
+		removeObjects();
+
+	}
+
+	private void removeObjects() {
+
 		for (GameObject g : toBeRemoved) {
 			g.parent(null);
 			world.removeRigidBody(g.body);
+			g.body.setUserPointer(null);
 			objects.remove(g);
 			if (g instanceof Light)
 				lights.remove(g);
+
+			if (g.mesh().instances.size() == 0 && g.mesh().autoDispose)
+				g.mesh().dispose();
+
+			scene = null;
 		}
 		toBeRemoved.clear();
 

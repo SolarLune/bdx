@@ -94,6 +94,9 @@ public class Light extends GameObject {
 	@Override
 	public void endNoChildren(){
 
+		if (!valid())
+			return;
+
 		if (type.equals(Type.POINT))
 			((PointLightsAttribute) scene.environment.get(PointLightsAttribute.Type)).lights.removeValue((PointLight) lightData, true);		// Remove the light from the environment
 		if (type.equals(Type.SUN))

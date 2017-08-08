@@ -231,6 +231,19 @@ public class Bdx{
 
 		profiler.start("__gpu wait");
 
+		defaultScreenShaderUniformSet = new UniformSet() {
+			@Override
+			public void set(ShaderProgram program) {
+				program.setUniformf("time", Bdx.time);
+				program.setUniformi("lastFrame", 1);
+				program.setUniformi("depthTexture", 2);
+				program.setUniformf("screenWidth", scene.viewport.w * display.downsample());
+				program.setUniformf("screenHeight", scene.viewport.h * display.downsample());
+				program.setUniformf("near", scene.camera.near());
+				program.setUniformf("far", scene.camera.far());
+			}
+		};
+
 	}
 
 	public static void main(){
@@ -272,6 +285,8 @@ public class Bdx{
 		profiler.stop("__scene");
 		// ------------------------------
 
+		defaultScreenShaderUniformSet.scene = null;		// Have to do this to not hold onto references
+
 		for (Component c : components){
 			if (c.state != null)
 				c.state.main();
@@ -305,7 +320,7 @@ public class Bdx{
 
 		for (int i = 0; i < newSceneList.size(); i++){
 
-			final Scene scene = newSceneList.get(i);
+			Scene scene = newSceneList.get(i);
 			boolean prevSceneRenderPassthrough = false;
 			boolean nextSceneRenderPassthrough = false;
 
@@ -330,26 +345,6 @@ public class Bdx{
 
 			vp = scene.viewport;
 			vp.apply();
-
-			final float vpw = vp.w;
-			final float vph = vp.h;
-
-			if (defaultScreenShaderUniformSet == null) {
-
-				defaultScreenShaderUniformSet = new UniformSet() {
-					@Override
-					public void set(ShaderProgram program) {
-						program.setUniformf("time", Bdx.time);
-						program.setUniformi("lastFrame", 1);
-						program.setUniformi("depthTexture", 2);
-						program.setUniformf("screenWidth", vpw * display.downsample());
-						program.setUniformf("screenHeight", vph * display.downsample());
-						program.setUniformf("near", scene.camera.near());
-						program.setUniformf("far", scene.camera.far());
-					}
-				};
-
-			}
 
 			depthShaderProvider.update(scene);
 			shaderProvider.update(scene);
@@ -414,6 +409,9 @@ public class Bdx{
 
 					if (!filter.uniformSets.contains(defaultScreenShaderUniformSet))
 						filter.uniformSets.add(defaultScreenShaderUniformSet);
+
+					for (UniformSet uniformSet : filter.uniformSets)
+						uniformSet.scene = scene;
 
 					if (!availableTempBuffers.containsKey(filter.renderScale.x)) {
 						int fx = Math.max(1, (int) (vp.size().x * filter.renderScale.x * display.downsample()));
