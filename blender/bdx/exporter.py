@@ -628,7 +628,7 @@ def instantiator(objects):
 
     src_root = ut.src_root()
 
-    relevant_dirs = ut.listdir(src_root, dirs_only=True, recursive=True);
+    relevant_dirs = ut.listdir(src_root, dirs_only=True, recursive=True)
 
     try:
         relevant_dirs.remove(j(src_root, "inst"))
@@ -637,13 +637,13 @@ def instantiator(objects):
 
     relevant_dirs.append(src_root)
 
-    relevant_files = sum([ut.listdir(d, pattern="*.java") for d in relevant_dirs], [])
+    relevant_files = sum([ut.listdir(d, pattern="*", files_only=True) for d in relevant_dirs], [])
 
     def path_to_name(path):
         return os.path.split(path)[1].split('.')[0]
 
     def path_to_class(path):
-        path = path[:-5] # strip ".java"
+        path = path[:path.rfind(".")]       # Strip the right-hand side of the filename
         path = os.path.relpath(path, j(ut.project_root(), "core", "src"))
         return '.'.join(ut.split_path(path))
 
