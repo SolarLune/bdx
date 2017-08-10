@@ -276,6 +276,7 @@ public class Mesh implements Named, Disposable {
 		if (model != null)
 			model.dispose();
 		model = null;
+		scene = null;
 	}
 
 	public boolean valid() {

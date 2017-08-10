@@ -80,8 +80,10 @@ class BDXDefaultShader extends DefaultShader {
 		}
 
 		if (applyingMaterial != null && applyingMaterial.shader != null) {
-			for (UniformSet uniformSet : applyingMaterial.shader.uniformSets)
+			for (UniformSet uniformSet : applyingMaterial.shader.uniformSets) {
+				uniformSet.scene = shaderProvider.scene;
 				uniformSet.set(program);
+			}
 		}
 
 		super.render(renderable, combinedAttributes);
