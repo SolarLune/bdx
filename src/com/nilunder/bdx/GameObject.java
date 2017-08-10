@@ -762,6 +762,9 @@ public class GameObject implements Named{
 		if (mesh == this.mesh)              // You're already set to the current mesh
 			return;
 
+		if (!mesh.valid())
+			throw new RuntimeException("ERROR! Attempting to set mesh of GameObject \"" + name + "\" to invalid Mesh \"" + mesh.name() + "\"!");
+
 		JsonValue mOrigin = null;
 		JsonValue mDimNoScale = null;
 
