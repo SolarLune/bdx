@@ -14,6 +14,7 @@ import com.nilunder.bdx.gl.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.utils.Color;
+import com.nilunder.bdx.utils.Timer;
 
 import javax.vecmath.Vector2f;
 
@@ -56,12 +57,11 @@ public class Bdx{
 		public Vector2f center(){
 			return new Vector2f(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
 		}
-		public void fullscreen(boolean full){
-			if (full){
+		public void fullscreen(boolean full) {
+			if (full)
 				Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-			}else{
+			else
 				size(size());
-			}
 		}
 		public boolean fullscreen(){
 			return Gdx.graphics.isFullscreen();
@@ -163,6 +163,7 @@ public class Bdx{
 	public static Audio audio;
 	public static Mouse mouse;
 	public static ArrayListNamed<Gamepad> gamepads;
+	public static Timer gamepadRefreshTimer = new Timer();
 	public static InputMaps imaps;
 	public static Keyboard keyboard;
 	public static ArrayList<Finger> fingers;
@@ -206,9 +207,9 @@ public class Bdx{
 			allocatedFingers.add(new Finger(i));
 		}
 
-		gamepads = new ArrayListNamed<Gamepad>();
-		for (int i = 0; i < Controllers.getControllers().size; i++)
-			gamepads.add(new Gamepad(i));
+		gamepadRefreshTimer.pause();
+
+		initializeGamepads();
 
 		com.badlogic.gdx.graphics.glutils.ShaderProgram.pedantic = false;
 
@@ -224,7 +225,7 @@ public class Bdx{
 
 		advancedLightingOn = true;
 
-		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers, gamepads));
+		Gdx.input.setInputProcessor(new GdxProcessor(keyboard, mouse, allocatedFingers));
 
 		availableTempBuffers = new HashMap<Float, RenderBuffer>();
 		requestedRestart = false;
@@ -447,7 +448,12 @@ public class Bdx{
 
 			profiler.stop("__render");
 		}
-		
+
+		if (Bdx.display.changed) {
+			gamepadRefreshTimer.restart();
+			gamepadRefreshTimer.resume();
+		}
+
 		mouse.wheelMove = 0;
 		Bdx.display.changed = false;
 		
@@ -494,6 +500,11 @@ public class Bdx{
 		shaderProvider.handleMaterialShaderChanges();
 
 		profiler.start("__gpu wait");
+
+		if (gamepadRefreshTimer.tick()) {
+			gamepadRefreshTimer.pause();
+			initializeGamepads();
+		}
 
 	}
 
@@ -568,6 +579,25 @@ public class Bdx{
 
 	public static void restart(){
 		requestedRestart = true;
+	}
+
+	private static void initializeGamepads() {
+
+		if (gamepads == null)
+			gamepads = new ArrayListNamed<Gamepad>();
+
+		ArrayList<Gamepad> oldGamepads = new ArrayList<Gamepad>(gamepads);
+
+		gamepads.clear();
+		for (int i = 0; i < Controllers.getControllers().size; i++) {
+			Gamepad newGP = new Gamepad(i);
+			if (oldGamepads.size() > i && oldGamepads.get(i) != null) {
+				Gamepad oldGP = oldGamepads.get(i);
+				newGP.profiles.putAll(oldGP.profiles);
+				newGP.profile(oldGP.profile.name);
+			}
+			gamepads.add(newGP);
+		}
 	}
 
 }
