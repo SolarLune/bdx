@@ -175,11 +175,18 @@ def find_file(pattern, path):
 
 def libgdx_version():
     fp = p.join(project_root(), "build.gradle")
-    _, version, *_ = get_file_line(fp, 21).split("'")
+    line_number = 21
+    with open(fp, "r") as build_gradle:
+        lines = build_gradle.readlines()
+        for i, line in enumerate(lines):
+            if "gdxVersion" in line:
+                line_number = i + 1
+                break
+    _, version, *_ = get_file_line(fp, line_number).split("'")
     return version
 
 def internal_java_package():
-    java_texts = [t for t in bpy.data.texts.values() if t.name.endswith(".java")]
+    java_texts = [t for t in bpy.data.texts.values()]
 
     if not java_texts:
         return None
@@ -187,7 +194,10 @@ def internal_java_package():
     for text_line in java_texts[0].lines:
         line = text_line.body
         if line.startswith("package "):
-            return line.split(" ")[1][:-1]
+            if line.endswith(";"):
+                return line.split(" ")[1][:-1]
+            else:
+                return line.split(" ")[1]
 
 def in_packed_bdx_blend():
     return bpy.data.is_saved and internal_java_package()
@@ -201,7 +211,7 @@ def split_path(path):
 
 def save_internal_java_files(to_dir, overwrite=True):
     saved = []
-    java_texts = [t for t in bpy.data.texts.values() if t.name.endswith(".java")]
+    java_texts = [t for t in bpy.data.texts.values()]
 
     for t in java_texts:
         fp = p.join(to_dir, t.name)
