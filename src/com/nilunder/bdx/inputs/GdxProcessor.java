@@ -93,7 +93,6 @@ public static class GamepadAdapter extends ControllerAdapter{
 		code = value >= 0 ? 200 + code : -200 - code;
 		GdxProcessor.UpDownLog b = gamepad.profile.codeToLog.get(code);
 		if (b != null){
-			float trigger = 0.35f;
 
 			value = Math.abs(value);
 			Float lastVal = lastAxisBtnState.get(code);
@@ -154,7 +153,7 @@ public static class GamepadAdapter extends ControllerAdapter{
 	private Mouse mouse;
 	private ArrayList<Finger> allocatedFingers;
 
-	public GdxProcessor(Keyboard keyboard, Mouse mouse, ArrayList<Finger> allocatedFingers, ArrayList<Gamepad> gamepads){
+	public GdxProcessor(Keyboard keyboard, Mouse mouse, ArrayList<Finger> allocatedFingers){
 		this.keyboard = keyboard;
 		this.mouse = mouse;
 		this.allocatedFingers = allocatedFingers;
