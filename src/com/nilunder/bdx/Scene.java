@@ -948,9 +948,6 @@ public class Scene implements Named{
 		if (requestedEnd) {
 			dispose();
 
-			if (Bdx.scenes.contains(this))
-				Bdx.scenes.remove(this);
-
 		} else if (requestedRestart) {
 			dispose();
 			init();

@@ -172,6 +172,7 @@ public class Bdx{
 	public static float physicsSpeed;
 	public static float timeSpeed;
 	public static boolean restartOnExport = false;
+	public static UpdateThread updateThread;
 
 	private static boolean advancedLightingOn;
 	private static ArrayList<Finger> allocatedFingers;
@@ -319,6 +320,12 @@ public class Bdx{
 			}
 		}
 
+		if (updateThread != null) {
+			if (!updateThread.started())
+				updateThread.start();
+			updateThread.update();
+		}
+
 		for (int i = 0; i < newSceneList.size(); i++){
 
 			Scene scene = newSceneList.get(i);
@@ -336,8 +343,8 @@ public class Bdx{
 				depthBufferCleared = false;
 			}
 
-			scene.update();
-			profiler.stop("__scene");
+			if (updateThread == null)
+				scene.update();
 
 			if (!scene.valid() || !scene.visible)
 				continue;
@@ -447,6 +454,9 @@ public class Bdx{
 			debugDrawer.drawWorld(scene.world, scene.camera.data);
 
 			profiler.stop("__render");
+
+			if (!scene.valid() && Bdx.scenes.contains(scene))
+				Bdx.scenes.remove(scene);
 		}
 
 		if (Bdx.display.changed) {
