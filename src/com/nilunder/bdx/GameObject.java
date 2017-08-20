@@ -734,20 +734,8 @@ public class GameObject implements Named{
 
 	public void mesh(String meshName){
 
-		Mesh m = null;
+		Mesh m = scene.meshes.get(meshName);
 
-		ArrayList<Scene> sceneList = new ArrayList<Scene>(Bdx.scenes);
-		
-		if (sceneList.indexOf(scene) >= 0)
-			Collections.swap(sceneList, sceneList.indexOf(scene), 0);
-		else
-			sceneList.add(0, scene);
-
-		for (Scene sce : sceneList){
-			m = sce.meshes.get(meshName);
-			if (m != null)
-				break;
-		}
 		if (m == null)
 			throw new RuntimeException("No model found with name '" + meshName + "' in an active scene.");
 
@@ -789,7 +777,7 @@ public class GameObject implements Named{
 		Matrix4 trans;
 		if (modelInstance != null) {
 			trans = modelInstance.transform;
-			this.mesh.instances.remove(this);
+			this.mesh.instances.remove(modelInstance);
 		}
 		else
 			trans = new Matrix4();

@@ -272,7 +272,8 @@ public class Mesh implements Named, Disposable {
 	// Also UV, Normal, and Transforms (and possibly "do this to all" versions that don't use transforms?)
 
 	public void dispose() {
-		scene.meshCopies.remove(this);
+		if (scene != null)
+			scene.meshCopies.remove(this);
 		if (model != null)
 			model.dispose();
 		model = null;
