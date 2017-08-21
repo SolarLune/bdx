@@ -446,6 +446,9 @@ public class Scene implements Named{
 			m.dispose();
 		meshCopies.clear();
 
+		world.destroy();
+		world = null;
+
 	}
 	
 	private void hookParentChild(){
@@ -882,7 +885,8 @@ public class Scene implements Named{
 
 		for (GameObject g : toBeRemoved) {
 			g.parent(null);
-			world.removeRigidBody(g.body);
+			if (g.body.isInWorld())
+				world.removeRigidBody(g.body);
 			g.body.setUserPointer(null);
 			objects.remove(g);
 			if (g instanceof Light)
@@ -933,7 +937,7 @@ public class Scene implements Named{
 			try{
 				world.stepSimulation(Bdx.TICK_TIME * Bdx.physicsSpeed, 0);
 			}catch (NullPointerException e){
-				throw new RuntimeException("PHYSICS ERROR: Detected collision between Static objects set to Ghost, with Triangle Mesh bounds: Keep them seperated, or use different bounds.");
+				throw new RuntimeException("PHYSICS ERROR: Detected collision between Static objects set to Ghost, with Triangle Mesh bounds: Keep them separated, or use different bounds.");
 			}
 			Bdx.profiler.stop("__physics");
 
