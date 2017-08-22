@@ -516,7 +516,10 @@ def srl_objects(objects):
         elif obj.type == "FONT":
             d["font"] = font_name(obj.data.font)
             d["text"] = obj.data.body
-            d["alignment"] = obj.data.align_x
+            if float("{}.{}".format(*bpy.app.version)) > 2.77:
+                d["alignment"] = obj.data.align_x
+            else:
+                d["alignment"] = obj.data.align
 
         elif obj.type == "LAMP":
             d['lamp'] = {
