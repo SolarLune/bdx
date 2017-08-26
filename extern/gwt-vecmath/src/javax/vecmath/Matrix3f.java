@@ -2414,7 +2414,51 @@ public class Matrix3f implements java.io.Serializable, Cloneable {
 	/**
 	 * BDX conveniences:
 	 */
-
+	
+	public final void get(Vector3f sca, Matrix3f ori){
+		float[] fa = new float[3];
+		for (int i = 0; i < 3; i++){
+			getColumn(i, sca);
+			fa[i] = sca.length();
+			sca.scale(1 / fa[i]);
+			ori.setColumn(i, sca);
+		}
+		sca.set(fa);
+	}
+	
+	public final void set(Vector3f sca, Matrix3f ori){
+		set(ori);
+		mul(sca);
+	}
+	
+	public final Matrix3f orientation(){
+		Matrix3f ori = new Matrix3f();
+		get(new Vector3f(), ori);
+		return ori;
+	}
+	
+	public final void orientation(Matrix3f ori){
+		set(scale(), ori);
+	}
+	
+	public final Vector3f scale(){
+		return new Vector3f(
+			(float) Math.sqrt(m00 * m00 + m10 * m10 + m20 * m20),
+			(float) Math.sqrt(m01 * m01 + m11 * m11 + m21 * m21),
+			(float) Math.sqrt(m02 * m02 + m12 * m12 + m22 * m22)
+		);
+	}
+	
+	public final void scale(Vector3f sca){
+		set(sca, orientation());
+	}
+	
+	public final void mul(Vector3f sca){
+		m00 *= sca.x; m01 *= sca.y; m02 *= sca.z;
+		m10 *= sca.x; m11 *= sca.y; m12 *= sca.z;
+		m20 *= sca.x; m21 *= sca.y; m22 *= sca.z;
+	}
+	
 	public final Matrix3f mult(Matrix3f b){
 		Matrix3f a = new Matrix3f(this);
 		a.mul(b);

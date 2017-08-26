@@ -3952,15 +3952,110 @@ public class Matrix4f implements java.io.Serializable, Cloneable {
 	 * BDX conveniences:
 	 */
 	
+	public final void get(float[] fa){
+		fa[0] = m00; fa[1] = m01; fa[2] = m02; fa[3] = m03;
+		fa[4] = m10; fa[5] = m11; fa[6] = m12; fa[7] = m13;
+		fa[8] = m20; fa[9] = m21; fa[10] = m22; fa[11] = m23;
+		fa[12] = m30; fa[13] = m31; fa[14] = m32; fa[15] = m33;
+	}
+	
+	public final void get(Vector3f pos, Vector3f sca, Matrix3f ori){
+		Matrix3f oriScaled = new Matrix3f();
+		getRotationScale(oriScaled);
+		oriScaled.get(sca, ori);
+		get(pos);
+	}
+	
+	public final void get(Vector3f sca, Matrix4f transNoSca){
+		Matrix3f oriScaled = new Matrix3f();
+		getRotationScale(oriScaled);
+		Matrix3f ori = new Matrix3f();
+		oriScaled.get(sca, ori);
+		transNoSca.set(this);
+		transNoSca.setRotationScale(ori);
+	}
+	
+	public final void set(Vector3f pos, Vector3f sca, Matrix3f ori){
+		Matrix3f oriScaled = new Matrix3f();
+		oriScaled.set(sca, ori);
+		setRotationScale(oriScaled);
+		position(pos);
+		m33 = 1;
+	}
+	
+	public final void set(Vector3f sca, Matrix4f transNoSca){
+		set(transNoSca);
+		Matrix3f oriScaled = new Matrix3f();
+		getRotationScale(oriScaled);
+		oriScaled.scale(sca);
+		setRotationScale(oriScaled);
+	}
+	
+	public final Vector3f scale(){
+		Matrix3f oriScaled = new Matrix3f();
+		getRotationScale(oriScaled);
+		return oriScaled.scale();
+	}
+	
+	public final void scale(Vector3f sca){
+		Matrix3f oriScaled = new Matrix3f();
+		getRotationScale(oriScaled);
+		oriScaled.scale(sca);
+		setRotationScale(oriScaled);
+	}
+	
+	public final Matrix3f orientation(){
+		Matrix3f oriScaled = new Matrix3f();
+		getRotationScale(oriScaled);
+		return oriScaled.orientation();
+	}
+	
+	public final void orientation(Matrix3f ori){
+		Matrix3f oriScaled = new Matrix3f();
+		getRotationScale(oriScaled);
+		oriScaled.orientation(ori);
+		setRotationScale(oriScaled);
+	}
+	
+	public final Vector3f position(){
+		return new Vector3f(m03, m13, m23);
+	}
+	
+	public final void position(Vector3f v){
+		m03 = v.x; m13 = v.y; m23 = v.z;
+	}
+	
+	public final void mul(Vector3f sca){
+		m00 *= sca.x; m01 *= sca.y; m02 *= sca.z;
+		m10 *= sca.x; m11 *= sca.y; m12 *= sca.z;
+		m20 *= sca.x; m21 *= sca.y; m22 *= sca.z;
+	}
+	
+	public final Matrix4f mult(Matrix4f t){
+		Matrix4f m = new Matrix4f(this);
+		m.mul(t);
+		return m;
+	}
+	
 	public final Matrix4f transposed(){
 		Matrix4f m = new Matrix4f(this);
 		m.transpose();
 		return m;
 	}
 	
+	public final float[] floatArray(){
+		return new float[]{m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33};
+	}
+	
 	public final static Matrix4f identity(){
 		Matrix4f m = new Matrix4f();
 		m.setIdentity();
+		return m;
+	}
+	
+	public final static Matrix4f transform(Vector3f pos, Vector3f sca, Matrix3f ori){
+		Matrix4f m = new Matrix4f();
+		m.set(pos, sca, ori);
 		return m;
 	}
 	
