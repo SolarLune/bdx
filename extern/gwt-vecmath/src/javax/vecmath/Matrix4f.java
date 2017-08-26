@@ -731,6 +731,10 @@ public class Matrix4f implements java.io.Serializable, Cloneable {
 
 	}
 
+	public final float[] get() {
+		return new float[]{m00, m10, m20, m30, m01, m11, m21, m31, m02, m12, m22, m32, m03, m13, m23, m33};
+	}
+
 	/**
 	 * Sets the scale component of the current matrix by factoring out the current
 	 * scale (by doing an SVD) from the rotational component and multiplying by

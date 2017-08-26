@@ -6,8 +6,8 @@ import javax.vecmath.*;
 
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.*;
-import com.badlogic.gdx.math.collision.*;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.graphics.glutils.*;
 
@@ -98,10 +98,8 @@ public static class DebugDrawer extends IDebugDraw{
 		return m;
 	}
 
-	public static CollisionShape makeShape(Mesh mesh, GameObject.BoundsType bounds, float margin, boolean compound){
-
+	private static CollisionShape constructShape(Mesh mesh, GameObject.BoundsType bounds, float margin) {
 		CollisionShape shape;
-	
 		if (bounds == GameObject.BoundsType.TRIANGLE_MESH){
 			TriangleIndexVertexArray mi = new TriangleIndexVertexArray();
 			mi.addIndexedMesh(Bullet.makeMesh(mesh), ScalarType.SHORT);
@@ -135,22 +133,31 @@ public static class DebugDrawer extends IDebugDraw{
 				margin *= 0.5f;
 			}
 		}
+
 		shape.setMargin(margin);
 
-		if (compound) {
+		return shape;
+	}
+
+	public static CollisionShape makeShape(Model model, GameObject.BoundsType bounds, float margin, boolean compound){
+
+		if (compound || model.meshes.size > 1) {	// The model can have multiple meshes in case of a join operation, for ex.
 			CompoundShape compShape = new CompoundShape();
 			compShape.setMargin(0);
 			Transform trans = new Transform();
 			trans.setIdentity();
-			compShape.addChildShape(trans, shape);
+
+			for (Mesh m : model.meshes)
+				compShape.addChildShape(trans, constructShape(m, bounds, margin));
+
 			return compShape;
-		}
-		return shape;
+		} else
+			return constructShape(model.meshes.get(0), bounds, margin);
 
 	}
 	
-	public static RigidBody makeBody(Mesh mesh, float[] glTransform, Vector3f origin, GameObject.BodyType bodyType, GameObject.BoundsType boundsType, JsonValue physics){
-		CollisionShape shape = makeShape(mesh, boundsType, physics.get("margin").asFloat(), physics.get("compound").asBoolean());
+	public static RigidBody makeBody(Model model, float[] glTransform, Vector3f origin, GameObject.BodyType bodyType, GameObject.BoundsType boundsType, JsonValue physics){
+		CollisionShape shape = makeShape(model, boundsType, physics.get("margin").asFloat(), physics.get("compound").asBoolean());
 		
 		float mass = physics.get("mass").asFloat();
 		
@@ -207,7 +214,7 @@ public static class DebugDrawer extends IDebugDraw{
 		CollisionShape shape;
 
 		if (gobj.modelInstance != null){
-			shape = makeShape(gobj.modelInstance.model.meshes.first(), GameObject.BoundsType.valueOf(physics.get("bounds_type").asString()), physics.get("margin").asFloat(), physics.get("compound").asBoolean());
+			shape = makeShape(gobj.modelInstance.model, GameObject.BoundsType.valueOf(physics.get("bounds_type").asString()), physics.get("margin").asFloat(), physics.get("compound").asBoolean());
 		}else{
 			shape = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
 		}

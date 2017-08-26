@@ -9,18 +9,14 @@ import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector3f;
 
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.VertexAttributes.Usage;
-import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelCache;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.graphics.g3d.model.NodePart;
-import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
-import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.JsonValue;
 
 import com.bulletphysics.collision.narrowphase.PersistentManifold;
@@ -32,7 +28,6 @@ import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.linearmath.MatrixUtil;
 import com.bulletphysics.linearmath.Transform;
 
-import com.nilunder.bdx.gl.Material;
 import com.nilunder.bdx.gl.Mesh;
 import com.nilunder.bdx.utils.*;
 
@@ -70,7 +65,9 @@ public class GameObject implements Named{
 	private Vector3f scale;
 	private Mesh mesh;
 	private static java.util.Random logicCounterRandom;
-	
+
+	public ModelCache modelCache;
+
 	public enum BodyType {
 		NO_COLLISION,
 		STATIC,
@@ -801,7 +798,7 @@ public class GameObject implements Named{
 		Vector3f scale = scale();
 
 		CollisionShape shape = body.getCollisionShape();
-		body.setCollisionShape(Bullet.makeShape(mesh.model.meshes.first(), currBoundsType, shape.getMargin(), shape.isCompound()));
+		body.setCollisionShape(Bullet.makeShape(mesh.model, currBoundsType, shape.getMargin(), shape.isCompound()));
 
 		Transform startTransform = new Transform();
 		body.getMotionState().getWorldTransform(startTransform);
@@ -850,186 +847,84 @@ public class GameObject implements Named{
 	public void updateBody(){
 		updateBody(mesh);
 	}
-	
-	public void join(ArrayList<GameObject> objects, boolean endObjects){
 
-		// collect scaled transforms per mesh
-		
-		HashMap<Mesh, ArrayList<Matrix4f>> map = new HashMap<Mesh, ArrayList<Matrix4f>>();
-		Mesh m;
-		for (GameObject g : objects){
-			m = g.mesh();
-			if (!g.valid() || !m.valid())
-				continue;
-			ArrayList<Matrix4f> l;
-			if (map.containsKey(m)){
-				l = map.get(m);
-			}else{
-				l = new ArrayList<Matrix4f>();
-				map.put(m, l);
-			}
+	public Mesh join(ArrayList<GameObject> gameObjects, boolean endObjects) {
+
+		HashMap<Mesh, ArrayList<Matrix4f>> data = new HashMap<Mesh, ArrayList<Matrix4f>>();
+
+		for (GameObject g : gameObjects) {
+
+			if (!data.containsKey(g.mesh()))
+				data.put(g.mesh(), new ArrayList<Matrix4f>());
+
 			Matrix4f t = g.transform();
 			Vector3f s = g.scale();
 			t.setRow(3, s.x, s.y, s.z, 0);
-			l.add(t);
+
+			data.get(g.mesh()).add(t);
+
 			if (endObjects)
 				g.endNoChildren();
 		}
-		
-		// join
-		
-		join(map);
+
+		return join(data);
+
 	}
-	
-	public void join(ArrayList<GameObject> objects){
-		join(objects, true);
+
+	public Mesh join(ArrayList<GameObject> gameObjects) {
+		return join(gameObjects, true);
 	}
-	
-	public void join(HashMap<Mesh, ArrayList<Matrix4f>> map){
-		
-		// Collect transformed vertex arrays for each material & calculate number of indices
-		
-		int VERT_STRIDE = Bdx.VERT_STRIDE;
-		
-		HashMap<Material, ArrayList<float[]>> tvaMap = new HashMap<Material, ArrayList<float[]>>();
-		HashMap<Material, Integer> lenMap = new HashMap<Material, Integer>();
-		
-		Mesh m;
-		Node node;
-		Material mat;
-		MeshPart meshPart;
-		float[] va, tva;
-		int numIndices, numVertices, offset, j, len;
-		
-		Vector3f p = new Vector3f();
-		Vector3f s = new Vector3f();
-		Matrix3f o = new Matrix3f();
-		Vector3f vP = new Vector3f();
-		Vector3f nP = new Vector3f();
-		Vector3f vPT = new Vector3f();
-		Vector3f nPT = new Vector3f();
-		
-		Vector3f pos = position();
-		Vector3f sca = scale();
-		Matrix3f oriInv = orientation().inverted();
-		
-		for (Map.Entry<Mesh, ArrayList<Matrix4f>> e : map.entrySet()){
-			m = e.getKey();
-			node = m.model.nodes.get(0);
-			for (Matrix4f t : e.getValue()){
-				t.get(p);
-				p.sub(pos);
-				p = oriInv.mult(p.div(sca));
-				t.getRotationScale(o);
-				o = oriInv.mult(o);
-				s.set(t.m30, t.m31, t.m32);
-				if (s.length() == 0){
-					s.set(1, 1, 1);
-				}
-				s = s.div(sca);
-				
-				for (NodePart nodePart : node.parts){
-					meshPart = nodePart.meshPart;
-					numIndices = meshPart.size;
-					numVertices = numIndices * VERT_STRIDE;
-					offset = meshPart.offset * VERT_STRIDE;
-					va = meshPart.mesh.getVertices(offset, numVertices, new float[numVertices]);
-					tva = new float[numVertices];
-					j = 0;
-					
-					for (int i = 0; i < numIndices; i++){
-						vP.set(va[j], va[j+1], va[j+2]);
-						nP.set(va[j+3], va[j+4], va[j+5]);
-						vPT.set(o.mult(vP.mul(s)));
-						vPT.add(p);
-						nPT.set(o.mult(vP.plus(nP)));
-						nPT.sub(o.mult(vP));
-						tva[j] = vPT.x;
-						tva[j+1] = vPT.y;
-						tva[j+2] = vPT.z;
-						tva[j+3] = nPT.x;
-						tva[j+4] = nPT.y;
-						tva[j+5] = nPT.z;
-						tva[j+6] = va[j+6];
-						tva[j+7] = va[j+7];
-						j += VERT_STRIDE;
-					}
-					
-					mat = m.materials.get(nodePart.material.id);
-					ArrayList<float[]> l;
-					if (tvaMap.containsKey(mat)){
-						l = tvaMap.get(mat);
-						len = lenMap.get(mat);
-					}else{
-						l = new ArrayList<float[]>();
-						tvaMap.put(mat, l);
-						len = 0;
-					}
-					l.add(tva);
-					lenMap.put(mat, len + tva.length);
-				}
+
+	public Mesh join(Map<Mesh, ArrayList<Matrix4f>> data) {
+
+		if (modelCache == null)
+			modelCache = new ModelCache();
+
+		modelCache.begin();
+
+		Matrix4f inverted = transform();
+		inverted.setIdentity();
+
+		for (Map.Entry<Mesh, ArrayList<Matrix4f>> entry : data.entrySet()) {
+
+			for (Matrix4f t : entry.getValue()) {
+				ModelInstance m = entry.getKey().getInstance();
+				t.mul(inverted);
+				m.transform.set(t.get());
+				modelCache.add(m);
 			}
+
 		}
-		
-		// Build a unique model out of meshparts for each material
-		
-		ModelBuilder builder = new ModelBuilder();
-		builder.begin();
-		
-		short idx = 0;
-		MeshPartBuilder mpb;
-		
-		for (Map.Entry<Material, ArrayList<float[]>> e : tvaMap.entrySet()){
-			mat = e.getKey();
-			len = lenMap.get(mat);
-			tva = new float[len];
-			j = 0;
-			
-			for (float[] verts : e.getValue()){
-				numVertices = verts.length;
-				for (int i = 0; i < numVertices; i++){
-					tva[i + j] = verts[i];
-				}
-				j += numVertices;
-			}
-			
-			mpb = builder.part(mat.name(), GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, mat);
-			mpb.vertex(tva);
-			
-			try{
-				for (short i = 0; i < len / VERT_STRIDE; i++){
-					mpb.index(idx);
-					idx += 1;
-				}
-			}catch (Error error){
-				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. Decrease the number of objects to join.");
-			}
-		}
-		
-		Model finishedModel = builder.end();
-		
-		// Update mesh
-		
-		mesh(new Mesh(finishedModel, scene));
-		
+
+		modelCache.end();
+
+		Array<Renderable> renderables = new Array<Renderable>();
+
+		modelCache.getRenderables(renderables, null);
+
+		ModelBuilder modelBuilder = new ModelBuilder();
+		modelBuilder.begin();
+		for (Renderable r : renderables)
+			modelBuilder.part(r.meshPart, r.material);
+		Mesh newMesh = new Mesh(modelBuilder.end(), scene, "JoinedMesh");
+
 		// Update dimensionsNoScale and origin
-		
-		com.badlogic.gdx.graphics.Mesh mesh = finishedModel.meshes.first();
-		BoundingBox bbox = mesh.calculateBoundingBox();
+
+		BoundingBox bbox = newMesh.model.calculateBoundingBox(new BoundingBox());
 		Vector3 dimensions = bbox.getDimensions(new Vector3());
 		Vector3 center = bbox.getCenter(new Vector3());
 		dimensionsNoScale = new Vector3f(dimensions.x, dimensions.y, dimensions.z);
 		origin = new Vector3f(center.x, center.y, center.z);
-		
-		// Update body
-		
-		updateBody();
-		
+
 		// Set visbility to initial value if empty
-		
-		if (json.get("mesh_name").asString() == null){
+
+		if (json.get("mesh_name").asString() == null)
 			visible = json.get("visible").asBoolean();
-		}
+
+		mesh(newMesh);
+
+		return newMesh;
+
 	}
 	
 	public String toString(){
@@ -1115,9 +1010,8 @@ public class GameObject implements Named{
 	}
 
 	public void boundsType(BoundsType boundsType){
-		com.badlogic.gdx.graphics.Mesh mesh = modelInstance.model.meshes.first();
 		CollisionShape shape = body.getCollisionShape();
-		shape = Bullet.makeShape(mesh, boundsType, shape.getMargin(), shape.isCompound());
+		shape = Bullet.makeShape(modelInstance.model, boundsType, shape.getMargin(), shape.isCompound());
 		body.setCollisionShape(shape);
 		currBoundsType = boundsType;
 	}

@@ -303,7 +303,6 @@ public class Scene implements Named{
 				g.mesh(defaultMesh);
 			}
 
-			com.badlogic.gdx.graphics.Mesh mesh = g.modelInstance.model.meshes.first();
 			float[] trans = gobj.get("transform").asFloatArray();
 			JsonValue origin = json.get("origins").get(meshName);
 			JsonValue dimensions = json.get("dimensions").get(meshName);
@@ -313,7 +312,7 @@ public class Scene implements Named{
 			
 			g.currBodyType = GameObject.BodyType.valueOf(physics.get("body_type").asString());
 			g.currBoundsType = GameObject.BoundsType.valueOf(physics.get("bounds_type").asString());
-			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
+			g.body = Bullet.makeBody(g.modelInstance.model, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
 			g.scale(getGLMatrixScale(trans));
 
@@ -892,7 +891,11 @@ public class Scene implements Named{
 			if (g instanceof Light)
 				lights.remove(g);
 
-			if (g.mesh().instances.size() == 0 && g.mesh().autoDispose)
+			if (g.modelCache != null) {
+				g.modelCache.dispose();
+				g.modelCache = null;
+			}
+			else if (g.mesh().instances.size() == 0 && g.mesh().autoDispose)
 				g.mesh().dispose();
 
 			scene = null;
