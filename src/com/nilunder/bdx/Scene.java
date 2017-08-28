@@ -895,7 +895,7 @@ public class Scene implements Named{
 			if (g.mesh().instances.size() == 0 && g.mesh().autoDispose)
 				g.mesh().dispose();
 
-			scene = null;
+			g.scene = null;
 		}
 		toBeRemoved.clear();
 
