@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.nilunder.bdx.Bdx;
 
 public class RenderBuffer extends FrameBuffer{
 		
@@ -33,8 +34,12 @@ public class RenderBuffer extends FrameBuffer{
 				getColorBufferTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
 			dest.begin();
-		} else										// Rendering to the screen, so nearest is good to keep things sharp
+		} else {                                        // Rendering to the screen, so nearest is good to keep things sharp
+			if (Bdx.display.nearestFiltering)
 				getColorBufferTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+			else
+				getColorBufferTexture().setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+		}
 
 		if (filter != null)
 			batch.setShader(filter.program);		// Set shader BEFORE calling begin() (avoids shader switching)
