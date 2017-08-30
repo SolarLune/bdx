@@ -25,6 +25,7 @@ public class Bdx{
 		public Color clearColor = new Color(0, 0, 0, 0);
 		private boolean vsync;
 		private float downsample = 1;
+		public boolean nearestFiltering = true;
 
 		public void vsync(boolean on) {
 			Gdx.graphics.setVSync(on);
