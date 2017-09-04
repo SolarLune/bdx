@@ -111,7 +111,7 @@ def srl_models(objects, use_mesh_modifiers):
 
         mesh = o.data
         if hasModifiers:                    # Create a new mesh that applies the modifiers if the mesh is using them
-            mesh = o.to_mesh(bpy.context.scene, use_mesh_modifiers, "PREVIEW")
+            mesh = o.to_mesh(bpy.context.scene, use_mesh_modifiers, "RENDER")
 
         m_tris = mat_tris(mesh)
         verts = vertices(mesh)
