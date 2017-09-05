@@ -256,7 +256,9 @@ void main() {
 
 	diffuse.rgb += u_tintColor.rgb;
 
-	if (u_shadeless == 1)
+    int shadeless = u_shadeless;
+
+	if (shadeless == 1)     // Don't want if on a uniform - sucks up CPU on older GPUs
 		gl_FragColor.rgb = diffuse.rgb;
 	else
 		gl_FragColor.rgb = applyLighting(diffuse.rgb);
