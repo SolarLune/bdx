@@ -15,12 +15,6 @@ from bpy.types import Operator
 from . import utils as ut
 
 
-def poly_indices(poly):
-    if len(poly.vertices) < 4:
-        return list(poly.vertices)
-
-    return [poly.vertices[i] for i in (0, 1, 2, 2, 3, 0)]
-
 def triform(loop_indices):
     indices = list(loop_indices)
 
@@ -45,11 +39,20 @@ def vertices(mesh):
 
     verts = []
 
+    if mesh.has_custom_normals:
+        clnors = [0.0] * 3 * len(mesh.loops)
+        mesh.loops.foreach_get("normal", clnors)
+
     for poly in mesh.polygons:
         for li in triform(poly.loop_indices):
             vert = mesh.vertices[loop_vert[li]]
             vert_co = list(vert.co)
-            vert_normal = list(vert.normal) if poly.use_smooth else list(poly.normal)
+            if mesh.has_custom_normals:
+                vert_normal = [clnors[li*3], clnors[li*3+1], clnors[li*3+2]]
+            elif poly.use_smooth:
+                vert_normal = list(vert.normal)
+            else:
+                vert_normal = list(poly.normal)
             vert_uv = list(uv_layer[li].uv)
             flip_uv(vert_uv)
             verts += vert_co + vert_normal + vert_uv
