@@ -285,6 +285,10 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 		put(name, ic);
 	}
 
+	public void put(String name, List<String> descriptors) {
+		put(name, descriptors.toArray(new String[descriptors.size()]));
+	}
+
 	public boolean hit(String name){
 		return get(name).status(0);
 	}
