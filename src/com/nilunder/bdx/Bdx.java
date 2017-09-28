@@ -345,9 +345,6 @@ public class Bdx{
 
 			// ------- Render Scene --------
 
-			vp = scene.viewport;
-			vp.apply();
-
 			depthShaderProvider.update(scene);
 			shaderProvider.update(scene);
 
@@ -362,6 +359,9 @@ public class Bdx{
 					cam.renderBuffer.end();
 				}
 			}
+
+			vp = scene.viewport;
+			vp.apply();
 
 			boolean frameBufferInUse = false;
 
@@ -512,7 +512,7 @@ public class Bdx{
 	private static void renderWorld(ModelBatch batch, Scene scene, Camera camera){
 		batch.begin(camera.data);
 		for (GameObject g : scene.objects){
-			if (g.visible() && (!g.frustumCulling || g.insideFrustum()) && !camera.ignoreObjects.contains(g))
+			if (g.visible() && (!g.frustumCulling || g.insideFrustum(null, camera)) && !camera.ignoreObjects.contains(g))
 				batch.render(g.modelInstance, scene.environment);
 		}
 		batch.end();

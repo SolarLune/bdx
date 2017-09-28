@@ -1139,7 +1139,7 @@ public class GameObject implements Named{
 		body.forceActivationState(2);
 	}
 
-	public boolean insideFrustum(Vector3f customHalfDim){
+	public boolean insideFrustum(Vector3f customHalfDim, Camera camera) {
 		Vector3f min = new Vector3f();
 		Vector3f max = new Vector3f();
 		body.getAabb(min, max);
@@ -1154,11 +1154,11 @@ public class GameObject implements Named{
 		if (customHalfDim == null)
 			customHalfDim = dimHalved;
 
-		return scene.camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, customHalfDim.x, customHalfDim.y, customHalfDim.z);
+		return camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, customHalfDim.x, customHalfDim.y, customHalfDim.z);
 	}
 
 	public boolean insideFrustum(){
-		return insideFrustum(null);
+		return insideFrustum(null, scene.camera);
 	}
 
 	public Vector3f vecTo(Vector3f vector){
