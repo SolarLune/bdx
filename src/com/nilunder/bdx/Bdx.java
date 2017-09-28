@@ -582,6 +582,10 @@ public class Bdx{
 		requestedRestart = true;
 	}
 
+	public static float delta() {
+		return Gdx.graphics.getDeltaTime();
+	}
+
 	private static void initializeGamepads() {
 
 		if (gamepads == null)
