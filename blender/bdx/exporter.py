@@ -40,6 +40,7 @@ def vertices(mesh):
     verts = []
 
     if mesh.has_custom_normals:
+        mesh.calc_normals_split()
         clnors = [0.0] * 3 * len(mesh.loops)
         mesh.loops.foreach_get("normal", clnors)
 
