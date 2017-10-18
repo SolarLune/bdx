@@ -37,6 +37,8 @@ import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
 import com.nilunder.bdx.GameObject.ArrayListGameObject;
+import com.nilunder.bdx.GameObject.BodyType;
+import com.nilunder.bdx.GameObject.BoundsType;
 import com.nilunder.bdx.utils.Color;
 
 public class Scene implements Named{
@@ -304,18 +306,18 @@ public class Scene implements Named{
 			}
 
 			com.badlogic.gdx.graphics.Mesh mesh = g.modelInstance.model.meshes.first();
-			float[] trans = gobj.get("transform").asFloatArray();
+			Matrix4f trans = new Matrix4f(gobj.get("transform").asFloatArray());
 			JsonValue origin = json.get("origins").get(meshName);
 			JsonValue dimensions = json.get("dimensions").get(meshName);
+			g.transform.set(trans);
 			g.origin = origin == null ? new Vector3f() : new Vector3f(origin.asFloatArray());
 			g.dimensionsNoScale = dimensions == null ? new Vector3f(1, 1, 1) : new Vector3f(dimensions.asFloatArray());
 			JsonValue physics = gobj.get("physics");
 			
-			g.currBodyType = GameObject.BodyType.valueOf(physics.get("body_type").asString());
-			g.currBoundsType = GameObject.BoundsType.valueOf(physics.get("bounds_type").asString());
+			g.currBodyType = BodyType.valueOf(physics.get("body_type").asString());
+			g.currBoundsType = BoundsType.valueOf(physics.get("bounds_type").asString());
 			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
-			g.scale(getGLMatrixScale(trans));
 
 			String type = gobj.get("type").asString();
 			if (type.equals("FONT")){
@@ -503,7 +505,7 @@ public class Scene implements Named{
 		g.origin = gobj.origin;
 		g.dimensionsNoScale = gobj.dimensionsNoScale;
 		g.body.setUserPointer(g);
-		g.scale(gobj.scale());
+		g.transform(gobj.transform);
 		
 		g.props = new HashMap<String, JsonValue>(gobj.props);
 
@@ -562,11 +564,11 @@ public class Scene implements Named{
 		}
 
 		if (instance != null){
-			g.position(inst.position());
-			Matrix3f ori = inst.orientation();
-			ori.mul(g.orientation());
-			g.orientation(ori);
-			g.scale(inst.scale());
+			
+			Matrix4f t = inst.transform.mult(g.transform);
+			t.position(inst.position());
+			g.transform(t);
+			
 			g.props.putAll(inst.props);
 
 			for (GameObject c : inst.children){
@@ -587,9 +589,9 @@ public class Scene implements Named{
 	}
 
 	private void addToWorld(GameObject gobj){
-		if (gobj.currBodyType != GameObject.BodyType.NO_COLLISION){
+		if (gobj.currBodyType != BodyType.NO_COLLISION){
 			world.addRigidBody(gobj.body, gobj.json.get("physics").get("group").asShort(), gobj.json.get("physics").get("mask").asShort());
-			if (gobj.currBodyType == GameObject.BodyType.STATIC)
+			if (gobj.currBodyType == BodyType.STATIC)
 				gobj.deactivate();
 			if (gobj.parent() != null && gobj.parent().body.getCollisionShape().isCompound())
 				world.removeRigidBody(gobj.body);
@@ -792,47 +794,17 @@ public class Scene implements Named{
 			}
 		}
 	}
-
-	private void setGLMatrixScale(float[] m, Vector3f scale){
-		m[0] *= scale.x;
-		m[1] *= scale.x;
-		m[2] *= scale.x;
-		m[4] *= scale.y;
-		m[5] *= scale.y;
-		m[6] *= scale.y;
-		m[8] *= scale.z;
-		m[9] *= scale.z;
-		m[10] *= scale.z;
-	}
-
-	private Vector3f getGLMatrixScale(float[] m){
-		Vector3f s = new Vector3f();
-		s.x = m[0];
-		s.y = m[1];
-		s.z = m[2];
-		float x = s.length();
-		s.x = m[4];
-		s.y = m[5];
-		s.z = m[6];
-		float y = s.length();
-		s.x = m[8];
-		s.y = m[9];
-		s.z = m[10];
-		float z = s.length();
-		s.x = x; s.y = y; s.z = z;
-		return s;
-	}
 	
 	private void updateVisuals(){
-		Transform trans = new Transform();
-		float[] mt = new float[16];
+		Matrix4f m = new Matrix4f();
+		float[] fa = new float[16];
 		
 		for (GameObject g : objects){
 			if (g.visible()){
-				g.body.getWorldTransform(trans);
-				trans.getOpenGLMatrix(mt);
-				setGLMatrixScale(mt, g.scale());
-				g.modelInstance.transform.set(mt);
+				m.set(g.transform);
+				m.transpose();
+				m.get(fa);
+				g.modelInstance.transform.set(fa);
 			}
 		}
 	}
@@ -847,7 +819,7 @@ public class Scene implements Named{
 
 		for (GameObject g : objects){
 
-			if (g.bodyType() == GameObject.BodyType.SENSOR)
+			if (g.bodyType() == BodyType.SENSOR)
 				g.body.activate(true);
 
 			if(!g.valid())
@@ -901,9 +873,22 @@ public class Scene implements Named{
 
 	}
 	
-	private void updateChildBodies(){
+	private void updateTransforms(){
+		Transform t = new Transform();
+		Matrix4f m = new Matrix4f();
+		
 		for (GameObject g : objects){
-			if (g.parent() == null && g.children.size() > 0 && g.body.isActive()){
+			if (g.parent() == null && g.dynamics() && g.body.isActive()){
+				
+				// update transforms of active dynamic objects without a parent
+				
+				g.body.getWorldTransform(t);
+				t.getMatrix(m);
+				m.scale(g.scale());
+				g.transform.set(m);
+				
+				// update transforms of children
+				
 				g.updateChildTransforms();
 			}
 		}
@@ -941,7 +926,8 @@ public class Scene implements Named{
 			}
 			Bdx.profiler.stop("__physics");
 
-			updateChildBodies();
+			updateTransforms();
+			
 			Bdx.profiler.stop("__scene");
 
 			detectCollisions();
