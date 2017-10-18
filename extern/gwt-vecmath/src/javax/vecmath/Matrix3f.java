@@ -2414,7 +2414,56 @@ public class Matrix3f implements java.io.Serializable, Cloneable {
 	/**
 	 * BDX conveniences:
 	 */
-
+	
+	public final void get(Vector3f sca, Matrix3f ori){
+		float[] fa = new float[3];
+		for (int i = 0; i < 3; i++){
+			getColumn(i, sca);
+			fa[i] = sca.length();
+			sca.scale(1 / fa[i]);
+			ori.setColumn(i, sca);
+		}
+		sca.set(fa);
+	}
+	
+	public final void set(Vector3f sca, Matrix3f ori){
+		set(ori);
+		mul(sca);
+	}
+	
+	public final Matrix3f orientation(){
+		Matrix3f ori = new Matrix3f();
+		get(new Vector3f(), ori);
+		return ori;
+	}
+	
+	public final void orientation(Matrix3f ori){
+		set(scale(), ori);
+	}
+	
+	public final Vector3f scale(){
+		return new Vector3f(
+			(float) Math.sqrt(m00 * m00 + m10 * m10 + m20 * m20),
+			(float) Math.sqrt(m01 * m01 + m11 * m11 + m21 * m21),
+			(float) Math.sqrt(m02 * m02 + m12 * m12 + m22 * m22)
+		);
+	}
+	
+	public final void scale(Vector3f sca){
+		set(sca, orientation());
+	}
+	
+	public final void mul(Vector3f v){
+		float MIN_VALUE = 0.00001f;
+		float f;
+		f = (float) (v.x < 0 ? Math.min(v.x, -MIN_VALUE) : Math.max(v.x, MIN_VALUE));
+		m00 *= f; m10 *= f; m20 *= f;
+		f = (float) (v.y < 0 ? Math.min(v.y, -MIN_VALUE) : Math.max(v.y, MIN_VALUE));
+		m01 *= f; m11 *= f; m21 *= f;
+		f = (float) (v.z < 0 ? Math.min(v.z, -MIN_VALUE) : Math.max(v.z, MIN_VALUE));
+		m02 *= f; m12 *= f; m22 *= f;
+	}
+	
 	public final Matrix3f mult(Matrix3f b){
 		Matrix3f a = new Matrix3f(this);
 		a.mul(b);
