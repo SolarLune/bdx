@@ -265,6 +265,12 @@ class CreateBdxProject(bpy.types.Operator):
     def execute(self, context):
         context.window.cursor_set("WAIT")
 
+        sc_bdx = context.scene.bdx
+        proj_path = j(ut.project_root(), sc_bdx.dir_name, sc_bdx.proj_name)
+        if os.path.exists(proj_path):
+            raise Exception("BDX project " + proj_path + " already exists.")
+            return {'CANCELLED'}
+
         self.create_libgdx_project()
         self.create_android_assets_bdx()
         self.create_blender_assets()
