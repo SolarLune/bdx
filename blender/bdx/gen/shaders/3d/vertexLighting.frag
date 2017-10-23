@@ -135,7 +135,9 @@ void main() {
 
 	diffuse.rgb += u_tintColor.rgb;
 
-	if (u_shadeless == 1)
+    int shadeless = u_shadeless;
+
+	if (shadeless == 1)
 		gl_FragColor.rgb = diffuse.rgb;
 	else
 	{
