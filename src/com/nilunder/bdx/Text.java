@@ -3,6 +3,8 @@ package com.nilunder.bdx;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.graphics.*;
 
+import javax.vecmath.Vector3f;
+
 public class Text extends GameObject{
 
 	public enum Alignment {
@@ -150,6 +152,32 @@ public class Text extends GameObject{
 
 	public float lineHeight(){
 		return this.lineHeight;
+	}
+
+	public Vector3f localCharPos(int charIndex) {
+		float[] verts = this.mesh().vertices();
+		int quad = Bdx.VERT_STRIDE * 6;
+		return new Vector3f(
+				verts[charIndex * quad],
+				verts[charIndex * quad + 1],
+				0);
+	}
+
+	public Vector3f worldCharPos(int charIndex) {
+		return orientation().mult(position().plus(localCharPos(charIndex).mul(scale())));
+	}
+
+	public Vector3f localCharSize(int charIndex) {
+		float[] verts = this.mesh().vertices();
+		int quad = Bdx.VERT_STRIDE * 6;
+		return new Vector3f(
+				verts[charIndex * quad + Bdx.VERT_STRIDE] - verts[charIndex * quad],
+				verts[charIndex * quad + (Bdx.VERT_STRIDE * 2) + 1] - verts[charIndex * quad + 1],
+				0);
+	}
+
+	public Vector3f worldCharSize(int charIndex) {
+		return localCharSize(charIndex).mul(scale());
 	}
 
 }
