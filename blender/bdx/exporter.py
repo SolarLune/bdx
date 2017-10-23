@@ -482,7 +482,7 @@ def srl_objects(objects):
         else:
             mesh_name = None
 
-        transform = sum([list(v) for v in matrix.col], [])
+        transform = sum([list(v) for v in matrix.row], [])
 
         name_object[obj.name] = {
             "class": get_cls_name(obj),
@@ -490,6 +490,7 @@ def srl_objects(objects):
             "type": obj.type,
             "properties": {n: p.value for n, p in obj.game.properties.items()},
             "transform": transform,
+            "scale": list(obj.scale),
             "parent": obj.parent.name if obj.parent else None,
             "mesh_name": mesh_name,
             "active": in_active_layer(obj),
@@ -539,7 +540,7 @@ def srl_objects(objects):
     if r3d:
 
         view_type = r3d.view_perspective
-        view_matrix = sum([list(v) for v in r3d.view_matrix.inverted().col], [])
+        view_matrix = sum([list(v) for v in r3d.view_matrix.inverted().row], [])
         view_projection = sum([list(v) for v in r3d.window_matrix.col], [])
         r = bpy.context.scene.render.resolution_x / bpy.context.scene.render.resolution_y
 
@@ -556,6 +557,7 @@ def srl_objects(objects):
             "type": "CAMERA",
             "properties": {},
             "transform": view_matrix,
+            "scale": [1, 1, 1],
             "parent": None,
             "mesh_name": None,
             "active": True,
