@@ -68,6 +68,11 @@ def export(self, context, multiBlend, diffExport):
 
     if multiBlend:
 
+        prev_auto_export = bpy.context.scene.bdx.auto_export
+        bpy.context.scene.bdx.auto_export = False
+        bpy.ops.wm.save_mainfile()                              # Save, just in case
+        bpy.context.scene.bdx.auto_export = prev_auto_export
+
         for blendName in blends:
 
             blend_path = j(bdx_blend_dir, blendName)
@@ -114,13 +119,19 @@ def export(self, context, multiBlend, diffExport):
             os.mkdir(inst)
 
     # Export scenes:
+
+    export_error = None
+
     for i in range(len(scenes_for_export)):
         scene = scenes_for_export[i]
         file_name = scene.name + ".bdx"
         file_path = j(asset_dir, "scenes", file_name)
         sys.stdout.write("\rBDX - Exporting Scene: {0} ({1}/{2})                            ".format(scene.name, i+1, len(scenes_for_export)))
         sys.stdout.flush()
-        bpy.ops.export_scene.bdx(filepath=file_path, scene_name=scene.name, exprun=True)
+        try:
+            bpy.ops.export_scene.bdx(filepath=file_path, scene_name=scene.name, exprun=True)
+        except RuntimeError as error:
+            export_error = error         # Defer raising any errors until later
 
     sys.stdout.write("\rBDX - Export Finished                                 ")      # Erase earlier text with this print
     sys.stdout.flush()
@@ -187,28 +198,27 @@ def export(self, context, multiBlend, diffExport):
     ut.set_file_var(al, "width", rx)
     ut.set_file_var(al, "height", ry)
 
-    if runThread is not None and runThread.is_alive():
+    if export_error is None:
 
-        f = open(j(ut.project_root(), "android", "assets", "finishedExport"), "w")
-        f.close()
+        if runThread is not None and runThread.is_alive():
 
-    if context.scene.bdx.post_export_program != "":
-        cmd = context.scene.bdx.post_export_program
-        old_cwd = os.getcwd()
-        os.chdir(ut.project_root())
-        subprocess.check_call(os.path.join(ut.project_root(), cmd))
-        os.chdir(old_cwd)
+            f = open(j(ut.project_root(), "android", "assets", "finishedExport"), "w")
+            f.close()
+
+        if context.scene.bdx.post_export_program != "":
+            cmd = context.scene.bdx.post_export_program
+            old_cwd = os.getcwd()
+            os.chdir(ut.project_root())
+            subprocess.check_call(os.path.join(ut.project_root(), cmd))
+            os.chdir(old_cwd)
+
+        export_time = time.time()
 
     context.window.cursor_set("DEFAULT")
 
-    export_time = time.time()
-
     if multiBlend and multipleBlendFilesExported:
-        prev_auto_export = bpy.context.scene.bdx.auto_export
-        bpy.context.scene.bdx.auto_export = False
-        bpy.ops.wm.save_mainfile()                              # Save and reload to clear out orphan data left behind by
-        bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)    # linked scenes
-        bpy.context.scene.bdx.auto_export = prev_auto_export
+        bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)    # Reload to clear out orphan data left by linked scenes
+
     if not multiBlend:
         export_time = None
 
@@ -224,6 +234,8 @@ def export(self, context, multiBlend, diffExport):
             bpy.data.meshes.remove(bpy.data.meshes["__PBackground"])
             bpy.data.fonts.remove(bpy.data.fonts["BDXFontMono"])
 
+    if export_error is not None:
+        raise export_error
 
 def run(self, context):
 
