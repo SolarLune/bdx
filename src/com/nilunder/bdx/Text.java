@@ -62,6 +62,9 @@ public class Text extends GameObject{
 
 		for (String l : lines) {
 
+			if (l != lines[lines.length - 1])
+				l += " "; // Java counts \n as an actual, single character
+
 			for (int i = 0; i < Math.min(l.length(), capacity - cap); ++i) {		// Write chars for the line or text object capacity, whichever's shorter
 
 				char chr = ' ';
@@ -155,6 +158,8 @@ public class Text extends GameObject{
 	}
 
 	public Vector3f localCharPos(int charIndex) {
+		if (charIndex < 0 || charIndex >= capacity)
+			throw new RuntimeException("ERROR: Cannot get character position from character at index " + charIndex + "; it is beyond " + name + "'s text capacity (0 - " + capacity + ")!");
 		float[] verts = this.mesh().vertices();
 		int quad = Bdx.VERT_STRIDE * 6;
 		return new Vector3f(
@@ -168,6 +173,8 @@ public class Text extends GameObject{
 	}
 
 	public Vector3f localCharSize(int charIndex) {
+		if (charIndex < 0 || charIndex >= capacity)
+			throw new RuntimeException("ERROR: Cannot get character size from character at index " + charIndex + "; it is beyond " + name + "'s text capacity (0 - " + capacity + ")!");
 		float[] verts = this.mesh().vertices();
 		int quad = Bdx.VERT_STRIDE * 6;
 		return new Vector3f(
