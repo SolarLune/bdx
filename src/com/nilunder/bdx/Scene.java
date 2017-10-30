@@ -326,8 +326,9 @@ public class Scene implements Named{
 			if (type.equals("FONT")){
 				Text t = (Text)g;
 				t.font = fonts.get(gobj.get("font").asString());
-				t.text(gobj.get("text").asString());
-				t.capacity = t.text().length();
+				String txt = gobj.get("text").asString();
+				t.capacity = txt.length();
+				t.text(txt);
 
 				String align = gobj.get("alignment").asString();
 
@@ -532,8 +533,8 @@ public class Scene implements Named{
 			Text t = (Text)g;
 			Text tt = (Text)gobj;
 			t.font = tt.font;
-			t.text(tt.text());
 			t.capacity = tt.capacity;
+			t.text(tt.text());
 			t.mesh(t.mesh().copy());
 			t.alignment(tt.alignment());
 		}else if (g instanceof Light){

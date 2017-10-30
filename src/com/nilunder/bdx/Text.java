@@ -1,9 +1,10 @@
 package com.nilunder.bdx;
 
 import com.badlogic.gdx.utils.JsonValue;
-import com.badlogic.gdx.graphics.*;
 
 import javax.vecmath.Vector3f;
+
+import com.nilunder.bdx.gl.Mesh;
 
 public class Text extends GameObject{
 
@@ -20,16 +21,35 @@ public class Text extends GameObject{
 	public JsonValue font;
 	public int capacity;
 	private float lineHeight = 1.0f;
-
-	public void text(String txt){
+	
+	public int capacity(){
+		return capacity;
+	}
+	
+	public void capacity(int capacity){
+		if (this.capacity == capacity){
+			return;
+		}
+		this.capacity = capacity;
+		Mesh m = mesh();
+		int len = ((capacity * 3) * 2) * Bdx.VERT_STRIDE;
+		mesh(new Mesh(m.serialized(), m.scene, m.name, len));
+		scene.meshCopies.add(mesh());
+		scene.meshCopies.remove(m);
+		m.dispose();
+	}
+	
+	public void text(String txt, boolean updateCapacity){
+		
 		// Reform quads according to Angel Code font format
-		Mesh mesh = modelInstance.model.meshes.first();
-		int vertexSize = mesh.getVertexSize() / 4;
-		int numVertices = mesh.getNumVertices();
-		float[] verts = new float[numVertices * vertexSize];
+		
+		if (updateCapacity){
+			capacity(txt.length());
+		}
+		
+		Mesh m = mesh();
+		float[] verts = new float[m.numVertices()];
 		int vi = 0;
-
-		int capacity = (numVertices / 3) / 2; // number of quads
 
 		String target = txt.substring(0, Math.min(txt.length(), capacity));
 
@@ -131,10 +151,14 @@ public class Text extends GameObject{
 
 		}
 
-		mesh.setVertices(verts, 0, verts.length);
+		m.vertices(verts);
 
 	}
-
+	
+	public void text(String txt){
+		text(txt, false);
+	}
+	
 	public String text(){
 		return text;
 	}
