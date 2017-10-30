@@ -4039,6 +4039,12 @@ public class Matrix4f implements java.io.Serializable, Cloneable {
 		return m;
 	}
 	
+	public final Matrix4f inverted(){
+		Matrix4f m = new Matrix4f(this);
+		m.invert();
+		return m;
+	}
+	
 	public final Matrix4f transposed(){
 		Matrix4f m = new Matrix4f(this);
 		m.transpose();

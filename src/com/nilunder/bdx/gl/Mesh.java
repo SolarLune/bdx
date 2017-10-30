@@ -1,26 +1,33 @@
 package com.nilunder.bdx.gl;
 
-import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.model.MeshPart;
-import com.badlogic.gdx.graphics.g3d.model.NodePart;
-import com.badlogic.gdx.math.Matrix3;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonReader;
-import com.nilunder.bdx.Bdx;
-import com.nilunder.bdx.Scene;
-import com.nilunder.bdx.utils.ArrayListNamed;
-import com.nilunder.bdx.utils.Color;
-import com.nilunder.bdx.utils.Named;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
-import java.util.ArrayList;
-import java.util.HashMap;
+
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
+import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.math.Matrix3;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.JsonValue;
+
+import com.nilunder.bdx.Bdx;
+import com.nilunder.bdx.Scene;
+import com.nilunder.bdx.utils.ArrayListNamed;
+import com.nilunder.bdx.utils.Color;
+import com.nilunder.bdx.utils.Named;
 
 public class Mesh implements Named, Disposable {
 
@@ -34,9 +41,9 @@ public class Mesh implements Named, Disposable {
 	public class ArrayListMaterials extends ArrayListNamed<Material> {
 
 		public Material set(int index, Material material) {
-			model.nodes.get(0).parts.get(index).material = material;
+			model.nodes.first().parts.get(index).material = material;
 			for (ModelInstance m : instances)
-				m.nodes.get(0).parts.get(index).material = material;
+				m.nodes.first().parts.get(index).material = material;
 			return super.set(index, material);
 		}
 
@@ -76,158 +83,226 @@ public class Mesh implements Named, Disposable {
 
 	}
 
+	private static Model createModel(JsonValue model, Scene scene){
+		ModelBuilder builder = new ModelBuilder();
+		builder.begin();
+		short idx = 0;
+		for (JsonValue mat : model){
+			Material m = scene.materials.get(mat.name);
+			if (mat.name.equals(scene.defaultMaterial.id)){
+				m = new Material(m);
+			}
+			MeshPartBuilder mpb = builder.part(model.name, GL20.GL_TRIANGLES,
+					Usage.Position | Usage.Normal | Usage.TextureCoordinates, m);
+			float verts[] = mat.asFloatArray();
+			mpb.vertex(verts);
+			int len = verts.length / Bdx.VERT_STRIDE;
+			try{
+				for (short i = 0; i < len; ++i){
+					mpb.index(idx);
+					idx += 1;
+				}
+			}catch (Error e){
+				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. " + model.name + " has " + Integer.toString(len) + " vertices.");
+			}
+		}
+		return builder.end();
+	}
+	
 	public Mesh(Model model, Scene scene, String name){
 		this.model = model;
 		this.name = name;
 		this.scene = scene;
 		materials = new ArrayListMaterials();
-		for (NodePart part : model.nodes.get(0).parts)
+		for (NodePart part : model.nodes.first().parts)
 			materials.add((Material) part.material);
 		instances = new ArrayList<ModelInstance>();
 		autoDispose = true;
+	}
+	
+	public Mesh(Model model, Scene scene){
+		this(model, scene, model.meshParts.first().id);
+	}
+	
+	public Mesh(JsonValue model, Scene scene, String name){
+		this(createModel(model, scene), scene, name);
+	}
+	
+	public Mesh(JsonValue model, Scene scene){
+		this(model, scene, model.name);
+	}
+	
+	public Mesh(String serialized, Scene scene, String name){
+		this(new JsonReader().parse(serialized), scene, name);
+	}
+	
+	public int offset(int ms){
+		return model.meshParts.get(ms).offset;
 	}
 	
 	public int numIndices(){
 		return model.meshes.first().getNumIndices();
 	}
 	
+	public int numIndices(int ms){
+		return model.meshParts.get(ms).size;
+	}
+	
 	public int numVertices(){
 		return numIndices() * Bdx.VERT_STRIDE;
+	}
+	
+	public int numVertices(int ms){
+		return numIndices(ms) * Bdx.VERT_STRIDE;
 	}
 	
 	public float[] vertices(){
 		return model.meshes.first().getVertices(new float[numVertices()]);
 	}
 	
+	private float[] vertices(int offset, int numVertices){
+		return model.meshes.first().getVertices(offset, numVertices, new float[numVertices]);
+	}
+	
+	public float[] vertices(int ms){
+		MeshPart mp = model.meshParts.get(ms);
+		int offset = mp.offset * Bdx.VERT_STRIDE;
+		int numVertices = mp.size * Bdx.VERT_STRIDE;
+		return mp.mesh.getVertices(offset, numVertices, new float[numVertices]);
+	}
+	
 	public void vertices(float[] va){
 		model.meshes.first().setVertices(va);
 	}
 	
-	public Mesh(Model model, Scene scene){
-		this(model, scene, model.meshParts.first().id);
+	public void vertices(int ms, float[] va){
+		MeshPart mp = model.meshParts.get(ms);
+		int offset = mp.offset * Bdx.VERT_STRIDE;
+		int numVertices = mp.size * Bdx.VERT_STRIDE;
+		mp.mesh.setVertices(va, offset, numVertices);
 	}
-
-    public int getVertexCount(int materialSlot){
-        return model.nodes.first().parts.get(materialSlot).meshPart.size;
-    }
-
-    public int getVertexCount(){
-        int count = 0;
-        for (int i = 0; i < model.nodes.get(0).parts.size; i++)
-            count += getVertexCount(i);
-        return count;
-    }
-
-    public void vertPos(int materialSlot, int index, float x, float y, float z){
-        com.badlogic.gdx.graphics.Mesh mesh = model.meshes.first();
-        float[] verts = new float[getVertexCount() * Bdx.VERT_STRIDE];
-        mesh.getVertices(verts);
-        int i = (model.meshParts.get(materialSlot).offset * Bdx.VERT_STRIDE) + (index * Bdx.VERT_STRIDE);
-        verts[i] = x;
-        verts[i+1] = y;
-        verts[i+2] = z;
-        mesh.setVertices(verts);
-    }
-
-    public void vertPos(int materialSlot, int index, Vector3f pos){
-        vertPos(materialSlot, index, pos.x, pos.y, pos.z);
-    }
-
-    public Vector3f vertPos(int materialSlot, int index){
-        com.badlogic.gdx.graphics.Mesh mesh = model.meshes.first();
-        float[] verts = new float[3];
-        mesh.getVertices((model.meshParts.get(materialSlot).offset * Bdx.VERT_STRIDE) + (index * Bdx.VERT_STRIDE), 3, verts);
-        return new Vector3f(verts[0], verts[1], verts[2]);
-    }
-
-    public void vertNor(int materialSlot, int index, float x, float y, float z){
-        com.badlogic.gdx.graphics.Mesh mesh = model.meshes.first();
-        float[] verts = new float[getVertexCount() * Bdx.VERT_STRIDE];
-        mesh.getVertices(verts);
-        int i = (model.meshParts.get(materialSlot).offset * Bdx.VERT_STRIDE) + (index * Bdx.VERT_STRIDE);
-        verts[i+3] = x;
-        verts[i+4] = y;
-        verts[i+5] = z;
-        mesh.setVertices(verts);
-    }
-
-    public void vertNor(int materialSlot, int index, Vector3f pos){
-        vertNor(materialSlot, index, pos.x, pos.y, pos.z);
-    }
-
-    public Vector3f vertNor(int materialSlot, int index){
-        com.badlogic.gdx.graphics.Mesh mesh = model.meshes.first();
-        float[] verts = new float[3];
-        mesh.getVertices((model.meshParts.get(materialSlot).offset * Bdx.VERT_STRIDE) + (index * Bdx.VERT_STRIDE) + 3, 3, verts);
-        return new Vector3f(verts[0], verts[1], verts[2]);
-    }
-
-    public void vertUV(int materialSlot, int index, float u, float v){
-        com.badlogic.gdx.graphics.Mesh mesh = model.meshes.first();
-        float[] verts = new float[getVertexCount() * Bdx.VERT_STRIDE];
-        mesh.getVertices(verts);
-        int i = (model.meshParts.get(materialSlot).offset * Bdx.VERT_STRIDE) + (index * Bdx.VERT_STRIDE);
-        verts[i+6] = u;
-        verts[i+7] = v;
-        mesh.setVertices(verts);
-    }
-
-    public void vertUV(int materialSlot, int index, Vector2f uv){
-        vertUV(materialSlot, index, uv.x, uv.y);
-    }
-
-    public Vector2f vertUV(int materialSlot, int index){
-        com.badlogic.gdx.graphics.Mesh mesh = model.meshes.first();
-        float[] verts = new float[3];
-        mesh.getVertices((model.meshParts.get(materialSlot).offset * Bdx.VERT_STRIDE) + (index * Bdx.VERT_STRIDE) + 6, 2, verts);
-        return new Vector2f(verts[0], verts[1]);
-    }
-
-    public void vertTransform(int materialSlot, Matrix4f matrix){
-        Matrix4f m = matrix;
-        float[] vals = {m.m00, m.m10, m.m20, m.m30,
-                        m.m01, m.m11, m.m21, m.m31,
-                        m.m02, m.m12, m.m22, m.m32,
-                        m.m03, m.m13, m.m23, m.m33};
-        model.meshes.first().transform(new Matrix4(vals), model.meshParts.get(materialSlot).offset, model.meshParts.get(materialSlot).size);
-    }
-
-    public void vertTransformUV(int materialSlot, Matrix3f matrix){
-        Matrix3f m = matrix;
-        float[] vals = {m.m00, m.m10, m.m20,
-                m.m01, m.m11, m.m21,
-                m.m02, m.m12, m.m22};
-        float[] verts = new float[getVertexCount() * Bdx.VERT_STRIDE];
-        model.meshes.first().getVertices(verts);
-        MeshPart mp = model.meshParts.get(materialSlot);
-        com.badlogic.gdx.graphics.Mesh.transformUV(new Matrix3(vals), verts, Bdx.VERT_STRIDE, 6, mp.offset, mp.size);
-        model.meshes.first().setVertices(verts);
-    }
-
-	public String serialized() {
-
-		HashMap<String, Float[]> out = new HashMap<String, Float[]>();
-		Float[] d;
-
-		for (int i = 0; i < materials.size(); i++) {
-			d = new Float[getVertexCount(i) * Bdx.VERT_STRIDE];
-			for (int v = 0; v < getVertexCount(i); v++) {
-				int vi = v * 8;
-				Vector3f p = vertPos(i, v);
-				d[vi] = p.x;
-				d[vi + 1] = p.y;
-				d[vi + 2] = p.z;
-				p = vertNor(i, v);
-				d[vi + 3] = p.x;
-				d[vi + 4] = p.y;
-				d[vi + 5] = p.z;
-				Vector2f u = vertUV(i, v);
-				d[vi + 6] = u.x;
-				d[vi + 7] = u.y;
-			}
-			out.put(materials.get(i).name(), d);
+	
+	private float[] verticesTransformed(float[] va, Matrix4f trans){
+		int numVertices = va.length;
+		int numIndices = va.length / Bdx.VERT_STRIDE;
+		float[] tva = new float[numVertices];
+		
+		Matrix4f t = Matrix4f.identity();
+		Vector3f v = new Vector3f();
+		Matrix4f transNoPos = new Matrix4f(trans);
+		transNoPos.position(v);
+		Matrix4f vertTrans = new Matrix4f();
+		Matrix4f normTrans = new Matrix4f();
+		int j = 0;
+		for (int i = 0; i < numIndices; i++){
+			vertTrans.set(trans);
+			v.set(va[j], va[j+1], va[j+2]);
+			t.position(v);
+			vertTrans.mul(t);
+			
+			normTrans.set(transNoPos);
+			v.set(va[j+3], va[j+4], va[j+5]);
+			t.position(v);
+			normTrans.mul(t);
+			
+			tva[j] = vertTrans.m03;
+			tva[j+1] = vertTrans.m13;
+			tva[j+2] = vertTrans.m23;
+			tva[j+3] = normTrans.m03;
+			tva[j+4] = normTrans.m13;
+			tva[j+5] = normTrans.m23;
+			tva[j+6] = va[j+6];
+			tva[j+7] = va[j+7];
+			j += Bdx.VERT_STRIDE;
 		}
-
+		
+		return tva;
+	}
+	
+	public float[] verticesTransformed(int ms, Matrix4f t){
+		return verticesTransformed(vertices(ms), t);
+	}
+	
+	public float[] verticesTransformed(Matrix4f t){
+		return verticesTransformed(vertices(), t);
+	}
+	
+	// [Normals are not calculated with Matrix4.transform() methods](https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/graphics/Mesh.java#L903-L948)
+	
+	public void transform(Matrix4f t){
+		vertices(verticesTransformed(t));
+	}
+	
+	public void transform(int ms, Matrix4f t){
+		vertices(ms, verticesTransformed(ms, t));
+	}
+	
+	public void transformUV(int ms, Matrix3f t){
+		MeshPart mp = model.meshParts.get(ms);
+		Matrix3 trans = new Matrix3(t.transposed().floatArray());
+		float[] verts = vertices();
+		com.badlogic.gdx.graphics.Mesh.transformUV(trans, verts, Bdx.VERT_STRIDE, 6, mp.offset, mp.size);
+		vertices(verts);
+	}
+	
+	public void vertPos(int ms, int index, float x, float y, float z){
+		int i = (offset(ms) + index) * Bdx.VERT_STRIDE;
+		float[] verts = vertices();
+		verts[i] = x;
+		verts[i+1] = y;
+		verts[i+2] = z;
+		vertices(verts);
+	}
+	
+	public void vertPos(int ms, int index, Vector3f pos){
+		vertPos(ms, index, pos.x, pos.y, pos.z);
+	}
+	
+	public Vector3f vertPos(int ms, int index){
+		int i = (offset(ms) + index) * Bdx.VERT_STRIDE;
+		return new Vector3f(vertices(i, 3));
+	}
+	
+	public void vertNor(int ms, int index, float x, float y, float z){
+		int i = (offset(ms) + index) * Bdx.VERT_STRIDE;
+		float[] verts = vertices();
+		verts[i+3] = x;
+		verts[i+4] = y;
+		verts[i+5] = z;
+		vertices(verts);
+	}
+	
+	public void vertNor(int ms, int index, Vector3f pos){
+		vertNor(ms, index, pos.x, pos.y, pos.z);
+	}
+	
+	public Vector3f vertNor(int ms, int index){
+		int i = (offset(ms) + index) * Bdx.VERT_STRIDE;
+		return new Vector3f(vertices(i + 3, 3));
+	}
+	
+	public void vertUV(int ms, int index, float u, float v){
+		int i = (offset(ms) + index) * Bdx.VERT_STRIDE;
+		float[] verts = vertices();
+		verts[i+6] = u;
+		verts[i+7] = v;
+		vertices(verts);
+	}
+	
+	public void vertUV(int ms, int index, Vector2f uv){
+		vertUV(ms, index, uv.x, uv.y);
+	}
+	
+	public Vector2f vertUV(int ms, int index){
+		int i = (offset(ms) + index) * Bdx.VERT_STRIDE;
+		return new Vector2f(vertices(i + 6, 2));
+	}
+	
+	public String serialized(){
+		HashMap<String, float[]> out = new HashMap<String, float[]>();
+		for (int i = 0; i < materials.size(); i++){
+			out.put(materials.get(i).name(), vertices(i));
+		}
 		return new Json().toJson(out);
 	}
 
@@ -236,13 +311,10 @@ public class Mesh implements Named, Disposable {
 	}
 
 	public Mesh copy(String newName){
-
-		Model uniqueModel = scene.createModel(new JsonReader().parse(serialized()));
-		Mesh newMesh = new Mesh(uniqueModel, scene, newName);
-
+		Mesh newMesh = new Mesh(new JsonReader().parse(serialized()), scene, newName);
 		newMesh.materials.clear();
 
-		for (NodePart part : uniqueModel.nodes.get(0).parts) {
+		for (NodePart part : newMesh.model.nodes.first().parts) {
 			Material newMat = new Material( (Material) part.material );			// Don't forget to cast to Material for it to be a true copy (see shader copying)
 			newMesh.materials.add(newMat);
 			part.material = newMat;
@@ -257,12 +329,12 @@ public class Mesh implements Named, Disposable {
 		return copy(name);
 	}
 
-	public ModelInstance getInstance(){
-		ModelInstance m = new ModelInstance(model);
-		for (int i = 0; i < m.nodes.get(0).parts.size; i++)
-			m.nodes.get(0).parts.get(i).material = materials.get(i);
-		instances.add(m);
-		return m;
+	public ModelInstance getNewModelInstance(){
+		ModelInstance mi = new ModelInstance(model);
+		for (int i = 0; i < mi.nodes.first().parts.size; i++)
+			mi.nodes.first().parts.get(i).material = materials.get(i);
+		instances.add(mi);
+		return mi;
 	}
 
 	public String toString(){

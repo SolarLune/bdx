@@ -14,13 +14,13 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.*;
-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
+
 import com.bulletphysics.collision.broadphase.BroadphaseInterface;
 import com.bulletphysics.collision.broadphase.DbvtBroadphase;
 import com.bulletphysics.collision.dispatch.CollisionDispatcher;
@@ -31,6 +31,7 @@ import com.bulletphysics.dynamics.DiscreteDynamicsWorld;
 import com.bulletphysics.dynamics.RigidBody;
 import com.bulletphysics.dynamics.constraintsolver.SequentialImpulseConstraintSolver;
 import com.bulletphysics.linearmath.Transform;
+
 import com.nilunder.bdx.gl.*;
 import com.nilunder.bdx.gl.Mesh;
 import com.nilunder.bdx.utils.*;
@@ -273,9 +274,9 @@ public class Scene implements Named{
 		}
 		
 		for (JsonValue model: json.get("models")){
-			Mesh m = new Mesh(createModel(model), this, model.name);
+			Mesh m = new Mesh(model, this);
 			m.autoDispose = false;
-			meshes.put(model.name, m);
+			meshes.put(m.name, m);
 		}
 
 		HashMap<String, JsonValue> fonts = new HashMap<>();
@@ -733,32 +734,6 @@ public class Scene implements Named{
 
 	public ArrayList<RayHit> xray(Vector3f src, Vector3f vec, String... props) {
 		return xray(src, vec, false, props);
-	}
-
-	public Model createModel(JsonValue model) {
-		ModelBuilder builder = new ModelBuilder();
-		builder.begin();
-		short idx = 0;
-		for (JsonValue mat : model){
-			Material m = materials.get(mat.name);
-			if (mat.name.equals(defaultMaterial.id))
-				m = new Material(m);
-			MeshPartBuilder mpb = builder.part(model.name, GL20.GL_TRIANGLES,
-					Usage.Position | Usage.Normal | Usage.TextureCoordinates, m);
-			float verts[] = mat.asFloatArray();
-			mpb.vertex(verts);
-			int len = verts.length / Bdx.VERT_STRIDE;
-			try{
-				for (short i = 0; i < len; ++i){
-					mpb.index(idx);
-					idx += 1;
-				}
-			}catch (Error e){
-				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. " + model.name + " has " + Integer.toString(len) + " vertices.");
-			}
-		}
-
-		return builder.end();
 	}
 	
 	public void restart(){

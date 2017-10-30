@@ -13,9 +13,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.graphics.g3d.model.NodePart;
-import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -744,7 +741,7 @@ public class GameObject implements Named{
 
 		this.mesh = mesh;
 
-		modelInstance = mesh.getInstance();
+		modelInstance = mesh.getNewModelInstance();
 		modelInstance.transform.set(trans);
 
 	}
@@ -859,72 +856,28 @@ public class GameObject implements Named{
 		
 		// Collect transformed vertex arrays for each material & calculate number of indices
 		
-		int VERT_STRIDE = Bdx.VERT_STRIDE;
-		
 		HashMap<Material, ArrayList<float[]>> tvaMap = new HashMap<Material, ArrayList<float[]>>();
 		HashMap<Material, Integer> lenMap = new HashMap<Material, Integer>();
 		
-		Mesh m;
-		Node node;
+		Mesh mesh;
 		Material mat;
-		MeshPart meshPart;
-		float[] va, tva;
-		int numIndices, numVertices, offset, j, len;
+		ArrayList<Matrix4f> transforms;
+		ArrayList<float[]> l;
+		float[] tva;
+		int len;
 		
-		Matrix4f transTemp = Matrix4f.identity();
-		Vector3f vecTemp = new Vector3f();
-		Matrix4f trans = new Matrix4f();
-		Matrix4f vertTrans = new Matrix4f();
-		Matrix4f normTrans = new Matrix4f();
-		Matrix4f transZeroPos = new Matrix4f();
-		
-		Matrix4f transInv = transform();
-		transInv.invert();
-		Vector3f zeroPos = new Vector3f();
+		Matrix4f transInv = transform.inverted();
+		Matrix4f t = new Matrix4f();
 		
 		for (Map.Entry<Mesh, ArrayList<Matrix4f>> e : map.entrySet()){
-			m = e.getKey();
-			node = m.model.nodes.get(0);
-			for (Matrix4f t : e.getValue()){
-				
-				trans.set(transInv);
-				trans.mul(t);
-				transZeroPos.set(trans);
-				transZeroPos.position(zeroPos);
-				
-				for (NodePart nodePart : node.parts){
-					meshPart = nodePart.meshPart;
-					numIndices = meshPart.size;
-					numVertices = numIndices * VERT_STRIDE;
-					offset = meshPart.offset * VERT_STRIDE;
-					va = meshPart.mesh.getVertices(offset, numVertices, new float[numVertices]);
-					tva = new float[numVertices];
-					j = 0;
-					
-					for (int i = 0; i < numIndices; i++){
-						vertTrans.set(trans);
-						vecTemp.set(va[j], va[j+1], va[j+2]);
-						transTemp.position(vecTemp);
-						vertTrans.mul(transTemp);
-						
-						normTrans.set(transZeroPos);
-						vecTemp.set(va[j+3], va[j+4], va[j+5]);
-						transTemp.position(vecTemp);
-						normTrans.mul(transTemp);
-						
-						tva[j] = vertTrans.m03;
-						tva[j+1] = vertTrans.m13;
-						tva[j+2] = vertTrans.m23;
-						tva[j+3] = normTrans.m03;
-						tva[j+4] = normTrans.m13;
-						tva[j+5] = normTrans.m23;
-						tva[j+6] = va[j+6];
-						tva[j+7] = va[j+7];
-						j += VERT_STRIDE;
-					}
-					
-					mat = m.materials.get(nodePart.material.id);
-					ArrayList<float[]> l;
+			mesh = e.getKey();
+			transforms = e.getValue();
+			for (int i = 0; i < mesh.materials.size(); i++){
+				mat = mesh.materials.get(i);
+				for (Matrix4f trans : transforms){
+					t.set(transInv);
+					t.mul(trans);
+					tva = mesh.verticesTransformed(i, t);
 					if (tvaMap.containsKey(mat)){
 						l = tvaMap.get(mat);
 						len = lenMap.get(mat);
@@ -944,6 +897,7 @@ public class GameObject implements Named{
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
 		
+		int numVertices, j;
 		short idx = 0;
 		MeshPartBuilder mpb;
 		
@@ -965,7 +919,7 @@ public class GameObject implements Named{
 			mpb.vertex(tva);
 			
 			try{
-				for (short i = 0; i < len / VERT_STRIDE; i++){
+				for (short i = 0; i < len / Bdx.VERT_STRIDE; i++){
 					mpb.index(idx);
 					idx += 1;
 				}
@@ -982,8 +936,8 @@ public class GameObject implements Named{
 		
 		// Update dimensionsNoScale and origin
 		
-		com.badlogic.gdx.graphics.Mesh mesh = finishedModel.meshes.first();
-		BoundingBox bbox = mesh.calculateBoundingBox();
+		com.badlogic.gdx.graphics.Mesh m = finishedModel.meshes.first();
+		BoundingBox bbox = m.calculateBoundingBox();
 		Vector3 dimensions = bbox.getDimensions(new Vector3());
 		Vector3 center = bbox.getCenter(new Vector3());
 		dimensionsNoScale = new Vector3f(dimensions.x, dimensions.y, dimensions.z);
