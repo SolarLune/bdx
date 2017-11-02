@@ -1,5 +1,6 @@
 package com.nilunder.bdx.gl;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -83,7 +84,7 @@ public class Mesh implements Named, Disposable {
 
 	}
 
-	private static Model createModel(JsonValue model, Scene scene){
+	private static Model createModel(JsonValue model, Scene scene, Integer numVerticesMax){
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
 		short idx = 0;
@@ -94,19 +95,29 @@ public class Mesh implements Named, Disposable {
 			}
 			MeshPartBuilder mpb = builder.part(model.name, GL20.GL_TRIANGLES,
 					Usage.Position | Usage.Normal | Usage.TextureCoordinates, m);
-			float verts[] = mat.asFloatArray();
+			float[] verts = mat.asFloatArray();
+			int numIndices;
+			if (numVerticesMax != null && numVerticesMax != verts.length){
+				verts = Arrays.copyOf(verts, numVerticesMax);
+				numIndices = numVerticesMax / Bdx.VERT_STRIDE;
+			}else{
+				numIndices = verts.length / Bdx.VERT_STRIDE;
+			}
 			mpb.vertex(verts);
-			int len = verts.length / Bdx.VERT_STRIDE;
 			try{
-				for (short i = 0; i < len; ++i){
+				for (short i = 0; i < numIndices; ++i){
 					mpb.index(idx);
 					idx += 1;
 				}
 			}catch (Error e){
-				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. " + model.name + " has " + Integer.toString(len) + " vertices.");
+				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. " + model.name + " has " + Integer.toString(numIndices) + " vertices.");
 			}
 		}
 		return builder.end();
+	}
+	
+	private static Model createModel(JsonValue model, Scene scene){
+		return createModel(model, scene, null);
 	}
 	
 	public Mesh(Model model, Scene scene, String name){
@@ -124,16 +135,24 @@ public class Mesh implements Named, Disposable {
 		this(model, scene, model.meshParts.first().id);
 	}
 	
+	public Mesh(JsonValue model, Scene scene, String name, Integer numVerticesMax){
+		this(createModel(model, scene, numVerticesMax), scene, name);
+	}
+	
 	public Mesh(JsonValue model, Scene scene, String name){
-		this(createModel(model, scene), scene, name);
+		this(model, scene, name, null);
 	}
 	
 	public Mesh(JsonValue model, Scene scene){
 		this(model, scene, model.name);
 	}
 	
+	public Mesh(String serialized, Scene scene, String name, Integer numVerticesMax){
+		this(new JsonReader().parse(serialized), scene, name, numVerticesMax);
+	}
+	
 	public Mesh(String serialized, Scene scene, String name){
-		this(new JsonReader().parse(serialized), scene, name);
+		this(serialized, scene, name, null);
 	}
 	
 	public int offset(int ms){

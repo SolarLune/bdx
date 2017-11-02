@@ -92,6 +92,7 @@ public class Profiler{
 	private final String EXC_MSG = "User created subsystem names should not start with: \"__\"";
 	private final Color BG_COLOR = new Color(0.125f, 0.125f, 0.125f, 0.75f);
 	private final String SPACE = "  ";
+	private final int TEXT_CAPACITY_BUFFER = 20;
 	private final int MARGIN = 2;
 	private final int OFFSET_RIGHT = 22;
 	private final int BAR_WIDTH = 5;
@@ -125,6 +126,7 @@ public class Profiler{
 	
 	private GameObject display;
 	private Text text;
+	private Text textProps;
 	private GameObject bars;
 	private GameObject background;
 	
@@ -195,8 +197,13 @@ public class Profiler{
 		
 		display = scene.objects.get("__PDisplay");
 		
-		text = (Text) display.children.get("__PText");
+		text = (Text) scene.add("__PText");
+		text.parent(display);
 		text.text("");
+		
+		textProps = (Text) scene.add("__PText");
+		textProps.parent(display);
+		initTextProps();
 		
 		fontWidth = CTE * text.font.get("char").get("0").get("xadvance").asInt();
 		fontHeight = CTE * text.font.get("common").get("lineHeight").asInt();
@@ -210,6 +217,15 @@ public class Profiler{
 		
 		scene.viewport.type(Viewport.Type.SCREEN);
 		updateViewport();
+	}
+	
+	private void initTextProps(){
+		textProps.capacity(TEXT_CAPACITY_BUFFER);
+		textProps.text("");
+	}
+	
+	private void updateTextProps(){
+		textProps.position(0, -text.text().split("\n").length * fontHeight * scale, 0);
 	}
 	
 	private void initBars(){
@@ -274,11 +290,18 @@ public class Profiler{
 			x = Math.max(x, line.length());
 			y++;
 		}
+		if (propsVisible){
+			lines = textProps.text().split("\n");
+			for (String line : lines){
+				x = Math.max(x, line.length());
+				y++;
+			}
+		}
 		if (subsystemsVisible){
 			x = Math.max(x, MARGIN + offsetLeft + OFFSET_RIGHT + BAR_WIDTH);
 		}
 		float width = (x + MARGIN) * fontWidth * scale;
-		float height = y * fontHeight * scale;
+		float height = (y + 0.5f) * fontHeight * scale;
 		background.scale(width, height, 1);
 	}
 	
@@ -357,10 +380,17 @@ public class Profiler{
 		if (glVisible){
 			textBuffer.append("\n" + glAsString());
 		}
+		text.text(textBuffer.toString(), true);
+		
 		if (propsVisible){
+			textBuffer.setLength(0);
 			textBuffer.append("\n" + propsAsString());
+			String s = textBuffer.toString();
+			if (s.length() > textProps.capacity()){
+				textProps.capacity(s.length() + TEXT_CAPACITY_BUFFER);
+			}
+			textProps.text(s);
 		}
-		text.text(textBuffer.toString());
 	}
 	
 	public void updateVisible(){
@@ -368,6 +398,7 @@ public class Profiler{
 			counter -= 1;
 			updateText();
 			updateBars();
+			updateTextProps();
 			updateBackground();
 		}
 		counter += frequency * Bdx.TICK_TIME;
@@ -524,6 +555,7 @@ public class Profiler{
 			return;
 		}
 		this.propsVisible = propsVisible;
+		initTextProps();
 	}
 	
 	public float scale(){
