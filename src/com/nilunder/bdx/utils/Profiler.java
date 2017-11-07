@@ -29,6 +29,7 @@ public class Profiler{
 			stats = new LinkedHashMap<String, Integer>();
 			fields = new HashMap<String, Integer>();
 			updateFields();
+			updateStats();
 		}
 		
 		public boolean active(){
