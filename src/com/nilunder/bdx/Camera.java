@@ -160,13 +160,12 @@ public class Camera extends GameObject{
 	}
 	
 	public void update(){
-		Transform t = new Transform();
-		body.getWorldTransform(t);
-		data.position.set(t.origin.x, t.origin.y, t.origin.z);
-		Vector3f axis = axis("-Z");
-		data.direction.set(axis.x, axis.y, axis.z);
-		axis = axis("Y");
-		data.up.set(axis.x, axis.y, axis.z);
+		Vector3f v = position();
+		data.position.set(v.x, v.y, v.z);
+		v = axis("-Z");
+		data.direction.set(v.x, v.y, v.z);
+		v = axis("Y");
+		data.up.set(v.x, v.y, v.z);
 		data.update();
 	}
 
