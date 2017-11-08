@@ -256,6 +256,11 @@ public class Mesh implements Named, Disposable {
 		vertices(ms, verticesTransformed(ms, t));
 	}
 	
+	public void transformUV(Matrix3f t){
+		Matrix3 trans = new Matrix3(t.transposed().floatArray());
+		model.meshes.first().transformUV(trans);
+	}
+	
 	public void transformUV(int ms, Matrix3f t){
 		MeshPart mp = model.meshParts.get(ms);
 		Matrix3 trans = new Matrix3(t.transposed().floatArray());
