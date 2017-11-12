@@ -1,13 +1,14 @@
 package com.nilunder.bdx.components;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-import javax.vecmath.*;
+import javax.vecmath.Vector2f;
+import javax.vecmath.Matrix3f;
 
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.*;
-import com.badlogic.gdx.graphics.g3d.attributes.*;
-import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.graphics.GLTexture;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 
 import com.nilunder.bdx.*;
 import com.nilunder.bdx.utils.Timer;
@@ -65,7 +66,7 @@ public class SpriteAnim extends Component<GameObject> {
 
 	private int prevFrame;
 	private Timer ticker;
-	private Matrix3 uvScale;
+	private Matrix3f uvScale;
 	private boolean rowBased;
 	private Vector2f baseFrame;
 	private Vector2f frameDim;
@@ -77,8 +78,7 @@ public class SpriteAnim extends Component<GameObject> {
 		this.rowBased = rowBased;
 		animations = new HashMap<String, Animation>();
 		ticker = new Timer();
-		uvScale = new Matrix3();
-		uvScale.idt();
+		uvScale = Matrix3f.identity();
 		speed = 1;
 		state = play;
 
@@ -92,7 +92,7 @@ public class SpriteAnim extends Component<GameObject> {
 		}
 
 		// frameDim
-		TextureAttribute ta = (TextureAttribute)g.modelInstance.materials.get(0).get(TextureAttribute.Diffuse);
+		TextureAttribute ta = (TextureAttribute)g.modelInstance.materials.first().get(TextureAttribute.Diffuse);
 		GLTexture t = ta.textureDescription.texture;
 		float u = 1f / t.getWidth();
 		float v = 1f / t.getHeight();
@@ -130,20 +130,36 @@ public class SpriteAnim extends Component<GameObject> {
 		return new ArrayList<String>(animations.keySet());
 	}
 
-	public void uvScaleX(float s){
-		uvScale(s, uvScaleY());
-	}
-
-	public void uvScaleY(float s){
-		uvScale(uvScaleX(), s);
-	}
-
 	public float uvScaleX(){
-		return uvScale.val[Matrix3.M00];
+		return uvScale.getM00();
 	}
 	
 	public float uvScaleY(){
-		return uvScale.val[Matrix3.M11];
+		return uvScale.getM11();
+	}
+	
+	public void uvScaleX(float s){
+		uvScale(s, uvScaleY());
+	}
+	
+	public void uvScaleY(float s){
+		uvScale(uvScaleX(), s);
+	}
+	
+	private void uvScale(float x, float y){
+		if (uvScaleX() == x && uvScaleY() == y)
+			return;
+			
+		uvScale.invert();
+		uvScale.mul(Matrix3f.scale(x, y));
+		
+		Vector2f df = uvFrame();
+		Matrix3f t = Matrix3f.position(df.x, df.y);
+		Matrix3f tInv = t.inverted();
+		t.mul(uvScale);
+		t.mul(tInv);
+		
+		g.mesh().transformUV(t);
 	}
 	
 	public void play(String name){
@@ -203,62 +219,25 @@ public class SpriteAnim extends Component<GameObject> {
 	};
 
 	private void uvFrame(Vector2f frame){
-		Matrix3 trans = new Matrix3();
 		Vector2f df = uvFrame();
-		trans.setToTranslation(frame.x - df.x, frame.y - df.y);
-		
-		Mesh mesh = g.modelInstance.model.meshes.first();
-		mesh.transformUV(trans);
-
+		Matrix3f t = Matrix3f.position(frame.x - df.x, frame.y - df.y);
+		g.mesh().transformUV(t);
 	}
 
 	private Vector2f uvFrame(){
-		Mesh mesh = g.modelInstance.model.meshes.first();
-		int n = mesh.getNumVertices();
-		float[] verts = new float[n*Bdx.VERT_STRIDE];
-		mesh.getVertices(0, verts.length, verts);
-
-		Vector2f frame = new Vector2f(0, 0);
-
-		int uvStart = Bdx.VERT_STRIDE - 2;
-		for (int v = 0; v < n; ++v){
-			int i = v * Bdx.VERT_STRIDE;
-			frame.x += verts[i + uvStart];
-			frame.y += verts[i + uvStart + 1];
+		Vector2f frame = new Vector2f();
+		
+		float[] verts = g.mesh().vertices();
+		int numIndices = g.mesh().numIndices();
+		for (int i = 0; i < numIndices; i++){
+			int offset = i * Bdx.VERT_STRIDE;
+			frame.x += verts[offset + 6];
+			frame.y += verts[offset + 7];
 		}
-
-		frame.x /= n;
-		frame.y /= n;
+		frame.x /= numIndices;
+		frame.y /= numIndices;
 		
 		return frame;
 	}
 
-	private void scaleUV(Matrix3 scale){
-		Matrix3 trans = new Matrix3(); trans.idt();
-		Vector2f df = uvFrame();
-		trans.setToTranslation(df.x, df.y);
-
-		Matrix3 toOrigin = new Matrix3(trans);
-		toOrigin.inv();
-
-		trans.mul(scale);
-		trans.mul(toOrigin);
-
-		Mesh mesh = g.modelInstance.model.meshes.first();
-		mesh.transformUV(trans);
-	}
-
-	private void uvScale(float x, float y){
-		if (uvScaleX() == x && uvScaleY() == y)
-			return;
-		
-		// back to unit scale
-		uvScale.inv();
-		scaleUV(uvScale);
-
-		// set new scale
-		uvScale.idt();
-		uvScale.scale(x, y);
-		scaleUV(uvScale);
-	}
 }

@@ -2506,6 +2506,31 @@ public class Matrix3f implements java.io.Serializable, Cloneable {
 		return m;
 	}
 	
+	public final static Matrix3f position(float x, float y){
+		Matrix3f m = Matrix3f.identity();
+		m.m02 = x;
+		m.m12 = y;
+		return m;
+	}
+	
+	public final static Matrix3f scale(float x, float y){
+		Matrix3f m = Matrix3f.identity();
+		m.m00 = x;
+		m.m11 = y;
+		return m;
+	}
+	
+	public final static Matrix3f rotation(float angle){
+		Matrix3f m = Matrix3f.identity();
+		float cos = (float) Math.cos(angle);
+		float sin = (float) Math.sin(angle);
+		m.m00 = cos;
+		m.m01 = -sin;
+		m.m10 = sin;
+		m.m11 = cos;
+		return m;
+	}
+	
 	public final static Matrix3f rotation(Vector3f axis, float angle){
 		AxisAngle4f aa = new AxisAngle4f(axis, angle);
 		Matrix3f m = new Matrix3f();
