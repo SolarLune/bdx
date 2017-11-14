@@ -187,8 +187,10 @@ public class Bdx{
 
 	private static long startMillis = System.currentTimeMillis();
 	private static UniformSet defaultScreenShaderUniformSet;
+	private static boolean valid;
 
 	public static void init(){
+		valid = true;
 		time = 0;
 		physicsSpeed = 1;
 		timeSpeed = 1;
@@ -520,6 +522,8 @@ public class Bdx{
 
 	public static void dispose(){
 
+		valid = false;
+
 		for (Scene s : scenes)
 			s.dispose();
 
@@ -599,6 +603,10 @@ public class Bdx{
 			}
 			gamepads.add(newGP);
 		}
+	}
+
+	public static boolean valid() {
+		return valid;
 	}
 
 }
