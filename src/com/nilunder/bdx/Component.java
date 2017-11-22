@@ -15,7 +15,7 @@ public class Component<T extends GameObject> implements Named {
 	public Component(T g){
 		this.g = g;
 		name = this.getClass().getSimpleName();
-		logicFrequency = Bdx.TICK_RATE;
+		logicFrequency = Bdx.TARGET_FPS;
 		if (logicCounterRandom == null)
 			logicCounterRandom = new java.util.Random();
 		logicCounter = 1 + logicCounterRandom.nextFloat();

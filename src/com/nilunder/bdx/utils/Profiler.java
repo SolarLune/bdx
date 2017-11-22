@@ -145,7 +145,7 @@ public class Profiler{
 		deltaTimes = new HashMap<String, Long>();
 		startTimes = new HashMap<String, Long>();
 		tickTimes = new ArrayList<Long>();
-		for (int i = 0; i < Bdx.TICK_RATE; i++){
+		for (int i = 0; i < Bdx.TARGET_FPS; i++){
 			tickTimes.add((long) Bdx.TICK_TIME);
 		}
 		counter = 1;
@@ -176,8 +176,8 @@ public class Profiler{
 			percents.put(name, 0f);
 		}
 		
-		frequency = Bdx.TICK_RATE;
-		avgTickRate = Bdx.TICK_RATE;
+		frequency = Bdx.TARGET_FPS;
+		avgTickRate = Bdx.TARGET_FPS;
 		avgTickTime = Bdx.TICK_TIME;
 		
 		gl = new Gl();
@@ -311,7 +311,7 @@ public class Profiler{
 		for (long l : tickTimes){
 			sumTickTimes += l;
 		}
-		avgTickRate = Bdx.TICK_RATE * 1000000000f / sumTickTimes;
+		avgTickRate = Bdx.TARGET_FPS * 1000000000f / sumTickTimes;
 		avgTickTime = 1000 / avgTickRate;
 	}
 	
@@ -410,7 +410,7 @@ public class Profiler{
 		}
 		long deltaTime = stopTime - startTime;
 		
-		long storedDeltaTime = (long) (deltaTime * (float) frequency / Bdx.TICK_RATE);
+		long storedDeltaTime = (long) (deltaTime * (float) frequency / Bdx.TARGET_FPS);
 		if (deltaTimes.containsKey(name)){
 			storedDeltaTime += deltaTimes.get(name);
 		}
@@ -634,7 +634,7 @@ public class Profiler{
 		buffer.append(SPACE);
 		addString(buffer, timeUnits, 3, false, ' ');
 		buffer.append(SPACE);
-		addFloat(buffer, avgTickRate, 4, 1, ' ');
+		addFloat(buffer, avgTickRate, 5, 1, ' ');
 		buffer.append(SPACE);
 		buffer.append(valueUnits);
 		return buffer.toString();

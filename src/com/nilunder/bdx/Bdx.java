@@ -102,6 +102,12 @@ public class Bdx{
 				resize(width(), height());		// Just call resize() to destroy and re-create new RenderBuffers
 			}
 		}
+		public boolean gpuBound() {
+			return profiler.nanos.get("__gpu wait") > 0;
+		}
+		public int averageFPS() {
+			return Gdx.graphics.getFramesPerSecond();
+		}
 	}
 
 	public static class ArrayListScenes extends ArrayListNamed<Scene>{
@@ -153,8 +159,8 @@ public class Bdx{
 		}
 	}
 
-	public static final int TICK_RATE = 60;
-	public static final float TICK_TIME = 1f/TICK_RATE;
+	public static int TARGET_FPS = 60;
+	public static float TICK_TIME = 1;
 	public static final int VERT_STRIDE = 8;
 	public static float time;
 	public static String firstScene;
@@ -173,6 +179,8 @@ public class Bdx{
 	public static float physicsSpeed;
 	public static float timeSpeed;
 	public static boolean restartOnExport = false;
+	public static boolean frameskip;
+	private static float frameskipDuration;
 
 	private static boolean advancedLightingOn;
 	private static ArrayList<Finger> allocatedFingers;
@@ -192,6 +200,9 @@ public class Bdx{
 		time = 0;
 		physicsSpeed = 1;
 		timeSpeed = 1;
+		TICK_TIME = 1f / TARGET_FPS;
+		frameskip = false;
+		frameskipDuration = 0;
 		profiler = new Profiler();
 		display = new Display();
 		scenes = new ArrayListScenes();
@@ -268,16 +279,26 @@ public class Bdx{
 			}
 		}
 
-		profiler.start("__render");
-		Gdx.gl.glClearColor(display.clearColor.r, display.clearColor.g, display.clearColor.b, display.clearColor.a);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		Gdx.gl.glClearColor(0, 0, 0, 0);
-		Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
-		profiler.stop("__render");
+		frameskipDuration = Math.max(frameskipDuration - TICK_TIME, 0);
+
+		if (frameskip)
+			frameskipDuration += delta() - TICK_TIME;
+
+		if (frameskipDuration < 0.001f)
+			frameskipDuration = 0;
+
+		if (!frameskip || frameskipDuration <= 0){
+			profiler.start("__render");
+			Gdx.gl.glClearColor(display.clearColor.r, display.clearColor.g, display.clearColor.b, display.clearColor.a);
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			Gdx.gl.glClearColor(0, 0, 0, 0);
+			Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+			profiler.stop("__render");
+		}
 
 		// -------- Update Input --------
 
-		time += TICK_TIME * timeSpeed;
+		time += delta() * timeSpeed;
 		++GdxProcessor.currentTick;
 		fingers.clear();
 		for (Finger f : allocatedFingers){
@@ -341,6 +362,9 @@ public class Bdx{
 			profiler.stop("__scene");
 
 			if (!scene.valid() || !scene.visible)
+				continue;
+
+			if (frameskip && frameskipDuration > 0)
 				continue;
 
 			// ------- Render Scene --------
@@ -599,6 +623,10 @@ public class Bdx{
 			}
 			gamepads.add(newGP);
 		}
+	}
+
+	public static float delta() {
+		return Gdx.graphics.getDeltaTime();
 	}
 
 }

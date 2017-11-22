@@ -138,7 +138,7 @@ public class GameObject implements Named{
 		children = new ArrayListGameObject();
 		valid = true;
 		scale = new Vector3f();
-		logicFrequency = Bdx.TICK_RATE;
+		logicFrequency = Bdx.TARGET_FPS;
 		if (logicCounterRandom == null)
 			logicCounterRandom = new java.util.Random();
 		logicCounter = 1 + logicCounterRandom.nextFloat();
@@ -380,12 +380,12 @@ public class GameObject implements Named{
 
 	public void applyForce(Vector3f vec){
 		activate();
-		body.applyCentralForce(vec.mul(1f / Bdx.physicsSpeed));
+		body.applyCentralForce(vec.mul(1f / Bdx.physicsSpeed * (Bdx.TARGET_FPS / 60f)));
 	}
 
 	public void applyForce(Vector3f force, Vector3f relPos) {
 		activate();
-		body.applyForce(force.mul(1f / Bdx.physicsSpeed), relPos);
+		body.applyForce(force.mul(1f / Bdx.physicsSpeed * (Bdx.TARGET_FPS / 60f)), relPos);
 	}
 
 	public void applyForce(float x, float y, float z){

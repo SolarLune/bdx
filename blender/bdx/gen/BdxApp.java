@@ -8,8 +8,11 @@ import com.nilunder.bdx.*;
 
 public class BdxApp implements ApplicationListener {
 
+	public int TARGET_FPS = 60;
+
 	@Override
 	public void create(){
+		Bdx.TARGET_FPS = this.TARGET_FPS;
 		Bdx.init();
 
 		Scene.instantiators = new HashMap<String, Instantiator>();

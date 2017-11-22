@@ -182,6 +182,11 @@ def export(self, context, multiBlend, diffExport):
     ut.set_file_var(dl, "width", rx)
     ut.set_file_var(dl, "height", ry)
 
+    fps = str(current_scene.game_settings.fps)
+
+    ut.set_file_var(dl, "foregroundFPS", fps)
+    ut.set_file_var(dl, "backgroundFPS", fps)
+
     # - AndroidLauncher.java
     al = j(ut.src_root("android", "AndroidLauncher.java"), "AndroidLauncher.java")
     ut.set_file_var(al, "width", rx)
