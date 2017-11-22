@@ -14,6 +14,7 @@ import com.nilunder.bdx.GameObject;
 import com.nilunder.bdx.Text;
 import com.nilunder.bdx.gl.Viewport;
 import com.nilunder.bdx.gl.Mesh;
+import com.nilunder.bdx.utils.JoinData;
 
 import javax.vecmath.Matrix4f;
 
@@ -233,7 +234,7 @@ public class Profiler{
 		if (!subsystemsVisible){
 			return;
 		}
-		HashMap<Mesh, ArrayList<Matrix4f>> data = new HashMap<Mesh, ArrayList<Matrix4f>>();
+		JoinData data = new JoinData();
 		ArrayList<Matrix4f> transforms = new ArrayList<Matrix4f>();
 		
 		Matrix4f m = Matrix4f.identity();
@@ -260,7 +261,8 @@ public class Profiler{
 		}
 		
 		data.put(scene.meshes.get("__PBar"), transforms);
-		bars.join(data);
+		bars.mesh(new Mesh(data, scene, "bars"));
+		bars.updateBody();
 	}
 	
 	private void updateBars(){

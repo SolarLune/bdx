@@ -690,60 +690,62 @@ public class GameObject implements Named{
 	}
 
 	public void mesh(String meshName){
-
 		Mesh m = scene.meshes.get(meshName);
 
 		if (m == null)
 			throw new RuntimeException("No model found with name '" + meshName + "' in an active scene.");
 
 		mesh(m);
-
 	}
-
-	public void mesh(Mesh mesh) {
-
-		String meshName = mesh.name();
-
-		if (mesh == this.mesh)              // You're already set to the current mesh
-			return;
-
-		if (!mesh.valid())
-			throw new RuntimeException("ERROR! Attempting to set mesh of GameObject \"" + name + "\" to invalid Mesh \"" + mesh.name() + "\"!");
-
-		JsonValue mOrigin = null;
-		JsonValue mDimNoScale = null;
-
-		ArrayList<Scene> sceneList = new ArrayList<Scene>(Bdx.scenes);
+	
+	public void mesh(Mesh newMesh) {
+		if (!newMesh.valid())
+			throw new RuntimeException("ERROR! Attempting to set mesh of GameObject \"" + name + "\" to invalid Mesh \"" + newMesh.name() + "\"!");
 		
-		if (sceneList.indexOf(scene) >= 0)
-			Collections.swap(sceneList, sceneList.indexOf(scene), 0);
-		else
+		// abort when mesh is already set
+		
+		if (mesh == newMesh)
+			return;
+			
+		// update mesh and modelInstance
+		
+		if (modelInstance != null){
+			mesh.instances.remove(modelInstance);
+			if (mesh.autoDispose && mesh.instances.isEmpty()){
+				mesh.dispose();
+			}
+		}
+		mesh = newMesh;
+		modelInstance = mesh.getNewModelInstance();
+		
+		// update origin and dimensionsNoScale
+		
+		ArrayList<Scene> sceneList = new ArrayList<Scene>(Bdx.scenes);
+		int index = sceneList.indexOf(scene);
+		if (index == -1){
 			sceneList.add(0, scene);
-
+		}else if (index != 0){
+			Collections.swap(sceneList, index, 0);
+		}
+		boolean exported = false;
+		String meshName = mesh.name();
 		for (Scene sce : sceneList) {
 			if (sce.meshes.containsKey(meshName)){
-				mOrigin = sce.json.get("origins").get(meshName);
-				mDimNoScale = sce.json.get("dimensions").get(meshName);
+				exported = true;
+				JsonValue mOrigin = sce.json.get("origins").get(meshName);
+				JsonValue mDimensions = sce.json.get("dimensions").get(meshName);
+				origin = mOrigin == null ? new Vector3f() : new Vector3f(mOrigin.asFloatArray());
+				dimensionsNoScale = mDimensions == null ? new Vector3f(1, 1, 1) : new Vector3f(mDimensions.asFloatArray());
 				break;
 			}
 		}
-
-		origin = mOrigin == null ? new Vector3f() : new Vector3f(mOrigin.asFloatArray());
-		dimensionsNoScale = mDimNoScale == null ? new Vector3f(1, 1, 1) : new Vector3f(mDimNoScale.asFloatArray());
-
-		Matrix4 trans;
-		if (modelInstance != null) {
-			trans = modelInstance.transform;
-			this.mesh.instances.remove(modelInstance);
+		if (!exported){
+			BoundingBox bbox = mesh.model.meshes.first().calculateBoundingBox();
+			Vector3 center = bbox.getCenter(new Vector3());
+			origin = new Vector3f(center.x, center.y, center.z);
+			Vector3 dimensions = bbox.getDimensions(new Vector3());
+			dimensionsNoScale = new Vector3f(dimensions.x, dimensions.y, dimensions.z);
 		}
-		else
-			trans = new Matrix4();
-
-		this.mesh = mesh;
-
-		modelInstance = mesh.getNewModelInstance();
-		modelInstance.transform.set(trans);
-
 	}
 
 	public void updateBody(Mesh mesh){
@@ -817,141 +819,6 @@ public class GameObject implements Named{
 
 	public void updateBody(){
 		updateBody(mesh);
-	}
-	
-	public HashMap<Mesh, ArrayList<Matrix4f>> join(ArrayList<GameObject> objects, boolean endObjects){
-		
-		// collect scaled transforms per mesh
-		
-		HashMap<Mesh, ArrayList<Matrix4f>> map = new HashMap<Mesh, ArrayList<Matrix4f>>();
-		Mesh m;
-		for (GameObject g : objects){
-			m = g.mesh();
-			if (!g.valid() || !m.valid())
-				continue;
-			ArrayList<Matrix4f> l;
-			if (map.containsKey(m)){
-				l = map.get(m);
-			}else{
-				l = new ArrayList<Matrix4f>();
-				map.put(m, l);
-			}
-			l.add(g.transform());
-			if (endObjects)
-				g.endNoChildren();
-		}
-		
-		// join
-		
-		join(map);
-		
-		return map;
-	}
-	
-	public HashMap<Mesh, ArrayList<Matrix4f>> join(ArrayList<GameObject> objects){
-		return join(objects, true);
-	}
-	
-	public void join(HashMap<Mesh, ArrayList<Matrix4f>> map){
-		
-		// Collect transformed vertex arrays for each material & calculate number of indices
-		
-		HashMap<Material, ArrayList<float[]>> tvaMap = new HashMap<Material, ArrayList<float[]>>();
-		HashMap<Material, Integer> lenMap = new HashMap<Material, Integer>();
-		
-		Mesh mesh;
-		Material mat;
-		ArrayList<Matrix4f> transforms;
-		ArrayList<float[]> l;
-		float[] tva;
-		int len;
-		
-		Matrix4f transInv = transform.inverted();
-		Matrix4f t = new Matrix4f();
-		
-		for (Map.Entry<Mesh, ArrayList<Matrix4f>> e : map.entrySet()){
-			mesh = e.getKey();
-			transforms = e.getValue();
-			for (int i = 0; i < mesh.materials.size(); i++){
-				mat = mesh.materials.get(i);
-				for (Matrix4f trans : transforms){
-					t.set(transInv);
-					t.mul(trans);
-					tva = mesh.verticesTransformed(i, t);
-					if (tvaMap.containsKey(mat)){
-						l = tvaMap.get(mat);
-						len = lenMap.get(mat);
-					}else{
-						l = new ArrayList<float[]>();
-						tvaMap.put(mat, l);
-						len = 0;
-					}
-					l.add(tva);
-					lenMap.put(mat, len + tva.length);
-				}
-			}
-		}
-		
-		// Build a unique model out of meshparts for each material
-		
-		ModelBuilder builder = new ModelBuilder();
-		builder.begin();
-		
-		int numVertices, j;
-		short idx = 0;
-		MeshPartBuilder mpb;
-		
-		for (Map.Entry<Material, ArrayList<float[]>> e : tvaMap.entrySet()){
-			mat = e.getKey();
-			len = lenMap.get(mat);
-			tva = new float[len];
-			j = 0;
-			
-			for (float[] verts : e.getValue()){
-				numVertices = verts.length;
-				for (int i = 0; i < numVertices; i++){
-					tva[i + j] = verts[i];
-				}
-				j += numVertices;
-			}
-			
-			mpb = builder.part(mat.name(), GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, mat);
-			mpb.vertex(tva);
-			
-			try{
-				for (short i = 0; i < len / Bdx.VERT_STRIDE; i++){
-					mpb.index(idx);
-					idx += 1;
-				}
-			}catch (Error error){
-				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. Decrease the number of objects to join.");
-			}
-		}
-		
-		Model finishedModel = builder.end();
-		
-		// Update mesh
-		
-		mesh(new Mesh(finishedModel, scene));
-		
-		// Update dimensionsNoScale and origin
-		
-		com.badlogic.gdx.graphics.Mesh m = finishedModel.meshes.first();
-		BoundingBox bbox = m.calculateBoundingBox();
-		Vector3 dimensions = bbox.getDimensions(new Vector3());
-		Vector3 center = bbox.getCenter(new Vector3());
-		dimensionsNoScale = new Vector3f(dimensions.x, dimensions.y, dimensions.z);
-		origin = new Vector3f(center.x, center.y, center.z);
-		
-		// Update body
-		
-		updateBody();
-		
-		// Set visbility to initial value if empty
-		
-		if (json.get("mesh_name").asString() == null){
-			visible = json.get("visible").asBoolean();
-		}
 	}
 	
 	public String toString(){

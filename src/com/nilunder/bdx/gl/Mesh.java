@@ -3,6 +3,7 @@ package com.nilunder.bdx.gl;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.vecmath.Matrix3f;
 import javax.vecmath.Matrix4f;
@@ -29,6 +30,7 @@ import com.nilunder.bdx.Scene;
 import com.nilunder.bdx.utils.ArrayListNamed;
 import com.nilunder.bdx.utils.Color;
 import com.nilunder.bdx.utils.Named;
+import com.nilunder.bdx.utils.JoinData;
 
 public class Mesh implements Named, Disposable {
 
@@ -120,6 +122,41 @@ public class Mesh implements Named, Disposable {
 		return createModel(model, scene, null);
 	}
 	
+	private static Model createModelJoined(JoinData data){
+		ModelBuilder builder = new ModelBuilder();
+		builder.begin();
+		short idx = 0;
+		for (Map.Entry<Material, JoinData.Part> e : data.parts.entrySet()){
+			Material mat = e.getKey();
+			JoinData.Part part = e.getValue();
+			int numVerticesJoined = part.numVertices();
+			float[] verticesJoined = new float[numVerticesJoined];
+			
+			int j = 0;
+			for (float[] vertices : part.values()){
+				int numVertices = vertices.length;
+				for (int i = 0; i < numVertices; i++){
+					verticesJoined[i + j] = vertices[i];
+				}
+				j += numVertices;
+			}
+			
+			MeshPartBuilder mpb = builder.part(mat.name(), GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, mat);
+			mpb.vertex(verticesJoined);
+			int numIndices = numVerticesJoined / Bdx.VERT_STRIDE;
+			try{
+				for (short i = 0; i < numIndices; i++){
+					mpb.index(idx);
+					idx++;
+				}
+			}catch (Error error){
+				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. Joining " + Integer.toString(numIndices) + " vertices.");
+			}
+		}
+		
+		return builder.end();
+	}
+	
 	public Mesh(Model model, Scene scene, String name){
 		this.model = model;
 		this.name = name;
@@ -153,6 +190,10 @@ public class Mesh implements Named, Disposable {
 	
 	public Mesh(String serialized, Scene scene, String name){
 		this(serialized, scene, name, null);
+	}
+	
+	public Mesh(JoinData data, Scene scene, String name){
+		this(createModelJoined(data), scene, name);
 	}
 	
 	public int offset(int ms){
