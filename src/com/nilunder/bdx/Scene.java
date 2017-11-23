@@ -190,6 +190,9 @@ public class Scene implements Named{
 		
 		json = new JsonReader().parse(scene);
 		name = json.get("name").asString();
+
+		if (Bdx.maxSubsteps() <= 0)
+			Bdx.maxSubsteps(json.get("maxSubsteps").asInt());
 		
 		world = new DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 		world.setDebugDrawer(new Bullet.DebugDrawer(json.get("physviz").asBoolean()));
@@ -810,17 +813,21 @@ public class Scene implements Named{
 			for (Component c : g.components){
 				if (c.state != null) {
 					if (c.logicCounter >= 1) {
-						c.logicCounter -= 1;
+						if (Bdx.substepIndex() == Bdx.substepCount() - 1)
+							c.logicCounter -= 1;
 						c.state.main();
 					}
-					c.logicCounter += c.logicFrequency * Bdx.TICK_TIME;
+					if (Bdx.substepIndex() == Bdx.substepCount() - 1)
+						c.logicCounter += c.logicFrequency * Bdx.rawDelta();
 				}
 			}
 			if (g.logicCounter >= 1) {
-				g.logicCounter -= 1;
+				if (Bdx.substepIndex() == Bdx.substepCount() - 1)
+					g.logicCounter -= 1;
 				g.main();
 			}
-			g.logicCounter += g.logicFrequency * Bdx.TICK_TIME;
+			if (Bdx.substepIndex() == Bdx.substepCount() - 1)
+				g.logicCounter += g.logicFrequency * Bdx.rawDelta();
 		}
 
 		for (GameObject g : toBeAdded) {
@@ -887,10 +894,13 @@ public class Scene implements Named{
 
 	public void update(){
 
+		if (!valid)
+			return;
+
 		if (!paused){
 
 			Bdx.profiler.start("__logic");
-			runObjectLogic();			
+			runObjectLogic();
 			Bdx.profiler.stop("__logic");
 
 			updateVisuals();
@@ -901,7 +911,10 @@ public class Scene implements Named{
 			Bdx.profiler.stop("__scene");
 
 			try{
-				world.stepSimulation(Bdx.TICK_TIME * Bdx.physicsSpeed, 0);
+				if (Bdx.maxSubsteps() > 1)
+					world.stepSimulation(Bdx.delta() * Bdx.physicsSpeed, 0, Bdx.TICK_TIME * Bdx.physicsSpeed / Bdx.substepCount());
+				else
+					world.stepSimulation(Bdx.TICK_TIME * Bdx.physicsSpeed, 0, Bdx.TICK_TIME);
 			}catch (NullPointerException e){
 				throw new RuntimeException("PHYSICS ERROR: Detected collision between Static objects set to Ghost, with Triangle Mesh bounds: Keep them separated, or use different bounds.");
 			}
@@ -913,7 +926,7 @@ public class Scene implements Named{
 
 			detectCollisions();
 			Bdx.profiler.stop("__physics");
-			
+
 		}
 
 		if (requestedEnd) {

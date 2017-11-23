@@ -102,6 +102,10 @@ public class Bdx{
 				resize(width(), height());		// Just call resize() to destroy and re-create new RenderBuffers
 			}
 		}
+		public int averageFPS(){
+			return Gdx.graphics.getFramesPerSecond();
+		}
+
 	}
 
 	public static class ArrayListScenes extends ArrayListNamed<Scene>{
@@ -153,9 +157,10 @@ public class Bdx{
 		}
 	}
 
-	public static final int TICK_RATE = 60;
-	public static final float TICK_TIME = 1f/TICK_RATE;
 	public static final int VERT_STRIDE = 8;
+	public static int TICK_RATE = 60;
+	public static float TICK_TIME;
+
 	public static float time;
 	public static String firstScene;
 	public static Profiler profiler;
@@ -174,6 +179,10 @@ public class Bdx{
 	public static float timeSpeed;
 	public static boolean restartOnExport = false;
 
+	private static int minSubsteps = 1;
+	private static int maxSubsteps = 0;
+	private static int substepCount;
+	private static int substepIndex;
 	private static boolean advancedLightingOn;
 	private static ArrayList<Finger> allocatedFingers;
 	private static ModelBatch modelBatch;
@@ -189,13 +198,18 @@ public class Bdx{
 	private static UniformSet defaultScreenShaderUniformSet;
 	private static boolean valid;
 
+	private static float requiredStepsFloat = 0;
+
 	public static void init(){
 		valid = true;
+
+		TICK_TIME = 1f / TICK_RATE;
+
 		time = 0;
 		physicsSpeed = 1;
 		timeSpeed = 1;
-		profiler = new Profiler();
 		display = new Display();
+		profiler = new Profiler();
 		scenes = new ArrayListScenes();
 		audio = new Audio();
 		mouse = new Mouse();
@@ -277,16 +291,6 @@ public class Bdx{
 		Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 		profiler.stop("__render");
 
-		// -------- Update Input --------
-
-		time += TICK_TIME * timeSpeed;
-		++GdxProcessor.currentTick;
-		fingers.clear();
-		for (Finger f : allocatedFingers){
-			if (f.down() || f.up())
-				fingers.add(f);
-		}
-		profiler.stop("__scene");
 		// ------------------------------
 
 		defaultScreenShaderUniformSet.scene = null;		// Have to do this to not hold onto references
@@ -322,6 +326,38 @@ public class Bdx{
 			}
 		}
 
+		requiredStepsFloat += rawDelta() / (1f / Bdx.TICK_RATE);
+
+		substepCount = (int) requiredStepsFloat;
+
+		if (substepCount > maxSubsteps) {
+			substepCount = maxSubsteps;
+			requiredStepsFloat = 0;
+		} else
+			requiredStepsFloat -= substepCount;
+
+		substepCount = Math.max(substepCount, minSubsteps);
+
+		for (substepIndex = 0; substepIndex < substepCount; substepIndex++) {
+
+			// -------- Update Input --------
+
+			profiler.start("__scene");
+			time += delta() * timeSpeed;
+			++GdxProcessor.currentTick;
+			fingers.clear();
+			for (Finger f : allocatedFingers) {
+				if (f.down() || f.up())
+					fingers.add(f);
+			}
+			profiler.stop("__scene");
+
+			// -------- Update Scene -------
+
+			for (Scene scene : newSceneList)
+				scene.update();
+		}
+
 		for (int i = 0; i < newSceneList.size(); i++){
 
 			Scene scene = newSceneList.get(i);
@@ -339,7 +375,6 @@ public class Bdx{
 				depthBufferCleared = false;
 			}
 
-			scene.update();
 			profiler.stop("__scene");
 
 			if (!scene.valid() || !scene.visible)
@@ -603,6 +638,45 @@ public class Bdx{
 			}
 			gamepads.add(newGP);
 		}
+	}
+
+	public static float delta() {
+		// Don't want to return so much delta that the physics world can't calculate it, so we clamp it here
+		return Math.min(rawDelta() / substepCount, TICK_TIME * maxSubsteps);
+	}
+
+	public static float rawDelta() {
+		if (Gdx.graphics.getDeltaTime() > 0)
+			return Gdx.graphics.getDeltaTime();
+		return 1f / TICK_RATE;
+	}
+
+	public static int substepCount() {
+		return substepCount;
+	}
+
+	public static int substepIndex() {
+		return substepIndex;
+	}
+
+	public static void minSubsteps(int substeps) {
+		minSubsteps = Math.max(1, substeps);
+		if (maxSubsteps < minSubsteps)
+			maxSubsteps = minSubsteps;
+	}
+
+	public static int minSubsteps() {
+		return minSubsteps;
+	}
+
+	public static void maxSubsteps(int substeps) {
+		maxSubsteps = Math.max(1, substeps);
+		if (minSubsteps > maxSubsteps)
+			minSubsteps = maxSubsteps;
+	}
+
+	public static int maxSubsteps() {
+		return maxSubsteps;
 	}
 
 	public static boolean valid() {

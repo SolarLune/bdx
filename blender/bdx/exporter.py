@@ -852,6 +852,7 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         "clearColor": clear_color,
         "resolution": [scene.render.resolution_x, scene.render.resolution_y],
         "frame_type": scene.game_settings.frame_type,
+        "maxSubsteps": scene.game_settings.physics_step_max
     }
 
     if exprun:

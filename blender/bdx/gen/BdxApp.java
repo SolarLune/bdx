@@ -8,8 +8,11 @@ import com.nilunder.bdx.*;
 
 public class BdxApp implements ApplicationListener {
 
+	public int TICK_RATE = 60;
+
 	@Override
 	public void create(){
+		Bdx.TICK_RATE = this.TICK_RATE;
 		Bdx.init();
 
 		Scene.instantiators = new HashMap<String, Instantiator>();

@@ -399,15 +399,17 @@ public class GameObject implements Named{
 		
 		orientation(ori);
 	}
-	
-	public void applyForce(Vector3f vec){
+
+	public void applyForce(Vector3f force){
 		activate();
-		body.applyCentralForce(vec.mul(1f / Bdx.physicsSpeed));
+		// The multiplication factor takes into account physics speed, tick time, and delta because it's a one-time
+		// force push. Without this, the force generated changes based on framerate and substep amount.
+		body.applyCentralForce(force.mul(1f / Bdx.physicsSpeed * Bdx.TICK_TIME / Bdx.delta()));
 	}
 
 	public void applyForce(Vector3f force, Vector3f relPos) {
 		activate();
-		body.applyForce(force.mul(1f / Bdx.physicsSpeed), relPos);
+		body.applyForce(force.mul(1f / Bdx.physicsSpeed * Bdx.TICK_TIME / Bdx.delta()), relPos);
 	}
 
 	public void applyForce(float x, float y, float z){
@@ -428,9 +430,9 @@ public class GameObject implements Named{
 		applyForce(orientation().mult(force), relPos);
 	}
 
-	public void applyTorque(Vector3f vec){
+	public void applyTorque(Vector3f torque){
 		activate();
-		body.applyTorque(vec.mul(1f / Bdx.physicsSpeed));
+		body.applyTorque(torque.mul(1f / Bdx.physicsSpeed * Bdx.TICK_TIME / Bdx.delta()));
 	}
 	
 	public void applyTorque(float x, float y, float z){
