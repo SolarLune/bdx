@@ -146,20 +146,26 @@ public class SpriteAnim extends Component<GameObject> {
 		uvScale(uvScaleX(), s);
 	}
 	
-	private void uvScale(float x, float y){
-		if (uvScaleX() == x && uvScaleY() == y)
-			return;
-			
-		uvScale.invert();
-		uvScale.mul(Matrix3f.scale(x, y));
-		
+	private void scaleUV(Matrix3f scale){
 		Vector2f df = uvFrame();
 		Matrix3f t = Matrix3f.position(df.x, df.y);
 		Matrix3f tInv = t.inverted();
 		t.mul(uvScale);
 		t.mul(tInv);
-		
 		g.mesh().transformUV(t);
+	}
+	
+	private void uvScale(float x, float y){
+		if (uvScaleX() == x && uvScaleY() == y)
+			return;
+			
+		// back to unit scale
+		uvScale.invert();
+		scaleUV(uvScale);
+		
+		// set new scale
+		uvScale.set(Matrix3f.scale(x, y));
+		scaleUV(uvScale);
 	}
 	
 	public void play(String name){
