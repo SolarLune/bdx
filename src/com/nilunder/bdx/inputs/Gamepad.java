@@ -164,6 +164,8 @@ public static class Profile{
 
 		profiles.put(p.name, p);
 
+		//-----
+
 		p = new Profile("XBOX360");
 
 		p.btnToCode = new HashMap<String,Integer>(profiles.get("XBOX").btnToCode);
@@ -255,6 +257,50 @@ public static class Profile{
 
 		profiles.put(p.name, p);
 
+		//-----
+
+		p = new Profile("PS3");
+
+		p.btnToCode.put("square", 0);
+		p.btnToCode.put("cross", 1);
+		p.btnToCode.put("circle", 2);
+		p.btnToCode.put("triangle", 3);
+		p.btnToCode.put("l1", 4);
+		p.btnToCode.put("r1", 5);
+		p.btnToCode.put("l2", 6);
+		p.btnToCode.put("r2", 7);
+		p.btnToCode.put("select", 8);
+		p.btnToCode.put("start", 9);
+		p.btnToCode.put("l3", 10);
+		p.btnToCode.put("r3", 11);
+
+		p.btnToCode.put("left", 100 + PovDirection.west.ordinal());
+		p.btnToCode.put("right", 100 + PovDirection.east.ordinal());
+		p.btnToCode.put("up", 100 + PovDirection.north.ordinal());
+		p.btnToCode.put("down", 100 + PovDirection.south.ordinal());
+
+		p.axes.put("lx", new Axis(0));
+		p.axes.put("ly", new Axis(1));
+		p.axes.put("rx", new Axis(2));
+		p.axes.put("ry", new Axis(3));
+
+		p.sticks.put("left", new Stick(p.axes.get("lx"), p.axes.get("ly")));
+		p.sticks.put("right", new Stick(p.axes.get("rx"), p.axes.get("ry")));
+
+		p.btnToCode.put("ls-left", -200 - p.axes.get("lx").code);
+		p.btnToCode.put("ls-right", 200 + p.axes.get("lx").code);
+		p.btnToCode.put("ls-up", -200 - p.axes.get("ly").code);
+		p.btnToCode.put("ls-down", 200 + p.axes.get("ly").code);
+
+		p.btnToCode.put("rs-left", -200 - p.axes.get("rx").code);
+		p.btnToCode.put("rs-right", 200 + p.axes.get("rx").code);
+		p.btnToCode.put("rs-up", -200 - p.axes.get("ry").code);
+		p.btnToCode.put("rs-down", 200 + p.axes.get("ry").code);
+
+		profiles.put(p.name, p);
+
+		//-----
+
 		p = new Profile("Generic");
 
 		for (int a = 0; a < 32; a++)
@@ -301,17 +347,36 @@ public static class Profile{
 		}
 	}
 
+	public String detectProfile() {
+		String profName = "";
+		if (name().contains("XInput") || name().contains("X-Box 360") || name().contains("Xbox 360"))
+			profName = "XBOX360";
+		else if (name().contains("Microsoft")) // Possible fall-back to OG Xbox controller???
+			profName = "XBOX";
+		else if (name().contains("PS3") || name().contains("PS4"))
+			profName = "PS3";
+		else
+			profName = "Generic";
+		return profName;
+	}
+
 	public boolean btnHit(String btn){
+		if (!profile.btnToCode.containsKey(btn))
+			return false;
 		GdxProcessor.UpDownLog b = profile.btnLog(btn);
 		return b.hit == GdxProcessor.currentTick;
 	}
 
 	public boolean btnDown(String btn){
+		if (!profile.btnToCode.containsKey(btn))
+			return false;
 		GdxProcessor.UpDownLog b = profile.btnLog(btn);
 		return b.hit > b.up;
 	}
 
 	public boolean btnUp(String btn){
+		if (!profile.btnToCode.containsKey(btn))
+			return false;
 		GdxProcessor.UpDownLog b = profile.btnLog(btn);
 		return b.up == GdxProcessor.currentTick;
 	}
