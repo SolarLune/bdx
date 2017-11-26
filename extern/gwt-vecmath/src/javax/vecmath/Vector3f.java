@@ -44,6 +44,13 @@ public class Vector3f extends Tuple3f implements java.io.Serializable {
 	// Combatible with 1.1
 	static final long serialVersionUID = -7031930069184524614L;
 
+	public static final Vector3f X = new Vector3f(1, 0, 0);
+	public static final Vector3f XN = new Vector3f(-1, 0, 0);
+	public static final Vector3f Y = new Vector3f(0, 1, 0);
+	public static final Vector3f YN = new Vector3f(0, -1, 0);
+	public static final Vector3f Z = new Vector3f(0, 0, 1);
+	public static final Vector3f ZN = new Vector3f(0, 0, -1);
+
 	/**
 	 * Constructs and initializes a Vector3f from the specified xyz coordinates.
 	 * @param x the x coordinate
