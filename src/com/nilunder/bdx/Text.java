@@ -48,7 +48,7 @@ public class Text extends GameObject{
 		}
 		
 		Mesh m = mesh();
-		float[] verts = new float[m.numVertices()];
+		float[] verts = new float[m.vertexArrayLength()];
 		int vi = 0;
 
 		String target = txt.substring(0, Math.min(txt.length(), capacity));
