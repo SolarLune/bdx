@@ -150,7 +150,7 @@ public class Profiler{
 		startTimes = new HashMap<String, Long>();
 		tickTimes = new ArrayList<Long>();
 		for (int i = 0; i < Bdx.TICK_RATE; i++){
-			tickTimes.add((long) Bdx.TICK_TIME);
+			tickTimes.add((long) Bdx.delta());
 		}
 		counter = 1;
 		scale = 1;
@@ -182,7 +182,7 @@ public class Profiler{
 		
 		frequency = Bdx.TICK_RATE;
 		avgTickRate = Bdx.TICK_RATE;
-		avgTickTime = Bdx.TICK_TIME;
+		avgTickTime = Bdx.delta();
 		
 		gl = new Gl();
 		props = new HashMap<String, Object>();
@@ -404,7 +404,7 @@ public class Profiler{
 			updateTextProps();
 			updateBackground();
 		}
-		counter += frequency * Bdx.TICK_TIME;
+		counter += frequency * Bdx.delta();
 		scene.viewport.apply();
 	}
 	
@@ -669,7 +669,7 @@ public class Profiler{
 		buffer.append(SPACE);
 		addString(buffer, timeUnits, 3, false, ' ');
 		buffer.append(SPACE);
-		addFloat(buffer, avgTickRate, 4, 1, ' ');
+		addFloat(buffer, avgTickRate, 5, 1, ' ');
 		buffer.append(SPACE);
 		buffer.append(valueUnits);
 		return buffer.toString();
