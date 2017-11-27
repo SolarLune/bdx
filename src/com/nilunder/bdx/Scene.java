@@ -296,9 +296,8 @@ public class Scene implements Named{
 			g.name = gobj.name;
 			g.scene = this;
 			g.props = new HashMap<String, JsonValue>();
-			for (JsonValue prop : gobj.get("properties")){
-				g.props.put(prop.name, prop);
-			}
+			for (JsonValue prop : gobj.get("properties"))
+				setProp(g, prop);
 						
 			String meshName = gobj.get("mesh_name").asString();
 			if (meshName != null){
@@ -515,7 +514,10 @@ public class Scene implements Named{
 		g.transform(gobj.transform);
 		g.flipState.set(gobj.flipState);
 		
-		g.props = new HashMap<String, JsonValue>(gobj.props);
+		g.props = new HashMap<String, JsonValue>();
+
+		for (JsonValue prop : gobj.props.values())
+			setProp(g, prop);
 
 		if (g instanceof Camera){
 			Camera c = (Camera)g;
@@ -577,8 +579,9 @@ public class Scene implements Named{
 			t.position(inst.position());
 			g.transform(t);
 			g.flipState.scale(inst.flipState);
-			
-			g.props.putAll(inst.props);
+
+			for (JsonValue prop : inst.props.values())
+				setProp(g, prop);
 
 			for (GameObject c : inst.children){
 				GameObject nc = clone(c);
@@ -587,6 +590,24 @@ public class Scene implements Named{
 		}
 
 		return g;
+
+	}
+
+	private void setProp(GameObject to, JsonValue prop) {
+
+		// Have to do this so GameObject properties (JSONValue references) aren't
+		// shared amongst object instances.
+
+		if (prop.type() == JsonValue.ValueType.booleanValue)
+			to.props.put(prop.name, new JsonValue(prop.asBoolean()));
+		else if (prop.type() == JsonValue.ValueType.stringValue)
+			to.props.put(prop.name, new JsonValue(prop.asString()));
+		else if (prop.type() == JsonValue.ValueType.doubleValue)
+			to.props.put(prop.name, new JsonValue(prop.asDouble()));
+		else if (prop.type() == JsonValue.ValueType.longValue)
+			to.props.put(prop.name, new JsonValue(prop.asLong()));
+
+		to.props.get(prop.name).name = prop.name;
 
 	}
 	
