@@ -648,6 +648,9 @@ public class GameObject implements Named{
 		if (modelInstance != null)
 			mesh.instances.remove(modelInstance);
 
+		for (Camera camera : scene.cameras)
+			camera.ignoreObjects.remove(this);
+
 	}
 
 	public boolean valid(){
