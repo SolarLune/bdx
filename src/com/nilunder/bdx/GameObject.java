@@ -772,7 +772,7 @@ public class GameObject implements Named{
 		CollisionShape shape = body.getCollisionShape();
 		float margin = shape.getMargin();
 		boolean isCompound = shape.isCompound();
-		shape = Bullet.makeShape(mesh.model.meshes.first(), currBoundsType, margin, isCompound);
+		shape = Bullet.makeShape(mesh, currBoundsType, margin, isCompound);
 		shape.setLocalScaling(sca);
 		body.setCollisionShape(shape);
 		
@@ -914,7 +914,6 @@ public class GameObject implements Named{
 	}
 
 	public void boundsType(BoundsType boundsType){
-		com.badlogic.gdx.graphics.Mesh mesh = modelInstance.model.meshes.first();
 		CollisionShape shape = body.getCollisionShape();
 		shape = Bullet.makeShape(mesh, boundsType, shape.getMargin(), shape.isCompound());
 		body.setCollisionShape(shape);

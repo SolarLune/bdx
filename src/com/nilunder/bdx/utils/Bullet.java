@@ -4,7 +4,6 @@ import java.nio.*;
 
 import javax.vecmath.*;
 
-import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.math.collision.*;
@@ -18,6 +17,7 @@ import com.bulletphysics.linearmath.*;
 import com.bulletphysics.util.*;
 
 import com.nilunder.bdx.*;
+import com.nilunder.bdx.gl.Mesh;
 import com.nilunder.bdx.GameObject.BodyType;
 import com.nilunder.bdx.GameObject.BoundsType;
 
@@ -80,24 +80,25 @@ public static class DebugDrawer extends IDebugDraw{
 }
 	
 	public static IndexedMesh makeMesh(Mesh mesh){
-		ByteBuffer indices = ByteBuffer.allocate(mesh.getIndicesBuffer().capacity() * (Short.SIZE/8));
-		indices.asShortBuffer().put(mesh.getIndicesBuffer());
-		mesh.getIndicesBuffer().rewind();
+		com.badlogic.gdx.graphics.Mesh m = mesh.model.meshes.first();
+		ByteBuffer indices = ByteBuffer.allocate(m.getIndicesBuffer().capacity() * (Short.SIZE/8));
+		indices.asShortBuffer().put(m.getIndicesBuffer());
+		m.getIndicesBuffer().rewind();
 		
-		ByteBuffer verts = ByteBuffer.allocate(mesh.getVerticesBuffer().capacity() * (Float.SIZE/8));
-		verts.asFloatBuffer().put(mesh.getVerticesBuffer());
-		mesh.getVerticesBuffer().rewind();
+		ByteBuffer verts = ByteBuffer.allocate(m.getVerticesBuffer().capacity() * (Float.SIZE/8));
+		verts.asFloatBuffer().put(m.getVerticesBuffer());
+		m.getVerticesBuffer().rewind();
 		
-		IndexedMesh m = new IndexedMesh();
+		IndexedMesh im = new IndexedMesh();
 		
-		m.numTriangles = mesh.getNumIndices()/3;
-		m.triangleIndexBase = indices;
-		m.triangleIndexStride = (Short.SIZE/8) * 3;
-		m.numVertices = mesh.getNumVertices();
-		m.vertexBase = verts;
-		m.vertexStride = (Float.SIZE/8) * Bdx.VERT_STRIDE;
+		im.numTriangles = m.getNumIndices()/3;
+		im.triangleIndexBase = indices;
+		im.triangleIndexStride = (Short.SIZE/8) * 3;
+		im.numVertices = m.getNumVertices();
+		im.vertexBase = verts;
+		im.vertexStride = (Float.SIZE/8) * Bdx.VERT_STRIDE;
 		
-		return m;
+		return im;
 	}
 
 	public static CollisionShape makeShape(Mesh mesh, BoundsType bounds, float margin, boolean compound){
@@ -109,16 +110,16 @@ public static class DebugDrawer extends IDebugDraw{
 			mi.addIndexedMesh(Bullet.makeMesh(mesh), ScalarType.SHORT);
 			shape = new BvhTriangleMeshShape(mi, false);
 		}else if (bounds == BoundsType.CONVEX_HULL){
-			float[] verts = new float[mesh.getNumVertices() * mesh.getVertexSize()];
-			mesh.getVertices(verts);
+			float[] verts = mesh.vertices();
 			ObjectArrayList<Vector3f> vertList = new ObjectArrayList<Vector3f>();
-			for (int i = 0; i < mesh.getNumVertices() * Bdx.VERT_STRIDE; i += Bdx.VERT_STRIDE) {
+			for (int i = 0; i < mesh.vertexArrayLength(); i += Bdx.VERT_STRIDE){
 				vertList.add(new Vector3f(verts[i], verts[i + 1], verts[i + 2]));
 			}
 			shape = new ConvexHullShape(vertList);
 			margin *= 0.5f;
 		}else{
-			Vector3 d = mesh.calculateBoundingBox().getDimensions(new Vector3()).scl(0.5f);
+			com.badlogic.gdx.graphics.Mesh m = mesh.model.meshes.first();
+			Vector3 d = m.calculateBoundingBox().getDimensions(new Vector3()).scl(0.5f);
 			if (bounds == BoundsType.SPHERE){
 				float radius = Math.max(Math.max(d.x, d.y), d.z);
 				shape = new SphereShape(radius);
@@ -235,7 +236,7 @@ public static class DebugDrawer extends IDebugDraw{
 		// create new shape
 		
 		if (gobj.modelInstance != null){
-			shape = makeShape(gobj.modelInstance.model.meshes.first(), boundsType, margin, isCompound);
+			shape = makeShape(gobj.mesh(), boundsType, margin, isCompound);
 		}else{
 			shape = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
 		}

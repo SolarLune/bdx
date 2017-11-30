@@ -309,7 +309,6 @@ public class Scene implements Named{
 				g.mesh(defaultMesh);
 			}
 
-			com.badlogic.gdx.graphics.Mesh mesh = g.modelInstance.model.meshes.first();
 			g.flipState(new Vector3f(gobj.get("scale").asFloatArray()));
 			Matrix4f trans = new Matrix4f(gobj.get("transform").asFloatArray());
 			trans.mul(g.flipState);
@@ -322,7 +321,7 @@ public class Scene implements Named{
 			
 			g.currBodyType = BodyType.valueOf(physics.get("body_type").asString());
 			g.currBoundsType = BoundsType.valueOf(physics.get("bounds_type").asString());
-			g.body = Bullet.makeBody(mesh, trans, g.origin, g.currBodyType, g.currBoundsType, physics);
+			g.body = Bullet.makeBody(g.mesh(), trans, g.origin, g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
 
 			String type = gobj.get("type").asString();
