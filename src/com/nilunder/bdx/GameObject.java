@@ -819,10 +819,18 @@ public class GameObject implements Named{
 
 	}
 
-	public void updateBody(){
+	public void updateBody(boolean reAddToWorld){
 		updateBody(mesh);
+		if (reAddToWorld){
+			scene.world.removeRigidBody(body);
+			scene.world.addRigidBody(body);
+		}
 	}
 	
+	public void updateBody(){
+		updateBody(false);
+	}
+
 	public String toString(){
 
 		return name + " <" + getClass().getName() + "> @" + Integer.toHexString(hashCode());
