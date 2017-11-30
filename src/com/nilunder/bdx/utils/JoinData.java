@@ -24,21 +24,21 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 	private Matrix4f relativeTransform;
 	
 	public class Part extends LinkedHashMap<Matrix4f, float[]>{
-		private int numVertices;
+		private int vertexArrayLength;
 		
-		public int numVertices(){
-			return numVertices;
+		public int vertexArrayLength(){
+			return vertexArrayLength;
 		}
-		public int numIndices(){
-			return numVertices / Bdx.VERT_STRIDE;
+		public int vertexCount(){
+			return vertexArrayLength / Bdx.VERT_STRIDE;
 		}
 		@Override
 		public float[] put(Matrix4f transform, float[] vertices){
 			float[] verticesOld = get(transform);
 			if (verticesOld != null){
-				numVertices -= verticesOld.length;
+				vertexArrayLength -= verticesOld.length;
 			}
-			numVertices += vertices.length;
+			vertexArrayLength += vertices.length;
 			return super.put(transform, vertices);
 		}
 		@Override
@@ -52,14 +52,14 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 			Matrix4f transform = (Matrix4f) o;
 			float[] vertices = super.remove(transform);
 			if (vertices != null){
-				numVertices -= vertices.length;
+				vertexArrayLength -= vertices.length;
 			}
 			return vertices;
 		}
 		@Override
 		public void clear(){
 			super.clear();
-			numVertices = 0;
+			vertexArrayLength = 0;
 		}
 	}
 	

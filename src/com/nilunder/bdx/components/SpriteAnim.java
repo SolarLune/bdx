@@ -234,14 +234,14 @@ public class SpriteAnim extends Component<GameObject> {
 		Vector2f frame = new Vector2f();
 		
 		float[] verts = g.mesh().vertices();
-		int numIndices = g.mesh().numIndices();
-		for (int i = 0; i < numIndices; i++){
+		int vertexCount = g.mesh().vertexCount();
+		for (int i = 0; i < vertexCount; i++){
 			int offset = i * Bdx.VERT_STRIDE;
 			frame.x += verts[offset + 6];
 			frame.y += verts[offset + 7];
 		}
-		frame.x /= numIndices;
-		frame.y /= numIndices;
+		frame.x /= vertexCount;
+		frame.y /= vertexCount;
 		
 		return frame;
 	}

@@ -86,7 +86,7 @@ public class Mesh implements Named, Disposable {
 
 	}
 
-	private static Model createModel(JsonValue model, Scene scene, Integer numVerticesMax){
+	private static Model createModel(JsonValue model, Scene scene, Integer vertexArrayLength){
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
 		short idx = 0;
@@ -98,21 +98,21 @@ public class Mesh implements Named, Disposable {
 			MeshPartBuilder mpb = builder.part(model.name, GL20.GL_TRIANGLES,
 					Usage.Position | Usage.Normal | Usage.TextureCoordinates, m);
 			float[] verts = mat.asFloatArray();
-			int numIndices;
-			if (numVerticesMax != null && numVerticesMax != verts.length){
-				verts = Arrays.copyOf(verts, numVerticesMax);
-				numIndices = numVerticesMax / Bdx.VERT_STRIDE;
+			int vertexCount;
+			if (vertexArrayLength != null && vertexArrayLength != verts.length){
+				verts = Arrays.copyOf(verts, vertexArrayLength);
+				vertexCount = vertexArrayLength / Bdx.VERT_STRIDE;
 			}else{
-				numIndices = verts.length / Bdx.VERT_STRIDE;
+				vertexCount = verts.length / Bdx.VERT_STRIDE;
 			}
 			mpb.vertex(verts);
 			try{
-				for (short i = 0; i < numIndices; ++i){
+				for (short i = 0; i < vertexCount; ++i){
 					mpb.index(idx);
 					idx += 1;
 				}
 			}catch (Error e){
-				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. " + model.name + " has " + Integer.toString(numIndices) + " vertices.");
+				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. " + model.name + " has " + Integer.toString(vertexCount) + " vertices.");
 			}
 		}
 		return builder.end();
@@ -129,28 +129,28 @@ public class Mesh implements Named, Disposable {
 		for (Map.Entry<Material, JoinData.Part> e : data.parts.entrySet()){
 			Material mat = e.getKey();
 			JoinData.Part part = e.getValue();
-			int numVerticesJoined = part.numVertices();
-			float[] verticesJoined = new float[numVerticesJoined];
+			int vertexArrayLengthJoined = part.vertexArrayLength();
+			float[] verticesJoined = new float[vertexArrayLengthJoined];
 			
 			int j = 0;
 			for (float[] vertices : part.values()){
-				int numVertices = vertices.length;
-				for (int i = 0; i < numVertices; i++){
+				int vertexArrayLength = vertices.length;
+				for (int i = 0; i < vertexArrayLength; i++){
 					verticesJoined[i + j] = vertices[i];
 				}
-				j += numVertices;
+				j += vertexArrayLength;
 			}
 			
 			MeshPartBuilder mpb = builder.part(mat.name(), GL20.GL_TRIANGLES, Usage.Position | Usage.Normal | Usage.TextureCoordinates, mat);
 			mpb.vertex(verticesJoined);
-			int numIndices = numVerticesJoined / Bdx.VERT_STRIDE;
+			int vertexCount = vertexArrayLengthJoined / Bdx.VERT_STRIDE;
 			try{
-				for (short i = 0; i < numIndices; i++){
+				for (short i = 0; i < vertexCount; i++){
 					mpb.index(idx);
 					idx++;
 				}
 			}catch (Error error){
-				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. Joining " + Integer.toString(numIndices) + " vertices.");
+				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. Joining " + Integer.toString(vertexCount) + " vertices.");
 			}
 		}
 		
@@ -172,8 +172,8 @@ public class Mesh implements Named, Disposable {
 		this(model, scene, model.meshParts.first().id);
 	}
 	
-	public Mesh(JsonValue model, Scene scene, String name, Integer numVerticesMax){
-		this(createModel(model, scene, numVerticesMax), scene, name);
+	public Mesh(JsonValue model, Scene scene, String name, Integer vertexArrayLength){
+		this(createModel(model, scene, vertexArrayLength), scene, name);
 	}
 	
 	public Mesh(JsonValue model, Scene scene, String name){
@@ -184,8 +184,8 @@ public class Mesh implements Named, Disposable {
 		this(model, scene, model.name);
 	}
 	
-	public Mesh(String serialized, Scene scene, String name, Integer numVerticesMax){
-		this(new JsonReader().parse(serialized), scene, name, numVerticesMax);
+	public Mesh(String serialized, Scene scene, String name, Integer vertexArrayLength){
+		this(new JsonReader().parse(serialized), scene, name, vertexArrayLength);
 	}
 	
 	public Mesh(String serialized, Scene scene, String name){
@@ -200,35 +200,35 @@ public class Mesh implements Named, Disposable {
 		return model.meshParts.get(ms).offset;
 	}
 	
-	public int numIndices(){
+	public int vertexCount(){
 		return model.meshes.first().getNumIndices();
 	}
 	
-	public int numIndices(int ms){
+	public int vertexCount(int ms){
 		return model.meshParts.get(ms).size;
 	}
 	
-	public int numVertices(){
-		return numIndices() * Bdx.VERT_STRIDE;
+	public int vertexArrayLength(){
+		return vertexCount() * Bdx.VERT_STRIDE;
 	}
 	
-	public int numVertices(int ms){
-		return numIndices(ms) * Bdx.VERT_STRIDE;
+	public int vertexArrayLength(int ms){
+		return vertexCount(ms) * Bdx.VERT_STRIDE;
 	}
 	
 	public float[] vertices(){
-		return model.meshes.first().getVertices(new float[numVertices()]);
+		return model.meshes.first().getVertices(new float[vertexArrayLength()]);
 	}
 	
-	private float[] vertices(int offset, int numVertices){
-		return model.meshes.first().getVertices(offset, numVertices, new float[numVertices]);
+	private float[] vertices(int offset, int vertexArrayLength){
+		return model.meshes.first().getVertices(offset, vertexArrayLength, new float[vertexArrayLength]);
 	}
 	
 	public float[] vertices(int ms){
 		MeshPart mp = model.meshParts.get(ms);
 		int offset = mp.offset * Bdx.VERT_STRIDE;
-		int numVertices = mp.size * Bdx.VERT_STRIDE;
-		return mp.mesh.getVertices(offset, numVertices, new float[numVertices]);
+		int vertexArrayLength = mp.size * Bdx.VERT_STRIDE;
+		return mp.mesh.getVertices(offset, vertexArrayLength, new float[vertexArrayLength]);
 	}
 	
 	public void vertices(float[] va){
@@ -238,14 +238,14 @@ public class Mesh implements Named, Disposable {
 	public void vertices(int ms, float[] va){
 		MeshPart mp = model.meshParts.get(ms);
 		int offset = mp.offset * Bdx.VERT_STRIDE;
-		int numVertices = mp.size * Bdx.VERT_STRIDE;
-		mp.mesh.setVertices(va, offset, numVertices);
+		int vertexArrayLength = mp.size * Bdx.VERT_STRIDE;
+		mp.mesh.setVertices(va, offset, vertexArrayLength);
 	}
 	
 	private float[] verticesTransformed(float[] va, Matrix4f trans){
-		int numVertices = va.length;
-		int numIndices = va.length / Bdx.VERT_STRIDE;
-		float[] tva = new float[numVertices];
+		int vertexArrayLength = va.length;
+		int vertexCount = va.length / Bdx.VERT_STRIDE;
+		float[] tva = new float[vertexArrayLength];
 		
 		Matrix4f t = Matrix4f.identity();
 		Vector3f v = new Vector3f();
@@ -254,7 +254,7 @@ public class Mesh implements Named, Disposable {
 		Matrix4f vertTrans = new Matrix4f();
 		Matrix4f normTrans = new Matrix4f();
 		int j = 0;
-		for (int i = 0; i < numIndices; i++){
+		for (int i = 0; i < vertexCount; i++){
 			vertTrans.set(trans);
 			v.set(va[j], va[j+1], va[j+2]);
 			t.position(v);
