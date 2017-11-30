@@ -15,9 +15,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
-import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.JsonValue;
 
 import com.bulletphysics.collision.narrowphase.PersistentManifold;
@@ -46,8 +44,6 @@ public class GameObject implements Named{
 	public BoundsType currBoundsType;
 	public Matrix4f transform;
 	public Vector3f flipState;
-	public Vector3f origin;
-	public Vector3f dimensionsNoScale;
 	
 	public HashMap<String, JsonValue> props;
 	public boolean frustumCulling;
@@ -242,42 +238,9 @@ public class GameObject implements Named{
 	
 	private void updateTransform(boolean updatePosOri, boolean updateSca, boolean updateLocal){
 		
-		// get scale and unscaled transform
+		// update Body
 		
-		Vector3f sca = new Vector3f();
-		Matrix4f transNoSca = new Matrix4f();
-		transform.get(sca, transNoSca);
-		
-		// apply unscaled transform to body and motion state
-		
-		if (updatePosOri){
-			Transform t = new Transform(transNoSca);
-			body.setWorldTransform(t);
-			body.getMotionState().setWorldTransform(t);
-		}
-		
-		// apply scale to collision shape
-		
-		if (updateSca){
-			body.getCollisionShape().setLocalScaling(sca);
-		}
-		
-		if (body.isInWorld()){
-			
-			// STATIC or SENSOR -> update Aabb and activate bodies of touching DYNAMIC objects
-				
-			if (body.isKinematicObject()){
-				scene.world.updateSingleAabb(body);
-				for (GameObject g : touchingObjects){
-					g.activate();
-				}
-				
-			// DYNAMIC or RIGID_BODY -> activate body
-				
-			}else{
-				body.activate();
-			}
-		}
+		Bullet.updateBody(this, updatePosOri, updateSca);
 		
 		// update transforms of children
 		
@@ -654,10 +617,6 @@ public class GameObject implements Named{
 		return valid;
 	}
 	
-	public Vector3f dimensions(){
-		return dimensionsNoScale.mul(scale());
-	}
-	
 	public Vector3f axis(String axisName){
 		int axis = "XYZ".indexOf(axisName.charAt(axisName.length() - 1));
 		Vector3f v = new Vector3f();
@@ -719,35 +678,6 @@ public class GameObject implements Named{
 		}
 		mesh = newMesh;
 		modelInstance = mesh.getNewModelInstance();
-		
-		// update origin and dimensionsNoScale
-		
-		ArrayList<Scene> sceneList = new ArrayList<Scene>(Bdx.scenes);
-		int index = sceneList.indexOf(scene);
-		if (index == -1){
-			sceneList.add(0, scene);
-		}else if (index != 0){
-			Collections.swap(sceneList, index, 0);
-		}
-		boolean exported = false;
-		String meshName = mesh.name();
-		for (Scene sce : sceneList) {
-			if (sce.meshes.containsKey(meshName)){
-				exported = true;
-				JsonValue mOrigin = sce.json.get("origins").get(meshName);
-				JsonValue mDimensions = sce.json.get("dimensions").get(meshName);
-				origin = mOrigin == null ? new Vector3f() : new Vector3f(mOrigin.asFloatArray());
-				dimensionsNoScale = mDimensions == null ? new Vector3f(1, 1, 1) : new Vector3f(mDimensions.asFloatArray());
-				break;
-			}
-		}
-		if (!exported){
-			BoundingBox bbox = mesh.model.meshes.first().calculateBoundingBox();
-			Vector3 center = bbox.getCenter(new Vector3());
-			origin = new Vector3f(center.x, center.y, center.z);
-			Vector3 dimensions = bbox.getDimensions(new Vector3());
-			dimensionsNoScale = new Vector3f(dimensions.x, dimensions.y, dimensions.z);
-		}
 	}
 
 	public void updateBody(Mesh mesh){
@@ -760,38 +690,17 @@ public class GameObject implements Named{
 			parent(null);
 		}
 
-		// get scale and unscaled transform
-		
-		Vector3f sca = new Vector3f();
-		Matrix4f t = new Matrix4f();
-		transform.get(sca, t);
-		Transform transNoSca = new Transform(t);
-		
 		// update collision shape
 
 		CollisionShape shape = body.getCollisionShape();
 		float margin = shape.getMargin();
 		boolean isCompound = shape.isCompound();
 		shape = Bullet.makeShape(mesh, currBoundsType, margin, isCompound);
-		shape.setLocalScaling(sca);
 		body.setCollisionShape(shape);
 		
-		// update center of mass transform
+		// update Body
 		
-		Matrix4f o = new Matrix4f();
-		o.set(origin);
-		t.mul(o);
-		body.setCenterOfMassTransform(new Transform(t));
-		
-		// update world transform
-		
-		body.setWorldTransform(transNoSca);
-		
-		// update Aabb
-		
-		if (body.isInWorld()){
-			scene.world.updateSingleAabb(body);
-		}
+		Bullet.updateBody(this);
 		
 		// restore compound children
 
@@ -936,23 +845,33 @@ public class GameObject implements Named{
 	public void deactivate(){
 		body.forceActivationState(2);
 	}
-
-	public boolean insideFrustum(Vector3f customHalfDim, Camera camera) {
+	
+	public Vector3f dimensions(){
 		Vector3f min = new Vector3f();
 		Vector3f max = new Vector3f();
 		body.getAabb(min, max);
-		Vector3f dimHalved = max.minus(min).mul(0.5f);
-		Vector3f center;
-
-		if (origin.length() == 0 || currBoundsType == BoundsType.CONVEX_HULL || currBoundsType == BoundsType.TRIANGLE_MESH)
-			center = min.plus(dimHalved);
-		else
-			center = min.plus(dimHalved).plus(orientation().mult(origin).mul(scale()));
-
-		if (customHalfDim == null)
-			customHalfDim = dimHalved;
-
-		return camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, customHalfDim.x, customHalfDim.y, customHalfDim.z);
+		max.sub(min);
+		return max;
+	}
+	
+	public Matrix4f boundsTransform(){
+		if (mesh.median.length() != 0){
+			Matrix4f m = Matrix4f.identity();
+			m.position(mesh.median);
+			Matrix4f t = transform.mult(m);
+			return t;
+		}
+		return transform();
+	}
+	
+	public boolean insideFrustum(Vector3f dimHalved, Camera camera) {
+		if (dimHalved == null){
+			dimHalved = dimensions();
+			dimHalved.scale(0.5f);
+		}
+		Vector3f center = boundsTransform().position();
+		
+		return camera.data.frustum.boundsInFrustum(center.x, center.y, center.z, dimHalved.x, dimHalved.y, dimHalved.z);
 	}
 
 	public boolean insideFrustum(){
@@ -986,16 +905,12 @@ public class GameObject implements Named{
 	}
 
 	public boolean aabbContains(float x, float y, float z, float[][] aabb) {
-		Vector3f min = new Vector3f();
-		Vector3f max = new Vector3f();
-		if (aabb == null) {
-			body.getAabb(min, max);
-			min.plus(position());
-			max.plus(position());
-		} else {
-			min.set(aabb[0]);
-			max.set(aabb[7]);
-		}
+		if (aabb == null)
+			aabb = getAABBPoints();
+			
+		Vector3f min = new Vector3f(aabb[0]);
+		Vector3f max = new Vector3f(aabb[7]);
+		
 		return (x >= min.x && x <= max.x && y >= min.y && y <= max.y && z >= min.z && z <= max.z);
 	}
 
@@ -1049,19 +964,17 @@ public class GameObject implements Named{
 	}
 
 	public float[][] getAABBPoints(float margin) {
-
 		float points[][] = new float[8][3];
-
+		
 		Vector3f min = new Vector3f();
 		Vector3f max = new Vector3f();
 		body.getAabb(min, max);
-
-		min.sub(margin, margin, margin);
-		max.add(margin, margin, margin);
-
-		min.plus(position());
-		max.plus(position());
-
+		
+		if (margin != 0){
+			min.sub(margin, margin, margin);
+			max.add(margin, margin, margin);
+		}
+		
 		points[0] = new float[]{min.x, min.y, min.z};
 		points[1] = new float[]{max.x, min.y, min.z};
 		points[2] = new float[]{min.x, max.y, min.z};

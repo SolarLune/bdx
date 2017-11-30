@@ -102,18 +102,26 @@ def mat_tris(mesh):
 
     return m_ps
 
+def median(obj):
+    return list(sum([mt.Vector(l) for l in obj.bound_box], mt.Vector()) / len(obj.bound_box))
+
+def dimensions(obj):
+    return [d / s for d, s in zip(obj.dimensions, obj.scale)]
+
 def srl_models(objects, use_mesh_modifiers):
     name_model = {}
 
     tfs = 3 * 8 # triangle float size: 3 verts at 8 floats each
 
     for o in objects:
-        if o.type != "MESH":
+        if not (o.type == "MESH" and o.data.name not in name_model):
             continue
 
-        hasModifiers = len(o.modifiers) > 0
-
         mesh = o.data
+
+        name_model[mesh.name] = model = {}
+
+        hasModifiers = len(o.modifiers) > 0
         if hasModifiers:                    # Create a new mesh that applies the modifiers if the mesh is using them
             mesh = o.to_mesh(bpy.context.scene, use_mesh_modifiers, "RENDER")
 
@@ -132,35 +140,15 @@ def srl_models(objects, use_mesh_modifiers):
             if mat in m_tris.keys():
                 m, tris = mat, m_tris[mat]
                 m_verts[m] = numpy.concatenate([verts[i * tfs : i * tfs + tfs] for i in tris]).tolist()
-        name_model[o.data.name] = m_verts
+
+        model["materials"] = m_verts
+        model["median"] = median(o)
+        model["dimensions"] = dimensions(o)
 
         if hasModifiers:                                                            # Remove the extra mesh if it was created
             bpy.data.meshes.remove(mesh)
 
     return name_model
-
-def srl_origins(objects):
-    name_origin = {}
-
-    for o in objects:
-        if o.type == "MESH":
-            mesh_name = o.data.name
-            if mesh_name not in name_origin:
-                origin = sum([mt.Vector(fv) for fv in o.bound_box], mt.Vector()) / len(o.bound_box)
-                name_origin[mesh_name] = list(origin)
-
-    return name_origin
-
-def srl_dimensions(objects):
-    name_dimensions = {}
-
-    for o in objects:
-        if o.type in ("MESH", "FONT"):
-            data_name = "__FNT_" + o.data.name if o.type == "FONT" else o.data.name
-            if data_name not in name_dimensions:
-                name_dimensions[data_name] = [d / s for d, s in zip(o.dimensions, o.scale)]
-
-    return name_dimensions
 
 def char_uvs(char, angel_code):
     """
@@ -259,12 +247,22 @@ def srl_models_text(texts, fntx_dir):
     def mat_name(t):
         for m in t.materials:
             if m:
-                return m.name
-        return ""
+                return "__FNT_" + m.name
+        return "__FNT_"
 
-    return {"__FNT_" + t.name:
-                {"__FNT_" + mat_name(t) + font_name(t.font): vertices_text(t, fntx(t))}
-            for t in texts}
+    name_model_text = {}
+    for text in texts:
+        t = text.data
+        t_name = "__FNT_" + t.name
+        if t_name in name_model_text:
+            continue
+
+        name_model_text[t_name] = model_text = {}
+        model_text["materials"] = {mat_name(t) + font_name(t.font): vertices_text(t, fntx(t))}
+        model_text["median"] = median(text)
+        model_text["dimensions"] = dimensions(text)
+
+    return name_model_text
 
 def srl_materials_text(texts):
 
@@ -277,7 +275,8 @@ def srl_materials_text(texts):
 
     name_gmat = {}
 
-    for t in texts:
+    for text in texts:
+        t = text.data
         m = mat(t)
         fnt_name = font_name(t.font)
 
@@ -705,10 +704,10 @@ def srl_actions(actions):
 
 
 def used_fonts(texts):
-    return {t.font for t in texts}
+    return {t.data.font for t in texts}
 
 def texts(objects):
-    return [o.data for o in objects if o.type == "FONT"]
+    return [o for o in objects if o.type == "FONT"]
 
 def generate_bitmap_fonts(fonts, fontgen_dir, fonts_dir, textures_dir):
     j = os.path.join
@@ -842,8 +841,6 @@ def export(context, filepath, scene_name, exprun, apply_modifier):
         "mistStart": mist_start,
         "mistDepth": mist_depth,
         "models": srl_models(objects, apply_modifier),
-        "origins": srl_origins(objects),
-        "dimensions": srl_dimensions(objects),
         "objects": srl_objects(objects),
         "materials": srl_materials(used_materials(objects)),
         "cameras": camera_names(scene),

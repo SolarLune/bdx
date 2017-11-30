@@ -166,7 +166,7 @@ public class Scene implements Named{
 		defaultMaterial.set(new ColorAttribute(ColorAttribute.Diffuse, 1, 1, 1, 1));
 		defaultMaterial.set(new BlendingAttribute());
 		defaultMaterial.set(new BDXColorAttribute(BDXColorAttribute.Tint, 0, 0, 0));
-		defaultMesh = new Mesh(new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates), this);
+		defaultMesh = new Mesh(new ModelBuilder().createBox(1.0f, 1.0f, 1.0f, defaultMaterial, Usage.Position | Usage.Normal | Usage.TextureCoordinates), this, "__BDX_DEFAULT");
 		defaultMesh.autoDispose = false;
 
 		meshes = new HashMap<String, Mesh>();
@@ -312,17 +312,14 @@ public class Scene implements Named{
 			g.flipState(new Vector3f(gobj.get("scale").asFloatArray()));
 			Matrix4f trans = new Matrix4f(gobj.get("transform").asFloatArray());
 			trans.mul(g.flipState);
-			JsonValue origin = json.get("origins").get(meshName);
-			JsonValue dimensions = json.get("dimensions").get(meshName);
 			g.transform.set(trans);
-			g.origin = origin == null ? new Vector3f() : new Vector3f(origin.asFloatArray());
-			g.dimensionsNoScale = dimensions == null ? new Vector3f(1, 1, 1) : new Vector3f(dimensions.asFloatArray());
 			JsonValue physics = gobj.get("physics");
 			
 			g.currBodyType = BodyType.valueOf(physics.get("body_type").asString());
 			g.currBoundsType = BoundsType.valueOf(physics.get("bounds_type").asString());
-			g.body = Bullet.makeBody(g.mesh(), trans, g.origin, g.currBodyType, g.currBoundsType, physics);
+			g.body = Bullet.makeBody(g.mesh(), g.currBodyType, g.currBoundsType, physics);
 			g.body.setUserPointer(g);
+			Bullet.updateBody(g);
 
 			String type = gobj.get("type").asString();
 			if (type.equals("FONT")){
@@ -508,8 +505,6 @@ public class Scene implements Named{
 		g.body = Bullet.cloneBody(gobj.body);
 		g.currBodyType = gobj.currBodyType;
 		g.currBoundsType = gobj.currBoundsType;
-		g.origin = gobj.origin;
-		g.dimensionsNoScale = gobj.dimensionsNoScale;
 		g.body.setUserPointer(g);
 		g.transform(gobj.transform);
 		g.flipState.set(gobj.flipState);
@@ -861,16 +856,34 @@ public class Scene implements Named{
 	}
 	
 	private void updateTransforms(){
+		
+		// update transforms of active dynamic objects without a parent
+		
 		Transform t = new Transform();
 		Matrix4f m = new Matrix4f();
+		Vector3f cmo = new Vector3f();
+		Matrix4f cmt = new Matrix4f();
 		
 		for (GameObject g : objects){
+			
 			if (g.parent() == null && g.dynamics() && g.body.isActive()){
 				
-				// update transforms of active dynamic objects without a parent
+				// get unscaled transform from body
 				
 				g.body.getWorldTransform(t);
 				t.getMatrix(m);
+				
+				// if off-center and primitive shape, get center of mass transform
+				
+				Vector3f med = g.mesh().median;
+				if (med.length() != 0 && g.boundsType() != BoundsType.TRIANGLE_MESH && g.boundsType() != BoundsType.CONVEX_HULL){
+					cmo.set(-med.x, -med.y, -med.z);
+					cmt.set(cmo);
+					m.mul(cmt);
+				}
+				
+				// get and apply scaled transform
+				
 				m.scale(g.scale());
 				g.transform.set(m);
 				

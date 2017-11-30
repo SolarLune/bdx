@@ -20,6 +20,8 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonReader;
@@ -37,6 +39,8 @@ public class Mesh implements Named, Disposable {
 	public Model model;
 	public String name;
 	public Scene scene;
+	public Vector3f median;
+	public Vector3f dimensions;
 	public ArrayListMaterials materials;
 	public ArrayList<ModelInstance> instances;
 	public boolean autoDispose;
@@ -90,14 +94,14 @@ public class Mesh implements Named, Disposable {
 		ModelBuilder builder = new ModelBuilder();
 		builder.begin();
 		short idx = 0;
-		for (JsonValue mat : model){
-			Material m = scene.materials.get(mat.name);
-			if (mat.name.equals(scene.defaultMaterial.id)){
-				m = new Material(m);
+		for (JsonValue m : model.get("materials")){
+			Material mat = scene.materials.get(m.name);
+			if (mat.name().equals(scene.defaultMaterial.name())){
+				mat = new Material(mat);
 			}
-			MeshPartBuilder mpb = builder.part(model.name, GL20.GL_TRIANGLES,
-					Usage.Position | Usage.Normal | Usage.TextureCoordinates, m);
-			float[] verts = mat.asFloatArray();
+			MeshPartBuilder mpb = builder.part(mat.name(), GL20.GL_TRIANGLES,
+					Usage.Position | Usage.Normal | Usage.TextureCoordinates, mat);
+			float[] verts = m.asFloatArray();
 			int vertexCount;
 			if (vertexArrayLength != null && vertexArrayLength != verts.length){
 				verts = Arrays.copyOf(verts, vertexArrayLength);
@@ -112,7 +116,7 @@ public class Mesh implements Named, Disposable {
 					idx += 1;
 				}
 			}catch (Error e){
-				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. " + model.name + " has " + Integer.toString(vertexCount) + " vertices.");
+				throw new RuntimeException("MODEL ERROR: Model parts with more than 4095 vertices are not supported. Part " + mat.name() + " of " + model.name + " has " + Integer.toString(vertexCount) + " vertices.");
 			}
 		}
 		return builder.end();
@@ -150,14 +154,22 @@ public class Mesh implements Named, Disposable {
 					idx++;
 				}
 			}catch (Error error){
-				throw new RuntimeException("MODEL ERROR: Models with more than 32767 vertices are not supported. Joining " + Integer.toString(vertexCount) + " vertices.");
+				throw new RuntimeException("MODEL ERROR: Model parts with more than 4095 vertices are not supported. Part " + mat.name() + " of the joined model has " + Integer.toString(vertexCount) + " vertices.");
 			}
 		}
 		
 		return builder.end();
 	}
 	
-	public Mesh(Model model, Scene scene, String name){
+	public void updateMedianDimensions(){
+		BoundingBox bbox = model.meshes.first().calculateBoundingBox();
+		Vector3 tmp = bbox.getCenter(new Vector3());
+		median = new Vector3f(tmp.x, tmp.y, tmp.z);
+		bbox.getDimensions(tmp);
+		dimensions = new Vector3f(tmp.x, tmp.y, tmp.z);
+	}
+	
+	private Mesh(Model model, Scene scene, String name, boolean updateMedianDimensions){
 		this.model = model;
 		this.name = name;
 		this.scene = scene;
@@ -165,15 +177,20 @@ public class Mesh implements Named, Disposable {
 		for (NodePart part : model.nodes.first().parts)
 			materials.add((Material) part.material);
 		instances = new ArrayList<ModelInstance>();
+		if (updateMedianDimensions){
+			updateMedianDimensions();
+		}
 		autoDispose = true;
 	}
 	
-	public Mesh(Model model, Scene scene){
-		this(model, scene, model.meshParts.first().id);
+	public Mesh(Model model, Scene scene, String name){
+		this(model, scene, name, true);
 	}
 	
 	public Mesh(JsonValue model, Scene scene, String name, Integer vertexArrayLength){
-		this(createModel(model, scene, vertexArrayLength), scene, name);
+		this(createModel(model, scene, vertexArrayLength), scene, name, false);
+		median = new Vector3f(model.get("median").asFloatArray());
+		dimensions = new Vector3f(model.get("dimensions").asFloatArray());
 	}
 	
 	public Mesh(JsonValue model, Scene scene, String name){
@@ -363,12 +380,26 @@ public class Mesh implements Named, Disposable {
 		return new Vector2f(vertices(i + 6, 2));
 	}
 	
-	public String serialized(){
-		HashMap<String, float[]> out = new HashMap<String, float[]>();
-		for (int i = 0; i < materials.size(); i++){
-			out.put(materials.get(i).name(), vertices(i));
+	private class Serialized{
+		private HashMap<String, float[]> materials;
+		private float[] median;
+		private float[] dimensions;
+		
+		protected Serialized(){
+			Mesh outer = Mesh.this;
+			materials = new HashMap<String, float[]>();
+			for (int i = 0; i < outer.materials.size(); i++){
+				materials.put(outer.materials.get(i).name(), vertices(i));
+			}
+			median = new float[3];
+			dimensions = new float[3];
+			outer.median.get(median);
+			outer.dimensions.get(dimensions);
 		}
-		return new Json().toJson(out);
+	}
+	
+	public String serialized(){
+		return new Json().toJson(new Serialized());
 	}
 
 	public String name(){
