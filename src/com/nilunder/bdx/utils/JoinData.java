@@ -203,23 +203,26 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 		}
 	}
 	
-	private static class Serialized{
-		protected float[] transform = new float[16];
-		protected HashMap<String, ArrayList<float[]>> models = new HashMap<String, ArrayList<float[]>>();
+	private class Serialized{
+		private float[] transform;
+		private HashMap<String, ArrayList<float[]>> models;
+		
+		protected Serialized(){
+			transform = new float[16];
+			relativeTransform.get(transform);
+			models = new HashMap<String, ArrayList<float[]>>();
+			for (Map.Entry<Mesh, ArrayList<Matrix4f>> e : entrySet()){
+				ArrayList<float[]> l = new ArrayList<float[]>();
+				for (Matrix4f t : e.getValue()){
+					l.add(t.floatArray());
+				}
+				models.put(e.getKey().name(), l);
+			}
+		}
 	}
 	
     public String serialized(){
-		Serialized s = new Serialized();
-		relativeTransform.get(s.transform);
-		for (Map.Entry<Mesh, ArrayList<Matrix4f>> e : entrySet()){
-			String meshName = e.getKey().name();
-			ArrayList<float[]> l = new ArrayList<float[]>();
-			for (Matrix4f t : e.getValue()){
-				l.add(t.floatArray());
-			}
-			s.models.put(meshName, l);
-		}
-		return new Json().toJson(s);
+		return new Json().toJson(new Serialized());
 	}
 	
 	public void deserialize(String s){
@@ -230,21 +233,21 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 		if (models == null){
 			return;
 		}
-		for (JsonValue meshData : models){
+		for (JsonValue model : models){
 			Mesh mesh = null;
 			for (Scene scene : Bdx.scenes){
-				if (scene.meshes.containsKey(meshData.name)){
-					mesh = scene.meshes.get(meshData.name);
+				if (scene.meshes.containsKey(model.name)){
+					mesh = scene.meshes.get(model.name);
 					break;
 				}
 			}
 			try{
 				ArrayList<Matrix4f> l = new ArrayList<Matrix4f>();
-				for (JsonValue j : meshData){
-					add(mesh, new Matrix4f(j.asFloatArray()));
+				for (JsonValue m : model){
+					add(mesh, new Matrix4f(m.asFloatArray()));
 				}
 			}catch (Error e){
-				throw new RuntimeException("ERROR: Mesh " + meshData.name + " does not exist.");
+				throw new RuntimeException("ERROR: Mesh " + model.name + " does not exist.");
 			}
 		}
 	}

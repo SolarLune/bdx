@@ -4,7 +4,6 @@ import java.nio.*;
 
 import javax.vecmath.*;
 
-import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.math.collision.*;
@@ -18,6 +17,7 @@ import com.bulletphysics.linearmath.*;
 import com.bulletphysics.util.*;
 
 import com.nilunder.bdx.*;
+import com.nilunder.bdx.gl.Mesh;
 import com.nilunder.bdx.GameObject.BodyType;
 import com.nilunder.bdx.GameObject.BoundsType;
 
@@ -80,24 +80,25 @@ public static class DebugDrawer extends IDebugDraw{
 }
 	
 	public static IndexedMesh makeMesh(Mesh mesh){
-		ByteBuffer indices = ByteBuffer.allocate(mesh.getIndicesBuffer().capacity() * (Short.SIZE/8));
-		indices.asShortBuffer().put(mesh.getIndicesBuffer());
-		mesh.getIndicesBuffer().rewind();
+		com.badlogic.gdx.graphics.Mesh m = mesh.model.meshes.first();
+		ByteBuffer indices = ByteBuffer.allocate(m.getIndicesBuffer().capacity() * (Short.SIZE/8));
+		indices.asShortBuffer().put(m.getIndicesBuffer());
+		m.getIndicesBuffer().rewind();
 		
-		ByteBuffer verts = ByteBuffer.allocate(mesh.getVerticesBuffer().capacity() * (Float.SIZE/8));
-		verts.asFloatBuffer().put(mesh.getVerticesBuffer());
-		mesh.getVerticesBuffer().rewind();
+		ByteBuffer verts = ByteBuffer.allocate(m.getVerticesBuffer().capacity() * (Float.SIZE/8));
+		verts.asFloatBuffer().put(m.getVerticesBuffer());
+		m.getVerticesBuffer().rewind();
 		
-		IndexedMesh m = new IndexedMesh();
+		IndexedMesh im = new IndexedMesh();
 		
-		m.numTriangles = mesh.getNumIndices()/3;
-		m.triangleIndexBase = indices;
-		m.triangleIndexStride = (Short.SIZE/8) * 3;
-		m.numVertices = mesh.getNumVertices();
-		m.vertexBase = verts;
-		m.vertexStride = (Float.SIZE/8) * Bdx.VERT_STRIDE;
+		im.numTriangles = m.getNumIndices()/3;
+		im.triangleIndexBase = indices;
+		im.triangleIndexStride = (Short.SIZE/8) * 3;
+		im.numVertices = m.getNumVertices();
+		im.vertexBase = verts;
+		im.vertexStride = (Float.SIZE/8) * Bdx.VERT_STRIDE;
 		
-		return m;
+		return im;
 	}
 
 	public static CollisionShape makeShape(Mesh mesh, BoundsType bounds, float margin, boolean compound){
@@ -109,23 +110,22 @@ public static class DebugDrawer extends IDebugDraw{
 			mi.addIndexedMesh(Bullet.makeMesh(mesh), ScalarType.SHORT);
 			shape = new BvhTriangleMeshShape(mi, false);
 		}else if (bounds == BoundsType.CONVEX_HULL){
-			float[] verts = new float[mesh.getNumVertices() * mesh.getVertexSize()];
-			mesh.getVertices(verts);
+			float[] verts = mesh.vertices();
 			ObjectArrayList<Vector3f> vertList = new ObjectArrayList<Vector3f>();
-			for (int i = 0; i < mesh.getNumVertices() * Bdx.VERT_STRIDE; i += Bdx.VERT_STRIDE) {
+			for (int i = 0; i < mesh.vertexArrayLength(); i += Bdx.VERT_STRIDE){
 				vertList.add(new Vector3f(verts[i], verts[i + 1], verts[i + 2]));
 			}
 			shape = new ConvexHullShape(vertList);
 			margin *= 0.5f;
 		}else{
-			Vector3 d = mesh.calculateBoundingBox().getDimensions(new Vector3()).scl(0.5f);
+			Vector3f d = mesh.dimensions.mul(0.5f);
 			if (bounds == BoundsType.SPHERE){
 				float radius = Math.max(Math.max(d.x, d.y), d.z);
 				shape = new SphereShape(radius);
 			}else if (bounds == BoundsType.BOX){
-				shape = new BoxShape(new Vector3f(d.x, d.y, d.z));
+				shape = new BoxShape(new Vector3f(d));
 			}else if (bounds == BoundsType.CYLINDER){
-				shape = new CylinderShapeZ(new Vector3f(d.x, d.y, d.z));
+				shape = new CylinderShapeZ(new Vector3f(d));
 			}else if (bounds == BoundsType.CAPSULE){
 				float radius = Math.max(d.x, d.y);
 				float height = (d.z - radius) * 2;
@@ -151,14 +151,7 @@ public static class DebugDrawer extends IDebugDraw{
 
 	}
 	
-	public static RigidBody makeBody(Mesh mesh, Matrix4f trans, Vector3f origin, BodyType bodyType, BoundsType boundsType, JsonValue physics){
-		
-		// get scale and unscaled transform
-		
-		Vector3f sca = new Vector3f();
-		Matrix4f t = new Matrix4f();
-		trans.get(sca, t);
-		Transform transform = new Transform(t);
+	public static RigidBody makeBody(Mesh mesh, BodyType bodyType, BoundsType boundsType, JsonValue physics){
 		
 		// collect physics properties
 		
@@ -166,29 +159,15 @@ public static class DebugDrawer extends IDebugDraw{
 		boolean isCompound = physics.get("compound").asBoolean();
 		float mass = physics.get("mass").asFloat();
 		
-		// create new scaled shape and get inertia
+		// create new shape and get inertia
 		
 		CollisionShape shape = makeShape(mesh, boundsType, margin, isCompound);
-		shape.setLocalScaling(sca);
 		Vector3f inertia = new Vector3f();
 		shape.calculateLocalInertia(mass, inertia);
-
-		// create new motion state
-
-		Matrix4f originMatrix = new Matrix4f();
-		originMatrix.set(origin);
-		t.mul(originMatrix);
-		Transform centerOfMassTransform = new Transform(t);
-		MotionState motionState = new DefaultMotionState(transform, centerOfMassTransform);
 		
 		// create new body
 		
-		RigidBodyConstructionInfo ci = new RigidBodyConstructionInfo(mass, motionState, shape, inertia);
-		RigidBody body = new RigidBody(ci);
-		
-		// set transform
-		
-		body.setWorldTransform(transform);
+		RigidBody body = new RigidBody(mass, new DefaultMotionState(), shape, inertia);
 		
 		// set collision flags
 		
@@ -211,7 +190,7 @@ public static class DebugDrawer extends IDebugDraw{
 		
 		body.setRestitution(physics.get("restitution").asFloat());
 		body.setFriction(physics.get("friction").asFloat());
-
+		
 		return body;
 	}
 
@@ -224,7 +203,6 @@ public static class DebugDrawer extends IDebugDraw{
 		
 		// collect physics properties
 		
-		Vector3f origin = gobj.origin;
 		float margin = shape.getMargin();
 		boolean isCompound = shape.isCompound();
 		BoundsType boundsType = gobj.boundsType();
@@ -235,20 +213,14 @@ public static class DebugDrawer extends IDebugDraw{
 		// create new shape
 		
 		if (gobj.modelInstance != null){
-			shape = makeShape(gobj.modelInstance.model.meshes.first(), boundsType, margin, isCompound);
+			shape = makeShape(gobj.mesh(), boundsType, margin, isCompound);
 		}else{
 			shape = new BoxShape(new Vector3f(0.25f, 0.25f, 0.25f));
 		}
 		
-		// create new motion state
-		
-		Transform startTransform = body.getMotionState().getWorldTransform(new Transform());
-		Transform centerOfMassTransform = body.getCenterOfMassTransform(new Transform());
-		MotionState motionState = new DefaultMotionState(startTransform, centerOfMassTransform);
-		
 		// create new body
 		
-		RigidBody b = new RigidBody(mass, motionState, shape, inertia);
+		RigidBody b = new RigidBody(mass, new DefaultMotionState(), shape, inertia);
 		
 		b.setCollisionFlags(gobj.body.getCollisionFlags());
 		b.setAngularFactor(gobj.body.getAngularFactor());
@@ -257,4 +229,54 @@ public static class DebugDrawer extends IDebugDraw{
 		
 		return b;
 	}
+	
+	public static void updateBody(GameObject g, boolean updatePosOri, boolean updateSca){
+		
+		// Get transform or if off-center and primitive shape, get bounds transform
+		
+		Matrix4f transform;
+		if (updatePosOri && g.mesh().median.length() != 0 && g.boundsType() != BoundsType.TRIANGLE_MESH && g.boundsType() != BoundsType.CONVEX_HULL){
+			transform = g.boundsTransform();
+		}else{
+			transform = g.transform();
+		}
+		
+		// Apply scale and unscaled transform
+		
+		Vector3f sca = new Vector3f();
+		Matrix4f transNoScale = new Matrix4f();
+		transform.get(sca, transNoScale);
+		
+		if (updatePosOri){
+			Transform trans = new Transform(transNoScale);
+			g.body.setWorldTransform(trans);
+			g.body.getMotionState().setWorldTransform(trans);
+		}
+		
+		if (updateSca){
+			g.body.getCollisionShape().setLocalScaling(sca);
+		}
+		
+		if (g.body.isInWorld()){
+			
+			// STATIC or SENSOR -> update Aabb and activate bodies of touching DYNAMIC objects
+				
+			if (g.body.isKinematicObject()){
+				g.scene.world.updateSingleAabb(g.body);
+				for (GameObject t : g.touchingObjects){
+					t.activate();
+				}
+				
+			// DYNAMIC or RIGID_BODY -> activate body
+				
+			}else{
+				g.body.activate();
+			}
+		}
+	}
+	
+	public static void updateBody(GameObject g){
+		updateBody(g, true, true);
+	}
+	
 }
