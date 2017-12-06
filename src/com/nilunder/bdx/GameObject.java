@@ -40,8 +40,8 @@ public class GameObject implements Named{
 	public ArrayList<PersistentManifold> contactManifolds;
 	public ModelInstance modelInstance;
 	public RigidBody body;
-	public BodyType currBodyType;
-	public BoundsType currBoundsType;
+	public BodyType bodyType;
+	public BoundsType boundsType;
 	public Matrix4f transform;
 	public Vector3f flipState;
 	
@@ -196,7 +196,7 @@ public class GameObject implements Named{
 				dynamics(false);
 			}
 
-		}else if (currBodyType == BodyType.STATIC || currBodyType == BodyType.SENSOR){
+		}else if (bodyType == BodyType.STATIC || bodyType == BodyType.SENSOR){
 			if (compound && compShapeOld != null)
 				scene.world.addRigidBody(body);
 
@@ -685,7 +685,7 @@ public class GameObject implements Named{
 		// store and unparent compound children
 		
 		GameObject compParent = parent != null && parent.body.getCollisionShape().isCompound() ? parent : null;
-		boolean isCompChild = compParent != null && !(currBodyType == BodyType.NO_COLLISION || currBodyType == BodyType.SENSOR);
+		boolean isCompChild = compParent != null && !(bodyType == BodyType.NO_COLLISION || bodyType == BodyType.SENSOR);
 		if (isCompChild){
 			parent(null);
 		}
@@ -695,7 +695,7 @@ public class GameObject implements Named{
 		CollisionShape shape = body.getCollisionShape();
 		float margin = shape.getMargin();
 		boolean isCompound = shape.isCompound();
-		shape = Bullet.makeShape(mesh, currBoundsType, margin, isCompound);
+		shape = Bullet.makeShape(mesh, boundsType, margin, isCompound);
 		body.setCollisionShape(shape);
 		
 		// update Body
@@ -747,9 +747,9 @@ public class GameObject implements Named{
 	}
 
 	public void dynamics(boolean restore){
-		if (currBodyType == BodyType.DYNAMIC || currBodyType == BodyType.RIGID_BODY){
+		if (bodyType == BodyType.DYNAMIC || bodyType == BodyType.RIGID_BODY){
 			if (restore){
-				bodyType(currBodyType);
+				bodyType(bodyType);
 			}else{ // suspend
 				body.setCollisionFlags(body.getCollisionFlags() | CollisionFlags.KINEMATIC_OBJECT);
 			}
@@ -774,7 +774,7 @@ public class GameObject implements Named{
 	}
 	
 	public BodyType bodyType(){
-		return currBodyType;
+		return bodyType;
 	}
 	
 	public void bodyType(BodyType bodyType){
@@ -793,7 +793,7 @@ public class GameObject implements Named{
 				flags |= CollisionFlags.NO_CONTACT_RESPONSE;
 			}else{
 				// NO_COLLISION -> DYNAMIC or RIGID_BODY hack
-				if (currBodyType == BodyType.NO_COLLISION){
+				if (this.bodyType == BodyType.NO_COLLISION){
 					body.clearForces();
 					body.setLinearVelocity(new Vector3f());
 				}
@@ -815,18 +815,18 @@ public class GameObject implements Named{
 			activate();
 		}
 		body.setCollisionFlags(flags);
-		currBodyType = bodyType;
+		this.bodyType = bodyType;
 	}
 	
 	public BoundsType boundsType(){
-		return currBoundsType;
+		return boundsType;
 	}
 
 	public void boundsType(BoundsType boundsType){
 		CollisionShape shape = body.getCollisionShape();
 		shape = Bullet.makeShape(mesh, boundsType, shape.getMargin(), shape.isCompound());
 		body.setCollisionShape(shape);
-		currBoundsType = boundsType;
+		this.boundsType = boundsType;
 	}
 	
 	public float collisionMargin(){
