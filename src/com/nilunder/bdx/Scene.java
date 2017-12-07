@@ -315,9 +315,9 @@ public class Scene implements Named{
 			g.transform.set(trans);
 			JsonValue physics = gobj.get("physics");
 			
-			g.currBodyType = BodyType.valueOf(physics.get("body_type").asString());
-			g.currBoundsType = BoundsType.valueOf(physics.get("bounds_type").asString());
-			g.body = Bullet.makeBody(g.mesh(), g.currBodyType, g.currBoundsType, physics);
+			g.bodyType = BodyType.valueOf(physics.get("body_type").asString());
+			g.boundsType = BoundsType.valueOf(physics.get("bounds_type").asString());
+			g.body = Bullet.makeBody(g.mesh(), g.bodyType, g.boundsType, physics);
 			g.body.setUserPointer(g);
 			Bullet.updateBody(g);
 
@@ -503,8 +503,8 @@ public class Scene implements Named{
 		g.mesh(gobj.mesh());
 
 		g.body = Bullet.cloneBody(gobj.body);
-		g.currBodyType = gobj.currBodyType;
-		g.currBoundsType = gobj.currBoundsType;
+		g.bodyType = gobj.bodyType;
+		g.boundsType = gobj.boundsType;
 		g.body.setUserPointer(g);
 		g.transform(gobj.transform);
 		g.flipState.set(gobj.flipState);
@@ -592,9 +592,9 @@ public class Scene implements Named{
 	}
 
 	private void addToWorld(GameObject gobj){
-		if (gobj.currBodyType != BodyType.NO_COLLISION){
+		if (gobj.bodyType != BodyType.NO_COLLISION){
 			world.addRigidBody(gobj.body, gobj.json.get("physics").get("group").asShort(), gobj.json.get("physics").get("mask").asShort());
-			if (gobj.currBodyType == BodyType.STATIC)
+			if (gobj.bodyType == BodyType.STATIC)
 				gobj.deactivate();
 			if (gobj.parent() != null && gobj.parent().body.getCollisionShape().isCompound())
 				world.removeRigidBody(gobj.body);

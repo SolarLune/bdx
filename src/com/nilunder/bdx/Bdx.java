@@ -3,6 +3,7 @@ package com.nilunder.bdx;
 import java.util.*;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.Application.ApplicationType;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
@@ -577,7 +578,11 @@ public class Bdx{
 
 	public static void end(){
 		profiler.end();
-		Gdx.app.exit();
+		if (Gdx.app.getType().equals(ApplicationType.Android)){
+			System.exit(0);
+		}else{
+			Gdx.app.exit();
+		}
 	}
 
 	public static void resize(int width, int height) {
