@@ -1,6 +1,7 @@
 package com.nilunder.bdx.inputs;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
@@ -89,7 +90,7 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 						return r;
 					}
 				};
-			}else if (d[0].contains("g")){
+			}else if (Pattern.compile("^g[0-9]$").matcher(d[0]).find()){
 				final int gpIndex;
 
 				// GWT doesn't implement Character.getNumericValue(), so do this instead
