@@ -37,7 +37,6 @@ import com.nilunder.bdx.gl.Mesh;
 import com.nilunder.bdx.utils.*;
 import com.nilunder.bdx.inputs.*;
 import com.nilunder.bdx.components.*;
-import com.nilunder.bdx.GameObject.ArrayListGameObject;
 import com.nilunder.bdx.GameObject.BodyType;
 import com.nilunder.bdx.GameObject.BoundsType;
 import com.nilunder.bdx.utils.Color;
