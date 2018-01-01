@@ -294,11 +294,13 @@ public class Scene implements Named{
 			g.json = gobj;
 			g.name = gobj.name;
 			g.scene = this;
-			g.props = new HashMap<String, JsonValue>();
 			for (JsonValue prop : gobj.get("properties")){
 				g.props.put(prop.name, prop);
 			}
-						
+			for (JsonValue group : gobj.get("groups")){
+				g.groups.add(group.name);
+			}
+			
 			String meshName = gobj.get("mesh_name").asString();
 			if (meshName != null){
 				g.visibleNoChildren(gobj.get("visible").asBoolean());
@@ -1061,5 +1063,27 @@ public class Scene implements Named{
 	public boolean debugPhysicsVisualization(){
 		return ((Bullet.DebugDrawer) world.getDebugDrawer()).debug;
 	}
-
+	
+	public ArrayListGameObject group(String groupName){
+		ArrayListGameObject group = new ArrayListGameObject();
+		for (GameObject g : objects){
+			if (g.groups.contains(groupName)){
+				group.add(g);
+			}
+		}
+		return group;
+	}
+	
+	public HashMap<String, ArrayListGameObject> groups(){
+		HashMap<String, ArrayListGameObject> groups = new HashMap<String, ArrayListGameObject>();
+		for (GameObject g : objects){
+			for (String groupName : g.groups){
+				if (!groups.containsKey(groupName)){
+					groups.put(groupName, group(groupName));
+				}
+			}
+		}
+		return groups;
+	}
+	
 }

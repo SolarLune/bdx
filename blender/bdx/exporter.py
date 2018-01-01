@@ -495,6 +495,7 @@ def srl_objects(objects):
             "active": in_active_layer(obj),
             "visible": not obj.hide_render,
             "instance": instance(obj.dupli_group),
+            "groups": [group.name for group in bpy.data.groups if obj.name in group.objects],
             "physics": {
                 "body_type": obj.game.physics_type,
                 "bounds_type": bounds_type(obj),
@@ -562,6 +563,7 @@ def srl_objects(objects):
             "active": True,
             "visible": False,
             "instance": None,
+            "groups": [],
             "physics": {
                 "body_type": "NO_COLLISION",
                 "bounds_type": "BOX",

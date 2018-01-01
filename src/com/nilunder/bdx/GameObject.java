@@ -46,6 +46,7 @@ public class GameObject implements Named{
 	public Vector3f flipState;
 	
 	public HashMap<String, JsonValue> props;
+	public ArrayList<String> groups;
 	public boolean frustumCulling;
 	
 	public ArrayListGameObject children;
@@ -88,6 +89,8 @@ public class GameObject implements Named{
 		contactManifolds = new ArrayList<PersistentManifold>();
 		components = new ArrayListNamed<Component>();
 		children = new ArrayListGameObject();
+		props = new HashMap<String, JsonValue>();
+		groups = new ArrayList<String>();
 		transform = new Matrix4f();
 		localTransform = Matrix4f.identity();
 		flipState = new Vector3f();
