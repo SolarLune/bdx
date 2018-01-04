@@ -46,6 +46,7 @@ public class GameObject implements Named{
 	public Vector3f flipState;
 	
 	public HashMap<String, JsonValue> props;
+	public ArrayList<String> groups;
 	public boolean frustumCulling;
 	
 	public ArrayListGameObject children;
@@ -81,54 +82,15 @@ public class GameObject implements Named{
 		CAPSULE,
 		CONE
 	}
-
-	public class ArrayListGameObject extends ArrayListNamed<GameObject> {
-
-		public GameObject getByProperty(String propName){
-			for (GameObject t : this) {
-				if (t.props.containsKey(propName)) {
-					return t;
-				}
-			}
-			return null;
-			
-		}
-		
-		public GameObject getByComponent(String compName){
-			for (GameObject t : this) {
-				if (t.components.get(compName) != null) {
-					return t;
-				}
-			}
-			return null;
-		}
-
-		public ArrayListGameObject getObjectsByProperty(String propName) {
-			ArrayListGameObject ret = new ArrayListGameObject();
-			for (GameObject t : this) {
-				if (t.props.containsKey(propName))
-					ret.add(t);
-			}
-			return ret;
-		}
-
-		public ArrayListGameObject getObjectsByComponent(String compName) {
-			ArrayListGameObject ret = new ArrayListGameObject();
-			for (GameObject t : this) {
-				if (t.components.get(compName) != null)
-					ret.add(t);
-			}
-			return ret;
-		}
-		
-	}
-
+	
 	public GameObject() {
 		touchingObjects = new ArrayListGameObject();
 		touchingObjectsLast = new ArrayListGameObject();
 		contactManifolds = new ArrayList<PersistentManifold>();
 		components = new ArrayListNamed<Component>();
 		children = new ArrayListGameObject();
+		props = new HashMap<String, JsonValue>();
+		groups = new ArrayList<String>();
 		transform = new Matrix4f();
 		localTransform = Matrix4f.identity();
 		flipState = new Vector3f();
