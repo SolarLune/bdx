@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 import com.nilunder.bdx.GameObject;
 
-public class ArrayListGameObject extends ArrayListNamed<GameObject> {
+public class LinkedListGameObject extends LinkedListNamed<GameObject> {
 	
 	public GameObject getByProperty(String propName){
 		for (GameObject g : this) {
@@ -24,8 +24,8 @@ public class ArrayListGameObject extends ArrayListNamed<GameObject> {
 		return null;
 	}
 	
-	public ArrayListGameObject getObjectsByProperty(String propName) {
-		ArrayListGameObject l = new ArrayListGameObject();
+	public LinkedListGameObject getObjectsByProperty(String propName) {
+		LinkedListGameObject l = new LinkedListGameObject();
 		for (GameObject g : this) {
 			if (g.props.containsKey(propName))
 				l.add(g);
@@ -33,8 +33,8 @@ public class ArrayListGameObject extends ArrayListNamed<GameObject> {
 		return l;
 	}
 	
-	public ArrayListGameObject getObjectsByComponent(String compName) {
-		ArrayListGameObject l = new ArrayListGameObject();
+	public LinkedListGameObject getObjectsByComponent(String compName) {
+		LinkedListGameObject l = new LinkedListGameObject();
 		for (GameObject g : this) {
 			if (g.components.get(compName) != null)
 				l.add(g);
@@ -42,8 +42,8 @@ public class ArrayListGameObject extends ArrayListNamed<GameObject> {
 		return l;
 	}
 	
-	public ArrayListGameObject group(String groupName){
-		ArrayListGameObject l = new ArrayListGameObject();
+	public LinkedListGameObject group(String groupName){
+		LinkedListGameObject l = new LinkedListGameObject();
 		for (GameObject g : this){
 			if (g.groups.contains(groupName)){
 				l.add(g);
@@ -52,8 +52,8 @@ public class ArrayListGameObject extends ArrayListNamed<GameObject> {
 		return l;
 	}
 	
-	public HashMap<String, ArrayListGameObject> groups(){
-		HashMap<String, ArrayListGameObject> m = new HashMap<String, ArrayListGameObject>();
+	public HashMap<String, LinkedListGameObject> groups(){
+		HashMap<String, LinkedListGameObject> m = new HashMap<String, LinkedListGameObject>();
 		for (GameObject g : this){
 			for (String groupName : g.groups){
 				if (!m.containsKey(groupName)){

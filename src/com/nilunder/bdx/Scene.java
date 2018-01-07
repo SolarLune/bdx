@@ -48,7 +48,7 @@ public class Scene implements Named{
 	public JsonValue json;
 
 	public String name;
-	public LinkedListNamed<GameObject> objects;
+	public LinkedListGameObject objects;
 	public LinkedListNamed<Light> lights;
 	public Camera camera;
 	public ArrayListNamed<Camera> cameras;
@@ -183,7 +183,7 @@ public class Scene implements Named{
 
 		toBeAdded = new ArrayList<GameObject>();
 		toBeRemoved = new ArrayList<GameObject>();
-		objects = new LinkedListNamed<GameObject>();
+		objects = new LinkedListGameObject();
 		lights = new LinkedListNamed<Light>();
 		templates = new HashMap<String, GameObject>();
 		
@@ -1063,27 +1063,5 @@ public class Scene implements Named{
 	public boolean debugPhysicsVisualization(){
 		return ((Bullet.DebugDrawer) world.getDebugDrawer()).debug;
 	}
-	
-	public ArrayListGameObject group(String groupName){
-		ArrayListGameObject group = new ArrayListGameObject();
-		for (GameObject g : objects){
-			if (g.groups.contains(groupName)){
-				group.add(g);
-			}
-		}
-		return group;
-	}
-	
-	public HashMap<String, ArrayListGameObject> groups(){
-		HashMap<String, ArrayListGameObject> groups = new HashMap<String, ArrayListGameObject>();
-		for (GameObject g : objects){
-			for (String groupName : g.groups){
-				if (!groups.containsKey(groupName)){
-					groups.put(groupName, group(groupName));
-				}
-			}
-		}
-		return groups;
-	}
-	
+
 }
