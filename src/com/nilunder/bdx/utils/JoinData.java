@@ -242,7 +242,6 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 				}
 			}
 			try{
-				ArrayList<Matrix4f> l = new ArrayList<Matrix4f>();
 				for (JsonValue m : model){
 					add(mesh, new Matrix4f(m.asFloatArray()));
 				}
