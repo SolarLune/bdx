@@ -662,7 +662,7 @@ def instantiator(objects):
     shared_names = []
     for o in objects:
         cls_name = get_cls_name(o)
-        if cls_name in name_class:
+        if cls_name in name_class and cls_name not in shared_names:
             shared_names.append(cls_name)
 
     if not shared_names:
