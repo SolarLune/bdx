@@ -172,7 +172,7 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 		}
 	}
 	
-	public void remove(Mesh mesh, Matrix4f transform){
+	public boolean remove(Mesh mesh, Matrix4f transform){
 		ArrayList<Matrix4f> transforms = get(mesh);
 		if (transforms != null && transforms.remove(transform)){
 			if (transforms.isEmpty()){
@@ -188,19 +188,27 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 					}
 				}
 			}
+			return true;
 		}
+		return false;
 	}
 	
-	public void remove(Mesh mesh){
+	public boolean remove(Mesh mesh){
 		if (super.remove(mesh) != null){
 			update();
+			return true;
 		}
+		return false;
 	}
 	
-	public void remove(Matrix4f transform){
+	public boolean remove(Matrix4f transform){
+		boolean result = false;
 		for (Mesh mesh : keySet()){
-			remove(mesh, transform);
+			if (remove(mesh, transform)){
+				result = true;
+			}
 		}
+		return result;
 	}
 	
 	private class Serialized{
