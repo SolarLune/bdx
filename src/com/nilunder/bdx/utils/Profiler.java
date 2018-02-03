@@ -140,7 +140,7 @@ public class Profiler{
 	public float avgTickTime;
 	
 	public Gl gl;
-	public HashMap<String, Object> props;
+	public LinkedHashMap<String, Object> props;
 	
 	public Scene scene;
 	
@@ -185,7 +185,7 @@ public class Profiler{
 		avgTickTime = Bdx.delta();
 		
 		gl = new Gl();
-		props = new HashMap<String, Object>();
+		props = new LinkedHashMap<String, Object>();
 		
 		scene = null;
 	}
