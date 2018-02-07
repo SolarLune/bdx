@@ -115,7 +115,7 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 	@Override
 	public ArrayList<Matrix4f> put(Mesh mesh, ArrayList<Matrix4f> transforms){
 		for (Matrix4f transform : transforms){
-			add(mesh, transform);
+			put(mesh, transform);
 		}
 		return transforms;
 	}
@@ -133,6 +133,15 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 		parts.clear();
 	}
 	
+	public boolean contains(Matrix4f transform){
+		for (ArrayList<Matrix4f> transforms : values()){
+			if (transforms.contains(transform)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private void update(){
 		HashMap<Mesh, ArrayList<Matrix4f>> map = new HashMap<Mesh, ArrayList<Matrix4f>>(this);
 		clear();
@@ -148,13 +157,13 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 		update();
 	}
 	
-	public void add(Mesh mesh, Matrix4f transform){
+	public boolean put(Mesh mesh, Matrix4f transform){
 		ArrayList<Matrix4f> transforms = get(mesh);
 		if (transforms == null){
 			transforms = new ArrayList<Matrix4f>();
 			super.put(mesh, transforms);
 		}else if (transforms.contains(transform)){
-			return;
+			return false;
 		}
 		transforms.add(transform);
 		
@@ -170,6 +179,7 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 			}
 			part.put(transform, vertices);
 		}
+		return true;
 	}
 	
 	public boolean remove(Mesh mesh, Matrix4f transform){
@@ -251,7 +261,7 @@ public class JoinData extends HashMap<Mesh, ArrayList<Matrix4f>>{
 			}
 			try{
 				for (JsonValue m : model){
-					add(mesh, new Matrix4f(m.asFloatArray()));
+					put(mesh, new Matrix4f(m.asFloatArray()));
 				}
 			}catch (Error e){
 				throw new RuntimeException("ERROR: Mesh " + model.name + " does not exist.");
