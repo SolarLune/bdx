@@ -156,7 +156,7 @@ public class Camera extends GameObject{
 	}
 	
 	public Vector3f[] rayDataNormalized(Vector2f p){
-		return rayData(p.div(Bdx.display.size()));
+		return rayData(p.mul(Bdx.display.size()));
 	}
 	
 	public void update(){
