@@ -550,8 +550,12 @@ public class Bdx{
 	private static void renderWorld(ModelBatch batch, Scene scene, Camera camera){
 		batch.begin(camera.data);
 		for (GameObject g : scene.objects){
-			if (g.visible() && (!g.frustumCulling || g.insideFrustum(null, camera)) && !camera.ignoreObjects.contains(g))
-				batch.render(g.modelInstance, scene.environment);
+			if (g.visible() && (!g.frustumCulling || g.insideFrustum(null, camera)) && !camera.ignoreObjects.contains(g)) {
+				if (g.merged)
+					batch.render(g.modelCache, scene.environment);
+				else
+					batch.render(g.modelInstance, scene.environment);
+			}
 		}
 		batch.end();
 	}

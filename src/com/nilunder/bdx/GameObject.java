@@ -12,7 +12,9 @@ import javax.vecmath.Vector3f;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelCache;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.math.Matrix4;
@@ -64,6 +66,9 @@ public class GameObject implements Named{
 	public float logicCounter;
 	private Mesh mesh;
 	private static java.util.Random logicCounterRandom;
+	public ModelCache modelCache;
+	public ArrayList<GameObject> mergedMeshes;
+	public boolean merged;
 	
 	public enum BodyType {
 		NO_COLLISION,
@@ -100,6 +105,8 @@ public class GameObject implements Named{
 			logicCounterRandom = new java.util.Random();
 		logicCounter = 1 + logicCounterRandom.nextFloat();
 		frustumCulling = true;
+		modelCache = new ModelCache();
+		mergedMeshes = new ArrayList<GameObject>();
 	}
 
 	public String name(){
@@ -952,5 +959,28 @@ public class GameObject implements Named{
 	public float[][] getAABBPoints(){
 		return getAABBPoints(0);
 	}
-
+	
+	public void applyMerge(boolean setVisible) {
+		if (mergedMeshes.size() == 0)
+			System.out.println(name() + " could not apply a merge with no meshes.");
+		else {
+			modelCache.begin();
+			for (GameObject g : mergedMeshes) {
+				g.visible(setVisible);
+				modelCache.add(g.modelInstance);
+			}
+			modelCache.end();
+			mergedMeshes.clear();
+			merged = true;
+		}
+	}
+	
+	public void applyMerge() {
+		applyMerge(false);
+	}
+	
+	public void clearMerge() {
+		merged = false;
+	}
+	
 }

@@ -14,7 +14,6 @@ import com.nilunder.bdx.GameObject;
 import com.nilunder.bdx.Text;
 import com.nilunder.bdx.gl.Viewport;
 import com.nilunder.bdx.gl.Mesh;
-import com.nilunder.bdx.utils.JoinData;
 
 import javax.vecmath.Matrix4f;
 
@@ -234,7 +233,6 @@ public class Profiler{
 		if (!subsystemsVisible){
 			return;
 		}
-		JoinData data = new JoinData();
 		ArrayList<Matrix4f> transforms = new ArrayList<Matrix4f>();
 		
 		Matrix4f m = Matrix4f.identity();
@@ -260,29 +258,28 @@ public class Profiler{
 			transforms.add(new Matrix4f(m));
 		}
 		
-		data.put(scene.meshes.get("__PBar"), transforms);
-		bars.mesh(new Mesh(data, scene, "bars"));
-		bars.updateBody();
+//		bars.mesh(new Mesh(data, scene, "bars"));
+//		bars.updateBody();
 	}
 	
 	private void updateBars(){
-		if (!subsystemsVisible){
-			return;
-		}
-		Mesh mesh = bars.mesh();
-		float[] va = mesh.vertices();
-		float f = fontWidth * BAR_WIDTH * 0.01f;
-		int i = 0;
-		for (float p : percents.values()){
-			float offset = va[i] + p * f;
-			i += Bdx.VERT_STRIDE;
-			for (int j = 0; j < 3; j++){
-				va[i] = offset;
-				i += Bdx.VERT_STRIDE;
-			}
-			i += Bdx.VERT_STRIDE * 2;
-		}
-		mesh.vertices(va);
+//		if (!subsystemsVisible){
+//			return;
+//		}
+//		Mesh mesh = bars.mesh();
+//		float[] va = mesh.vertices();
+//		float f = fontWidth * BAR_WIDTH * 0.01f;
+//		int i = 0;
+//		for (float p : percents.values()){
+//			float offset = va[i] + p * f;
+//			i += Bdx.VERT_STRIDE;
+//			for (int j = 0; j < 3; j++){
+//				va[i] = offset;
+//				i += Bdx.VERT_STRIDE;
+//			}
+//			i += Bdx.VERT_STRIDE * 2;
+//		}
+//		mesh.vertices(va);
 	}
 	
 	private void updateBackground(){
