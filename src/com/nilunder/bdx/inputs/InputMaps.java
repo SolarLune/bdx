@@ -41,10 +41,10 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 
 			final String[] d = descriptor.split(":");
 
+			if (d[0].equals("g")){  // the gamepad descriptor requires an index
+				d[0] += "0";
+			}
 			parsedDescriptor = d;
-
-			if (d[0].contains("g") && d[0].length() == 1)  // There's not a gamepad id number, so add in "0" for the first
-				parsedDescriptor = new String[]{d[0] + "0", d[1]};
 
 			if (d[0].equals("k")){
 				hdu[0] = new FnBool(){
@@ -94,7 +94,7 @@ public class InputMaps extends HashMap<String, InputMaps.Inputs> {
 				final int gpIndex;
 
 				// GWT doesn't implement Character.getNumericValue(), so do this instead
-				gpIndex = Integer.parseInt("" + parsedDescriptor[0].charAt(1), 36);
+				gpIndex = Integer.parseInt("" + d[0].charAt(1), 36);
 
 				hdu[0] = new FnBool(){
 					public boolean eval(){
